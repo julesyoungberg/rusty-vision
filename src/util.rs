@@ -1,26 +1,10 @@
 use nannou::prelude::*;
-use shaderc;
-use std::fs;
 
 // The vertex type that we will use to represent a point on our triangle.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Vertex {
     pub position: [f32; 2],
-}
-
-pub fn compile_shader(
-    device: &wgpu::Device,
-    compiler: &mut shaderc::Compiler,
-    filename: &str,
-    kind: shaderc::ShaderKind,
-) -> wgpu::ShaderModule {
-    let src_string = fs::read_to_string(filename).expect("Error reading shader");
-    let src = src_string.as_str();
-    let spirv = compiler
-        .compile_into_spirv(src, kind, filename, "main", None)
-        .unwrap();
-    return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
 }
 
 pub fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout {

@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 
+mod shaders;
 mod util;
 
 static SIZE: u32 = 1024;
@@ -41,16 +42,16 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     let mut compiler = shaderc::Compiler::new().unwrap();
-    let vs_module = util::compile_shader(
+    let vs_module = shaders::compile_shader(
         device,
         &mut compiler,
-        "./src/shaders/basic.vert",
+        "basic.vert",
         shaderc::ShaderKind::Vertex,
     );
-    let fs_module = util::compile_shader(
+    let fs_module = shaders::compile_shader(
         device,
         &mut compiler,
-        "./src/shaders/basic.frag",
+        "basic.frag",
         shaderc::ShaderKind::Fragment,
     );
 
