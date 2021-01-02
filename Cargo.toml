@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 nannou = "0.15"
+shaderc = "0.6"
