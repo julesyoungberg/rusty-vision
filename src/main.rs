@@ -73,14 +73,17 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         .shader_channel
         .recv_timeout(time::Duration::from_millis(10))
     {
-        println!("{:?}", event);
-        // changes have been made, recompile the shaders and rebuild the pipelines
-        let window = app.window(model.main_window_id).unwrap();
-        let device = window.swap_chain_device();
-        let shaders = shaders::compile_shaders(device, SHADERS);
-        let mut pipelines =
-            pipelines::create_pipelines(device, window.msaa_samples(), &shaders, &PIPELINES);
-        model.render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
+        if let DebouncedEvent::Write(path) = event {
+            let path_str = path.into_os_string().into_string().unwrap();
+            println!("changes written to: {}", path_str);
+            // changes have been made, recompile the shaders and rebuild the pipelines
+            let window = app.window(model.main_window_id).unwrap();
+            let device = window.swap_chain_device();
+            let shaders = shaders::compile_shaders(device, SHADERS);
+            let mut pipelines =
+                pipelines::create_pipelines(device, window.msaa_samples(), &shaders, &PIPELINES);
+            model.render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
+        }
     }
 }
 
