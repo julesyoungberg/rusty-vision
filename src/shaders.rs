@@ -21,6 +21,7 @@ pub fn compile_shader(
     // read and compile shader
     let src_string = fs::read_to_string(path).expect(error.as_str());
     let src = src_string.as_str();
+    println!("{}", src);
     let spirv = compiler
         .compile_into_spirv(src, kind, filename, "main", None)
         .unwrap();

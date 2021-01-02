@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 
+mod d2;
 mod shaders;
 mod util;
 
@@ -9,22 +10,6 @@ struct Model {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
 }
-
-// The vertices that make up the rectangle to which the image will be drawn.
-const VERTICES: [util::Vertex; 4] = [
-    util::Vertex {
-        position: [-1.0, 1.0],
-    },
-    util::Vertex {
-        position: [-1.0, -1.0],
-    },
-    util::Vertex {
-        position: [1.0, 1.0],
-    },
-    util::Vertex {
-        position: [1.0, -1.0],
-    },
-];
 
 fn main() {
     nannou::app(model).run();
@@ -55,19 +40,8 @@ fn model(app: &App) -> Model {
         shaderc::ShaderKind::Fragment,
     );
 
-    let pipeline_layout = util::create_pipeline_layout(device);
-    let render_pipeline = util::create_render_pipeline(
-        device,
-        &pipeline_layout,
-        &vs_module,
-        &fs_module,
-        Frame::TEXTURE_FORMAT,
-        msaa_samples,
-    );
-
-    let vertices_bytes = util::vertices_as_bytes(&VERTICES[..]);
-    let usage = wgpu::BufferUsage::VERTEX;
-    let vertex_buffer = device.create_buffer_with_data(vertices_bytes, usage);
+    let render_pipeline = util::create_pipeline(device, vs_module, fs_module, msaa_samples);
+    let vertex_buffer = d2::create_vertex_buffer(device);
 
     Model {
         render_pipeline,
@@ -80,9 +54,12 @@ fn view(_app: &App, model: &Model, frame: Frame) {
     let mut render_pass = wgpu::RenderPassBuilder::new()
         .color_attachment(frame.texture_view(), |color| color)
         .begin(&mut encoder);
+
     render_pass.set_pipeline(&model.render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
-    let vertex_range = 0..VERTICES.len() as u32;
+
+    let vertex_range = 0..d2::VERTICES.len() as u32;
     let instance_range = 0..1;
+
     render_pass.draw(vertex_range, instance_range);
 }
