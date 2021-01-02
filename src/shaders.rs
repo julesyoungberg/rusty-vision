@@ -9,8 +9,14 @@ pub fn compile_shader(
     device: &wgpu::Device,
     compiler: &mut shaderc::Compiler,
     filename: &str,
-    kind: shaderc::ShaderKind,
 ) -> wgpu::ShaderModule {
+    let split = filename.split(".").collect::<Vec<&str>>();
+    let ext = split[1];
+    let mut kind = shaderc::ShaderKind::Fragment;
+    if ext == "vert" {
+        kind = shaderc::ShaderKind::Vertex;
+    }
+
     // create error message
     let mut error = "Error reading shader: ".to_owned();
     error.push_str(filename);

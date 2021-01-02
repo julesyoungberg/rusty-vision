@@ -27,18 +27,8 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     let mut compiler = shaderc::Compiler::new().unwrap();
-    let vs_module = shaders::compile_shader(
-        device,
-        &mut compiler,
-        "basic.vert",
-        shaderc::ShaderKind::Vertex,
-    );
-    let fs_module = shaders::compile_shader(
-        device,
-        &mut compiler,
-        "basic.frag",
-        shaderc::ShaderKind::Fragment,
-    );
+    let vs_module = shaders::compile_shader(device, &mut compiler, "basic.vert");
+    let fs_module = shaders::compile_shader(device, &mut compiler, "basic.frag");
 
     let render_pipeline = util::create_pipeline(device, vs_module, fs_module, msaa_samples);
     let vertex_buffer = d2::create_vertex_buffer(device);
