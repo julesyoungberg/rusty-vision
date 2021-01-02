@@ -29,9 +29,8 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     let shaders = shaders::compile_shaders(device, SHADERS);
-    let vert_shader = shaders::get_shader(&shaders, "basic.vert");
-    let frag_shader = shaders::get_shader(&shaders, "basic.frag");
-    let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, msaa_samples);
+    let render_pipeline =
+        shaders::create_pipeline(device, msaa_samples, shaders, "basic.vert", "basic.frag");
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     Model {

@@ -4,6 +4,9 @@ use shaderc;
 use std::collections::HashMap;
 use std::fs;
 
+#[path = "util.rs"]
+mod util;
+
 static SHADERS_PATH: &str = "./src/shaders/";
 
 pub fn compile_shader(
@@ -35,7 +38,6 @@ pub fn compile_shader(
     let complete_src = re
         .replace_all(src, |captures: &regex::Captures| {
             let import = &captures[1];
-            println!("imported: {}", import);
             let mut import_path = SHADERS_PATH.to_owned();
             import_path.push_str(import);
             import_path.push_str(".glsl");
@@ -52,11 +54,10 @@ pub fn compile_shader(
             return import_src;
         })
         .to_string();
-    println!("{}", complete_src);
 
     // compile shader
     let spirv = compiler
-        .compile_into_spirv(src, kind, filename, "main", None)
+        .compile_into_spirv(complete_src.as_str(), kind, filename, "main", None)
         .unwrap();
 
     return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
@@ -89,4 +90,17 @@ pub fn get_shader<'a>(
             panic!(error);
         }
     }
+}
+
+pub fn create_pipeline<'a>(
+    device: &wgpu::Device,
+    num_samples: u32,
+    shaders: HashMap<String, wgpu::ShaderModule>,
+    vert_name: &str,
+    frag_name: &str,
+) -> wgpu::RenderPipeline {
+    let vert_shader = get_shader(&shaders, vert_name);
+    let frag_shader = get_shader(&shaders, frag_name);
+    let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, num_samples);
+    return render_pipeline;
 }
