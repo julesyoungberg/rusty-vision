@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use nannou::prelude::*;
 
 // The vertex type that we will use to represent a point on our triangle.
@@ -7,7 +9,6 @@ pub struct Vertex {
     pub position: [f32; 2],
 }
 
-#[allow(dead_code)]
 pub fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout {
     let desc = wgpu::PipelineLayoutDescriptor {
         bind_group_layouts: &[],
@@ -15,7 +16,6 @@ pub fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout {
     device.create_pipeline_layout(&desc)
 }
 
-#[allow(dead_code)]
 pub fn create_render_pipeline(
     device: &wgpu::Device,
     layout: &wgpu::PipelineLayout,
@@ -33,7 +33,6 @@ pub fn create_render_pipeline(
         .build(device)
 }
 
-#[allow(dead_code)]
 pub fn create_pipeline(
     device: &wgpu::Device,
     vs: &wgpu::ShaderModule,
@@ -52,7 +51,6 @@ pub fn create_pipeline(
 }
 
 // See the `nannou::wgpu::bytes` documentation for why this is necessary.
-#[allow(dead_code)]
 pub fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
     unsafe { wgpu::bytes::from_slice(data) }
 }

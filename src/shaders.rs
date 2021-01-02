@@ -1,17 +1,17 @@
+#![allow(dead_code)]
+
 use nannou::prelude::*;
-use notify::{watcher, RecursiveMode, Watcher};
 use regex::Regex;
 use shaderc;
 use std::collections::HashMap;
 use std::fs;
-use std::sync::mpsc::channel;
-use std::thread;
-use std::time::Duration;
 
 #[path = "util.rs"]
 mod util;
 
-static SHADERS_PATH: &str = "./src/shaders/";
+pub static SHADERS_PATH: &str = "./src/shaders/";
+
+pub type Shaders = HashMap<String, wgpu::ShaderModule>;
 
 pub fn compile_shader(
     device: &wgpu::Device,
@@ -67,10 +67,7 @@ pub fn compile_shader(
     return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
 }
 
-pub fn compile_shaders(
-    device: &wgpu::Device,
-    shader_names: &[&str],
-) -> HashMap<String, wgpu::ShaderModule> {
+pub fn compile_shaders(device: &wgpu::Device, shader_names: &[&str]) -> Shaders {
     let mut compiler = shaderc::Compiler::new().unwrap();
     let mut shaders = HashMap::new();
 
@@ -82,48 +79,13 @@ pub fn compile_shaders(
     return shaders;
 }
 
-pub fn get_shader<'a>(
-    shaders: &'a HashMap<String, wgpu::ShaderModule>,
-    filename: &str,
-) -> &'a wgpu::ShaderModule {
+pub fn get_shader<'a>(shaders: &'a Shaders, filename: &str) -> &'a wgpu::ShaderModule {
     match shaders.get(filename) {
-        Some(shader) => return &shader,
+        Some(shader) => return shader,
         None => {
             let mut error = "Shader not found: ".to_owned();
             error.push_str(filename);
             panic!(error);
         }
     }
-}
-
-pub fn create_pipeline<'a>(
-    device: &wgpu::Device,
-    num_samples: u32,
-    shaders: HashMap<String, wgpu::ShaderModule>,
-    vert_name: &str,
-    frag_name: &str,
-) -> wgpu::RenderPipeline {
-    let vert_shader = get_shader(&shaders, vert_name);
-    let frag_shader = get_shader(&shaders, frag_name);
-    let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, num_samples);
-    return render_pipeline;
-}
-
-pub fn watch() {
-    thread::spawn(|| {
-        let (tx, rx) = channel();
-
-        let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
-
-        watcher
-            .watch(SHADERS_PATH, RecursiveMode::Recursive)
-            .unwrap();
-
-        loop {
-            match rx.recv() {
-                Ok(event) => println!("{:?}", event),
-                Err(e) => println!("watch error: {:?}", e),
-            }
-        }
-    });
 }

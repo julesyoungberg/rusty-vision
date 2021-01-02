@@ -1,12 +1,16 @@
 use nannou::prelude::*;
 
 mod d2;
+mod pipelines;
+mod shader_watch;
 mod shaders;
 mod util;
 
 static SIZE: u32 = 1024;
 
 const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag"];
+
+const PIPELINES: &'static [&'static [&'static str]] = &[&["basic", "basic.vert", "basic.frag"]];
 
 struct Model {
     render_pipeline: wgpu::RenderPipeline,
@@ -17,7 +21,7 @@ fn main() {
     nannou::app(model).run();
 }
 
-fn model(app: &App) -> Model {
+fn model<'a>(app: &App) -> Model {
     let w_id = app
         .new_window()
         .size(SIZE, SIZE)
@@ -29,9 +33,10 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     let shaders = shaders::compile_shaders(device, SHADERS);
-    let render_pipeline =
-        shaders::create_pipeline(device, msaa_samples, shaders, "basic.vert", "basic.frag");
-    shaders::watch();
+    let mut pipelines = pipelines::create_pipelines(device, msaa_samples, &shaders, &PIPELINES);
+    let render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
+
+    shader_watch::watch();
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     Model {
