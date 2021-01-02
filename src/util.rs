@@ -36,16 +36,16 @@ pub fn create_render_pipeline(
 #[allow(dead_code)]
 pub fn create_pipeline(
     device: &wgpu::Device,
-    vs: wgpu::ShaderModule,
-    fs: wgpu::ShaderModule,
+    vs: &wgpu::ShaderModule,
+    fs: &wgpu::ShaderModule,
     sample_count: u32,
 ) -> wgpu::RenderPipeline {
     let pipeline_layout = create_pipeline_layout(device);
     return create_render_pipeline(
         device,
         &pipeline_layout,
-        &vs,
-        &fs,
+        vs,
+        fs,
         Frame::TEXTURE_FORMAT,
         sample_count,
     );

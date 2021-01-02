@@ -1,6 +1,7 @@
 use nannou::prelude::*;
 use regex::Regex;
 use shaderc;
+use std::collections::HashMap;
 use std::fs;
 
 static SHADERS_PATH: &str = "./src/shaders/";
@@ -59,4 +60,33 @@ pub fn compile_shader(
         .unwrap();
 
     return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
+}
+
+pub fn compile_shaders(
+    device: &wgpu::Device,
+    shader_names: &[&str],
+) -> HashMap<String, wgpu::ShaderModule> {
+    let mut compiler = shaderc::Compiler::new().unwrap();
+    let mut shaders = HashMap::new();
+
+    for shader in shader_names {
+        let key = shader.to_string();
+        shaders.insert(key, compile_shader(device, &mut compiler, shader));
+    }
+
+    return shaders;
+}
+
+pub fn get_shader<'a>(
+    shaders: &'a HashMap<String, wgpu::ShaderModule>,
+    filename: &str,
+) -> &'a wgpu::ShaderModule {
+    match shaders.get(filename) {
+        Some(shader) => return &shader,
+        None => {
+            let mut error = "Shader not found: ".to_owned();
+            error.push_str(filename);
+            panic!(error);
+        }
+    }
 }

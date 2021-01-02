@@ -6,6 +6,8 @@ mod util;
 
 static SIZE: u32 = 1024;
 
+const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag"];
+
 struct Model {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
@@ -26,11 +28,10 @@ fn model(app: &App) -> Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
-    let mut compiler = shaderc::Compiler::new().unwrap();
-    let vs_module = shaders::compile_shader(device, &mut compiler, "basic.vert");
-    let fs_module = shaders::compile_shader(device, &mut compiler, "basic.frag");
-
-    let render_pipeline = util::create_pipeline(device, vs_module, fs_module, msaa_samples);
+    let shaders = shaders::compile_shaders(device, SHADERS);
+    let vert_shader = shaders::get_shader(&shaders, "basic.vert");
+    let frag_shader = shaders::get_shader(&shaders, "basic.frag");
+    let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, msaa_samples);
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     Model {
