@@ -1,6 +1,6 @@
 use nannou::prelude::*;
-use shaderc;
-use std::fs;
+
+mod util;
 
 static SIZE: u32 = 1024;
 
@@ -9,74 +9,24 @@ struct Model {
     vertex_buffer: wgpu::Buffer,
 }
 
-// The vertex type that we will use to represent a point on our triangle.
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vertex {
-    position: [f32; 2],
-}
-
 // The vertices that make up the rectangle to which the image will be drawn.
-const VERTICES: [Vertex; 4] = [
-    Vertex {
+const VERTICES: [util::Vertex; 4] = [
+    util::Vertex {
         position: [-1.0, 1.0],
     },
-    Vertex {
+    util::Vertex {
         position: [-1.0, -1.0],
     },
-    Vertex {
+    util::Vertex {
         position: [1.0, 1.0],
     },
-    Vertex {
+    util::Vertex {
         position: [1.0, -1.0],
     },
 ];
 
 fn main() {
     nannou::app(model).run();
-}
-
-fn compile_shader(
-    device: &wgpu::Device,
-    compiler: &mut shaderc::Compiler,
-    filename: &str,
-    kind: shaderc::ShaderKind,
-) -> wgpu::ShaderModule {
-    let src_string = fs::read_to_string(filename).expect("Error reading shader");
-    let src = src_string.as_str();
-    let spirv = compiler
-        .compile_into_spirv(src, kind, filename, "main", None)
-        .unwrap();
-    return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
-}
-
-fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout {
-    let desc = wgpu::PipelineLayoutDescriptor {
-        bind_group_layouts: &[],
-    };
-    device.create_pipeline_layout(&desc)
-}
-
-fn create_render_pipeline(
-    device: &wgpu::Device,
-    layout: &wgpu::PipelineLayout,
-    vs_mod: &wgpu::ShaderModule,
-    fs_mod: &wgpu::ShaderModule,
-    dst_format: wgpu::TextureFormat,
-    sample_count: u32,
-) -> wgpu::RenderPipeline {
-    wgpu::RenderPipelineBuilder::from_layout(layout, vs_mod)
-        .fragment_shader(fs_mod)
-        .color_format(dst_format)
-        .add_vertex_buffer::<Vertex>(&wgpu::vertex_attr_array![0 => Float2])
-        .sample_count(sample_count)
-        .primitive_topology(wgpu::PrimitiveTopology::TriangleStrip)
-        .build(device)
-}
-
-// See the `nannou::wgpu::bytes` documentation for why this is necessary.
-fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
-    unsafe { wgpu::bytes::from_slice(data) }
 }
 
 fn model(app: &App) -> Model {
@@ -91,21 +41,21 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     let mut compiler = shaderc::Compiler::new().unwrap();
-    let vs_module = compile_shader(
+    let vs_module = util::compile_shader(
         device,
         &mut compiler,
         "./src/shaders/basic.vert",
         shaderc::ShaderKind::Vertex,
     );
-    let fs_module = compile_shader(
+    let fs_module = util::compile_shader(
         device,
         &mut compiler,
         "./src/shaders/basic.frag",
         shaderc::ShaderKind::Fragment,
     );
 
-    let pipeline_layout = create_pipeline_layout(device);
-    let render_pipeline = create_render_pipeline(
+    let pipeline_layout = util::create_pipeline_layout(device);
+    let render_pipeline = util::create_render_pipeline(
         device,
         &pipeline_layout,
         &vs_module,
@@ -114,7 +64,7 @@ fn model(app: &App) -> Model {
         msaa_samples,
     );
 
-    let vertices_bytes = vertices_as_bytes(&VERTICES[..]);
+    let vertices_bytes = util::vertices_as_bytes(&VERTICES[..]);
     let usage = wgpu::BufferUsage::VERTEX;
     let vertex_buffer = device.create_buffer_with_data(vertices_bytes, usage);
 
