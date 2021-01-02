@@ -31,6 +31,7 @@ fn model(app: &App) -> Model {
     let shaders = shaders::compile_shaders(device, SHADERS);
     let render_pipeline =
         shaders::create_pipeline(device, msaa_samples, shaders, "basic.vert", "basic.frag");
+    shaders::watch();
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     Model {

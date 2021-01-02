@@ -1,8 +1,12 @@
 use nannou::prelude::*;
+use notify::{watcher, RecursiveMode, Watcher};
 use regex::Regex;
 use shaderc;
 use std::collections::HashMap;
 use std::fs;
+use std::sync::mpsc::channel;
+use std::thread;
+use std::time::Duration;
 
 #[path = "util.rs"]
 mod util;
@@ -103,4 +107,23 @@ pub fn create_pipeline<'a>(
     let frag_shader = get_shader(&shaders, frag_name);
     let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, num_samples);
     return render_pipeline;
+}
+
+pub fn watch() {
+    thread::spawn(|| {
+        let (tx, rx) = channel();
+
+        let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
+
+        watcher
+            .watch(SHADERS_PATH, RecursiveMode::Recursive)
+            .unwrap();
+
+        loop {
+            match rx.recv() {
+                Ok(event) => println!("{:?}", event),
+                Err(e) => println!("watch error: {:?}", e),
+            }
+        }
+    });
 }

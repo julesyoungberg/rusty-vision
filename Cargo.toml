@@ -6,5 +6,6 @@ edition = "2018"
 
 [dependencies]
 nannou = "0.15"
+notify = "4.0.12"
 regex = "1"
 shaderc = "0.6"

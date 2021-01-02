@@ -1,3 +1,3 @@
 void util() {
-    //
+    // hello world
 }
