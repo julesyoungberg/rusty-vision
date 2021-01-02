@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 use shaderc;
+use std::fs;
 
 static SIZE: u32 = 1024;
 
@@ -33,6 +34,20 @@ const VERTICES: [Vertex; 4] = [
 
 fn main() {
     nannou::app(model).run();
+}
+
+fn compile_shader(
+    device: &wgpu::Device,
+    compiler: &mut shaderc::Compiler,
+    filename: &str,
+    kind: shaderc::ShaderKind,
+) -> wgpu::ShaderModule {
+    let src_string = fs::read_to_string(filename).expect("Error reading shader");
+    let src = src_string.as_str();
+    let spirv = compiler
+        .compile_into_spirv(src, kind, filename, "main", None)
+        .unwrap();
+    return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
 }
 
 fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout {
@@ -75,29 +90,19 @@ fn model(app: &App) -> Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
-    let vs_src = include_str!("shaders/basic.vert");
-    let fs_src = include_str!("shaders/basic.frag");
     let mut compiler = shaderc::Compiler::new().unwrap();
-    let vs_spirv = compiler
-        .compile_into_spirv(
-            vs_src,
-            shaderc::ShaderKind::Vertex,
-            "shaders/basic.vert",
-            "main",
-            None,
-        )
-        .unwrap();
-    let fs_spirv = compiler
-        .compile_into_spirv(
-            fs_src,
-            shaderc::ShaderKind::Fragment,
-            "shaders/basic.frag",
-            "main",
-            None,
-        )
-        .unwrap();
-    let vs_module = wgpu::shader_from_spirv_bytes(device, &vs_spirv.as_binary_u8());
-    let fs_module = wgpu::shader_from_spirv_bytes(device, &fs_spirv.as_binary_u8());
+    let vs_module = compile_shader(
+        device,
+        &mut compiler,
+        "./src/shaders/basic.vert",
+        shaderc::ShaderKind::Vertex,
+    );
+    let fs_module = compile_shader(
+        device,
+        &mut compiler,
+        "./src/shaders/basic.frag",
+        shaderc::ShaderKind::Fragment,
+    );
 
     let pipeline_layout = create_pipeline_layout(device);
     let render_pipeline = create_render_pipeline(
