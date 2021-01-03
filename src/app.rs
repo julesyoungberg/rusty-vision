@@ -16,6 +16,15 @@ widget_ids! {
         shape_color_r,
         shape_color_g,
         shape_color_b,
+        palette_color1_r,
+        palette_color1_g,
+        palette_color1_b,
+        palette_color2_r,
+        palette_color2_g,
+        palette_color2_b,
+        palette_color3_r,
+        palette_color3_g,
+        palette_color3_b,
     }
 }
 

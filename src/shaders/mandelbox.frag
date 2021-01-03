@@ -21,6 +21,15 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float shapeColorG;
     float shapeColorB;
     float time;
+    float paletteColor1R;
+    float paletteColor1G;
+    float paletteColor1B;
+    float paletteColor2R;
+    float paletteColor2G;
+    float paletteColor2B;
+    float paletteColor3R;
+    float paletteColor3G;
+    float paletteColor3B;
 };
 
 // ray marching
@@ -134,9 +143,9 @@ vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 tr
     vec3 color = vec3(shapeColorR, shapeColorG, shapeColorB);
 
     if (colorMode == 0) {
-        vec3 paletteColor1 = vec3(1, 0, 0);
-        vec3 paletteColor2 = vec3(0, 1, 0);
-        vec3 paletteColor3 = vec3(0, 0, 1);
+        vec3 paletteColor1 = vec3(paletteColor1R, paletteColor1G, paletteColor1B);
+        vec3 paletteColor2 = vec3(paletteColor2R, paletteColor2G, paletteColor2B);
+        vec3 paletteColor3 = vec3(paletteColor3R, paletteColor3G, paletteColor3B);
         color = paletteColor1 * clamp(pow(trap.x, 20.0), 0.0, 1.0);
         color += paletteColor2 * clamp(pow(trap.y, 20.0), 0.0, 1.0);
         color += paletteColor3 * clamp(pow(trap.z, 20.0), 0.0, 1.0);

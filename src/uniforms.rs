@@ -14,6 +14,15 @@ pub struct Data {
     pub shape_color_g: f32,
     pub shape_color_b: f32,
     pub time: f32,
+    pub palette_color1_r: f32,
+    pub palette_color1_g: f32,
+    pub palette_color1_b: f32,
+    pub palette_color2_r: f32,
+    pub palette_color2_g: f32,
+    pub palette_color2_b: f32,
+    pub palette_color3_r: f32,
+    pub palette_color3_g: f32,
+    pub palette_color3_b: f32,
 }
 
 pub struct Uniforms {
@@ -35,6 +44,15 @@ impl Uniforms {
                 shape_color_g: 1.0,
                 shape_color_b: 1.0,
                 time: 0.0,
+                palette_color1_r: 1.0,
+                palette_color1_g: 1.0,
+                palette_color1_b: 1.0,
+                palette_color2_r: 1.0,
+                palette_color2_g: 1.0,
+                palette_color2_b: 1.0,
+                palette_color3_r: 1.0,
+                palette_color3_g: 1.0,
+                palette_color3_b: 1.0,
             },
         }
     }
