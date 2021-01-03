@@ -13,6 +13,7 @@ pub type Pipelines = HashMap<String, wgpu::RenderPipeline>;
 
 pub fn create_pipeline(
     device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
     num_samples: u32,
     shaders: &shaders::Shaders,
     vert_name: &str,
@@ -20,11 +21,18 @@ pub fn create_pipeline(
 ) -> wgpu::RenderPipeline {
     let vert_shader = shaders::get_shader(shaders, vert_name);
     let frag_shader = shaders::get_shader(shaders, frag_name);
-    util::create_pipeline(device, vert_shader, frag_shader, num_samples)
+    util::create_pipeline(
+        device,
+        bind_group_layout,
+        vert_shader,
+        frag_shader,
+        num_samples,
+    )
 }
 
 pub fn create_pipelines<'a>(
     device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
     num_samples: u32,
     shaders: &shaders::Shaders,
     pipelines_desc: &'a [&[&str]],
@@ -37,6 +45,7 @@ pub fn create_pipelines<'a>(
             name,
             create_pipeline(
                 device,
+                bind_group_layout,
                 num_samples,
                 shaders,
                 pipeline_desc[1],

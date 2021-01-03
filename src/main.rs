@@ -8,7 +8,6 @@ use std::time;
 mod d2;
 mod pipelines;
 mod shaders;
-mod uniforms;
 mod util;
 
 static SIZE: u32 = 1024;
@@ -22,8 +21,16 @@ const PIPELINES: &'static [&'static [&'static str]] = &[
 
 const PROGRAMS: &'static [&'static str] = &["basic", "basic2"];
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Uniforms {
+    time: f32,
+}
+
 #[allow(dead_code)]
 struct Model {
+    bind_group: wgpu::BindGroup,
+    bind_group_layout: wgpu::BindGroupLayout,
     current_program: usize,
     ids: Ids,
     main_window_id: WindowId,
@@ -31,8 +38,7 @@ struct Model {
     shader_channel: Receiver<DebouncedEvent>,
     shader_watcher: notify::FsEventWatcher,
     ui: Ui,
-    uniforms: uniforms::Uniforms,
-    uniform_bind_group: wgpu::BindGroup,
+    uniforms: Uniforms,
     uniform_buffer: wgpu::Buffer,
     vertex_buffer: wgpu::Buffer,
 }
@@ -47,8 +53,28 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
-fn uniforms_as_bytes(u: &uniforms::Uniforms) -> &[u8] {
+fn create_uniforms() -> Uniforms {
+    Uniforms { time: 0.5 }
+}
+
+fn uniforms_as_bytes(u: &Uniforms) -> &[u8] {
     unsafe { wgpu::bytes::from(u) }
+}
+
+fn create_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
+    wgpu::BindGroupLayoutBuilder::new()
+        .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
+        .build(device)
+}
+
+fn create_bind_group(
+    device: &wgpu::Device,
+    layout: &wgpu::BindGroupLayout,
+    uniform_buffer: &wgpu::Buffer,
+) -> wgpu::BindGroup {
+    wgpu::BindGroupBuilder::new()
+        .buffer::<Uniforms>(uniform_buffer, 0..1)
+        .build(device, layout)
 }
 
 /**
@@ -66,6 +92,19 @@ fn model(app: &App) -> Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
+    // setup uniform buffer
+    println!("creating uniforms");
+    let uniforms = create_uniforms();
+    let uniforms_bytes = uniforms_as_bytes(&uniforms);
+    let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
+    let uniform_buffer = device.create_buffer_with_data(uniforms_bytes, usage);
+
+    println!("creating bind group layout");
+    let bind_group_layout = create_bind_group_layout(device);
+    println!("creating bind group");
+    let bind_group = create_bind_group(device, &bind_group_layout, &uniform_buffer);
+    println!("all set");
+
     // setup shader watcher
     let (schannel, shader_channel) = channel();
     let mut shader_watcher = watcher(schannel, time::Duration::from_secs(1)).unwrap();
@@ -75,7 +114,13 @@ fn model(app: &App) -> Model {
 
     // compile shaders, build pipelines, and create GPU buffers
     let shaders = shaders::compile_shaders(device, SHADERS);
-    let pipelines = pipelines::create_pipelines(device, msaa_samples, &shaders, &PIPELINES);
+    let pipelines = pipelines::create_pipelines(
+        device,
+        &bind_group_layout,
+        msaa_samples,
+        &shaders,
+        &PIPELINES,
+    );
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     // create UI
@@ -84,25 +129,9 @@ fn model(app: &App) -> Model {
     // generate ids for our widgets.
     let ids = Ids::new(ui.widget_id_generator());
 
-    // setup uniform buffer
-    println!("creating uniforms");
-    let mut m_uniforms = uniforms::Uniforms::new();
-    m_uniforms.update_time();
-    let uniform_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-    let uniform_buffer =
-        device.create_buffer_with_data(uniforms_as_bytes(&m_uniforms), uniform_usage);
-
-    println!("creating bind group layout");
-    let uniform_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
-        .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
-        .build(device);
-    println!("creating bind group");
-    let uniform_bind_group = wgpu::BindGroupBuilder::new()
-        .buffer::<uniforms::Uniforms>(&uniform_buffer, 0..1)
-        .build(device, &uniform_bind_group_layout);
-    println!("all set");
-
     Model {
+        bind_group,
+        bind_group_layout,
         current_program: 0,
         ids,
         main_window_id,
@@ -110,8 +139,7 @@ fn model(app: &App) -> Model {
         shader_channel,
         shader_watcher,
         ui,
-        uniforms: m_uniforms,
-        uniform_bind_group,
+        uniforms,
         uniform_buffer,
         vertex_buffer,
     }
@@ -131,8 +159,13 @@ fn update_shaders(app: &App, model: &mut Model) {
             let window = app.window(model.main_window_id).unwrap();
             let device = window.swap_chain_device();
             let shaders = shaders::compile_shaders(device, SHADERS);
-            model.pipelines =
-                pipelines::create_pipelines(device, window.msaa_samples(), &shaders, &PIPELINES);
+            model.pipelines = pipelines::create_pipelines(
+                device,
+                &model.bind_group_layout,
+                window.msaa_samples(),
+                &shaders,
+                &PIPELINES,
+            );
         }
     }
 }
@@ -162,7 +195,7 @@ fn update_ui(model: &mut Model) {
  * Update app state
  */
 fn update(app: &App, model: &mut Model, _update: Update) {
-    model.uniforms.update_time();
+    // model.uniforms.update_time();
     update_shaders(app, model);
     update_ui(model);
 }
@@ -180,8 +213,9 @@ fn draw(model: &Model, frame: &Frame) {
     let mut encoder = frame.command_encoder();
 
     // update uniform buffer
-    let uniforms_size = std::mem::size_of::<uniforms::Uniforms>() as wgpu::BufferAddress;
-    let uniforms_bytes = uniforms_as_bytes(&model.uniforms);
+    let uniforms = create_uniforms();
+    let uniforms_size = std::mem::size_of::<Uniforms>() as wgpu::BufferAddress;
+    let uniforms_bytes = uniforms_as_bytes(&uniforms);
     let uniforms_usage = wgpu::BufferUsage::COPY_SRC;
     let new_uniform_buffer = device.create_buffer_with_data(uniforms_bytes, uniforms_usage);
     encoder.copy_buffer_to_buffer(
@@ -196,12 +230,9 @@ fn draw(model: &Model, frame: &Frame) {
     let mut render_pass = wgpu::RenderPassBuilder::new()
         .color_attachment(&frame.texture_view(), |color| color)
         .begin(&mut encoder);
-    println!("render pass");
     render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
-    println!("setting bind group");
-    render_pass.set_bind_group(0, &model.uniform_bind_group, &[]);
-    println!("rendering");
+    render_pass.set_bind_group(0, &model.bind_group, &[]);
 
     // render
     let vertex_range = 0..d2::VERTICES.len() as u32;

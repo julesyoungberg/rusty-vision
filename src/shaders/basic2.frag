@@ -8,5 +8,5 @@ layout(set = 0, binding = 0) uniform Uniforms {
 } uniforms;
 
 void main() {
-    frag_color = vec4(uniforms.time / 1000.0, uv, 1);
+    frag_color = vec4(uniforms.time, uniforms.time, uniforms.time, 1);
 }
