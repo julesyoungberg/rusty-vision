@@ -20,8 +20,7 @@ pub fn create_pipeline(
 ) -> wgpu::RenderPipeline {
     let vert_shader = shaders::get_shader(shaders, vert_name);
     let frag_shader = shaders::get_shader(shaders, frag_name);
-    let render_pipeline = util::create_pipeline(device, vert_shader, frag_shader, num_samples);
-    return render_pipeline;
+    util::create_pipeline(device, vert_shader, frag_shader, num_samples)
 }
 
 pub fn create_pipelines<'a>(
@@ -46,7 +45,7 @@ pub fn create_pipelines<'a>(
         );
     }
 
-    return pipelines;
+    pipelines
 }
 
 pub fn get_pipeline<'a>(pipelines: &'a Pipelines, name: &str) -> &'a wgpu::RenderPipeline {

@@ -8,6 +8,7 @@ use std::time;
 mod d2;
 mod pipelines;
 mod shaders;
+mod uniforms;
 mod util;
 
 static SIZE: u32 = 1024;

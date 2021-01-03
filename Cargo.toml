@@ -5,6 +5,7 @@ authors = ["Jules Youngberg <julesdayoungberg@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bytemuck = { version = "1.4", features = [ "derive" ] }
 nannou = "0.15"
 notify = "4.0.12"
 regex = "1"

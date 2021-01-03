@@ -40,14 +40,14 @@ pub fn create_pipeline(
     sample_count: u32,
 ) -> wgpu::RenderPipeline {
     let pipeline_layout = create_pipeline_layout(device);
-    return create_render_pipeline(
+    create_render_pipeline(
         device,
         &pipeline_layout,
         vs,
         fs,
         Frame::TEXTURE_FORMAT,
         sample_count,
-    );
+    )
 }
 
 // See the `nannou::wgpu::bytes` documentation for why this is necessary.

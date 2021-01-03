@@ -64,7 +64,7 @@ pub fn compile_shader(
         .compile_into_spirv(complete_src.as_str(), kind, filename, "main", None)
         .unwrap();
 
-    return wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8());
+    wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8())
 }
 
 pub fn compile_shaders(device: &wgpu::Device, shader_names: &[&str]) -> Shaders {
@@ -76,7 +76,7 @@ pub fn compile_shaders(device: &wgpu::Device, shader_names: &[&str]) -> Shaders 
         shaders.insert(key, compile_shader(device, &mut compiler, shader));
     }
 
-    return shaders;
+    shaders
 }
 
 pub fn get_shader<'a>(shaders: &'a Shaders, filename: &str) -> &'a wgpu::ShaderModule {
