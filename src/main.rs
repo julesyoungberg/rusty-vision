@@ -86,10 +86,7 @@ fn model(app: &App) -> Model {
     }
 }
 
-/**
- * Update app state
- */
-fn update(app: &App, model: &mut Model, _update: Update) {
+fn update_shaders(app: &App, model: &mut Model) {
     // check for shader changes
     if let Ok(event) = model
         .shader_channel
@@ -108,7 +105,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
             model.render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
         }
     }
+}
 
+fn update_ui(model: &mut Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
     let program_select =
@@ -125,6 +124,14 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     {
         model.current_program = selected;
     }
+}
+
+/**
+ * Update app state
+ */
+fn update(app: &App, model: &mut Model, _update: Update) {
+    update_shaders(app, model);
+    update_ui(model);
 }
 
 /**
