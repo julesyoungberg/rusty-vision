@@ -7,7 +7,7 @@ layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
     bool drawFloor;
     float fogDist;
-    int quality;
+    float quality;
     vec2 resolution;
     float time;
 };

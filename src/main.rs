@@ -43,6 +43,8 @@ struct Model {
 widget_ids! {
     struct Ids {
         current_program,
+        fog_dist,
+        quality,
     }
 }
 
@@ -171,6 +173,31 @@ fn update_ui(model: &mut Model) {
             println!("program selected: {}", PROGRAMS[selected]);
             model.current_program = selected;
         }
+    }
+
+    fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+        widget::Slider::new(val, min, max)
+            .w_h(200.0, 30.0)
+            .label_font_size(15)
+            .rgb(0.3, 0.3, 0.3)
+            .label_rgb(1.0, 1.0, 1.0)
+            .border(0.0)
+    }
+
+    for value in slider(model.uniforms.data.fog_dist, 15.0, 200.0)
+        .down(10.0)
+        .label("Fog Distance")
+        .set(model.ids.fog_dist, ui)
+    {
+        model.uniforms.data.fog_dist = value;
+    }
+
+    for value in slider(model.uniforms.data.quality, 1.0, 3.0)
+        .down(10.0)
+        .label("Quality")
+        .set(model.ids.quality, ui)
+    {
+        model.uniforms.data.quality = value;
     }
 }
 

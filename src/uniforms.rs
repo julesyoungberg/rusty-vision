@@ -8,7 +8,7 @@ pub struct Data {
     pub color_mode: u32,
     pub draw_floor: bool,
     pub fog_dist: f32,
-    pub quality: u32,
+    pub quality: f32,
     pub resolution: Vector2,
     pub time: f32,
 }
@@ -25,8 +25,8 @@ impl Uniforms {
             data: Data {
                 color_mode: 0,
                 draw_floor: true,
-                fog_dist: 50.0,
-                quality: 1,
+                fog_dist: 100.0,
+                quality: 1.0,
                 resolution,
                 time: 0.0,
             },
