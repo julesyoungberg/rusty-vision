@@ -136,8 +136,19 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
  * Handle key pressed event
  */
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
+    let camera_dir = model.uniforms.camera_dir();
+    let scale = 0.2;
+
     if key == Key::H {
         model.show_controls = !model.show_controls;
+    } else if key == Key::Up {
+        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + camera_dir.x * scale;
+        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + camera_dir.y * scale;
+        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + camera_dir.z * scale;
+    } else if key == Key::Down {
+        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - camera_dir.x * scale;
+        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - camera_dir.y * scale;
+        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - camera_dir.z * scale;
     }
 }
 

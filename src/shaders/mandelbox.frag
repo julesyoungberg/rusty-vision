@@ -38,9 +38,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
 #define FRAME_OF_VIEW 1.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
-#define MIN_HIT_DISTANCE 0.02
+#define MIN_HIT_DISTANCE 0.001
 #define NUM_STEPS 512
-#define RAY_PUSH 0.05
+#define RAY_PUSH 0.002
 
 // shading
 #define LIGHT_POS vec3(20.0, 10.0, 20.0)
@@ -193,7 +193,7 @@ void main() {
         jitter.y += y / d;
 
         currentUV = getUV(st * resolution + jitter, resolution);
-        getRayData(currentUV, camPos, lookAt, time, rayOrigin, rayDir);
+        getRayData(currentUV, camPos, lookAt, 0.0, rayOrigin, rayDir);
         backgroundColor = getBackgroundColor(currentUV);
 
         vec3 trap;

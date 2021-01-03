@@ -58,7 +58,7 @@ impl Uniforms {
                 color3_b: 1.0,
                 camera_pos_x: 20.0,
                 camera_pos_y: 0.0,
-                camera_pos_z: 20.0,
+                camera_pos_z: 10.0,
                 camera_target_x: 0.0,
                 camera_target_y: 0.0,
                 camera_target_z: 0.0,
@@ -76,5 +76,16 @@ impl Uniforms {
 
     pub fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
+    }
+
+    pub fn camera_dir(&self) -> Vector3 {
+        let dir = pt3(
+            self.data.camera_target_x - self.data.camera_pos_x,
+            self.data.camera_target_y - self.data.camera_pos_y,
+            self.data.camera_target_z - self.data.camera_pos_z,
+        );
+        let sum = dir.x * dir.x + dir.y * dir.y + dir.z * dir.z;
+        let len = sum.sqrt();
+        pt3(dir.x / len, dir.y / len, dir.z / len)
     }
 }
