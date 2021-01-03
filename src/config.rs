@@ -1,7 +1,5 @@
 pub static SIZE: u32 = 1024;
 
-pub static SIDEBAR_WIDTH: u32 = 240;
-
 pub static SHADERS_PATH: &str = "./src/shaders/";
 
 pub const SHADERS: &'static [&'static str] =

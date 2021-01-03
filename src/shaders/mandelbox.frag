@@ -169,12 +169,13 @@ vec3 calculateReflectionsWithTrap(in vec3 position, in vec3 normal,
 vec3 calculateNormal(in vec3 point);
 
 void main() {
+    vec2 st = uv * resolution.x / resolution.y;
     const vec3 camPos = vec3(20.0, 3.0, 20.0);
     const vec3 lookAt = vec3(0.0);
     const float zoom = 1.0;
 
     vec3 finalColor = vec3(0.0);
-    vec2 currentUV = uv;
+    vec2 currentUV = st;
     vec3 backgroundColor;
     vec3 rayOrigin;
     vec3 rayDir;
@@ -188,9 +189,9 @@ void main() {
         jitter.x += x / d;
         jitter.y += y / d;
 
-        currentUV = getUV(uv * resolution + jitter, resolution);
+        currentUV = getUV(st * resolution + jitter, resolution);
         getRayData(currentUV, camPos, lookAt, time, rayOrigin, rayDir);
-        backgroundColor = getBackgroundColor(uv);
+        backgroundColor = getBackgroundColor(currentUV);
 
         vec3 trap;
         float dist = marchRayWithTrap(rayOrigin, rayDir, 0.0, trap);
