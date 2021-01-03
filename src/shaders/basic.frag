@@ -9,7 +9,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float fogDist;
     int quality;
     vec2 resolution;
-    bool spin;
     float time;
 };
 

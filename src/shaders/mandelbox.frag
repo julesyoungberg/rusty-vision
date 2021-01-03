@@ -17,7 +17,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float fogDist;
     int quality;
     vec2 resolution;
-    bool spin;
     float time;
 };
 
@@ -178,11 +177,7 @@ void main() {
         jitter.y += y / d;
 
         currentUV = getUV(uv * resolution + jitter, resolution);
-        if (spin) {
-            getRayData(currentUV, camPos, lookAt, time, rayOrigin, rayDir);
-        } else {
-            getRayData(currentUV, camPos, lookAt, 0.0, rayOrigin, rayDir);
-        }
+        getRayData(currentUV, camPos, lookAt, time, rayOrigin, rayDir);
         backgroundColor = getBackgroundColor(uv);
 
         vec3 trap;

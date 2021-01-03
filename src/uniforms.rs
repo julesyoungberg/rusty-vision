@@ -10,7 +10,6 @@ pub struct Data {
     pub fog_dist: f32,
     pub quality: u32,
     pub resolution: Vector2,
-    pub spin: bool,
     pub time: f32,
 }
 
@@ -29,7 +28,6 @@ impl Uniforms {
                 fog_dist: 50.0,
                 quality: 1,
                 resolution,
-                spin: false,
                 time: 0.0,
             },
         }
