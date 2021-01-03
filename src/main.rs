@@ -172,6 +172,10 @@ fn draw(model: &app::Model, frame: &Frame) {
  * Draw the state of the `Ui` to the frame.
  */
 fn draw_ui(app: &App, model: &app::Model, frame: &Frame) {
+    // let draw = app.draw();
+    // draw.quad().color(STEELBLUE).x_y(0.0, 0.0).w_h(200.0, 200.0);
+    // draw.to_frame(app, &frame).unwrap();
+
     let color_attachment_desc = frame.color_attachment_descriptor();
     let primitives = model.ui.draw();
     let window = app
