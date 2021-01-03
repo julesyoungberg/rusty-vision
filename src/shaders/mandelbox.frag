@@ -17,19 +17,16 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float fogDist;
     float quality;
     vec2 resolution;
-    float shapeColorR;
-    float shapeColorG;
-    float shapeColorB;
     float time;
-    float paletteColor1R;
-    float paletteColor1G;
-    float paletteColor1B;
-    float paletteColor2R;
-    float paletteColor2G;
-    float paletteColor2B;
-    float paletteColor3R;
-    float paletteColor3G;
-    float paletteColor3B;
+    float color1R;
+    float color1G;
+    float color1B;
+    float color2R;
+    float color2G;
+    float color2B;
+    float color3R;
+    float color3G;
+    float color3B;
 };
 
 // ray marching
@@ -140,12 +137,12 @@ float calculateShadow(const vec3 position, const vec3 normal,
                       const vec3 lightPos);
 
 vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 trap) {
-    vec3 color = vec3(shapeColorR, shapeColorG, shapeColorB);
+    vec3 color = vec3(color1R, color1G, color1B);
 
     if (colorMode == 0) {
-        vec3 paletteColor1 = vec3(paletteColor1R, paletteColor1G, paletteColor1B);
-        vec3 paletteColor2 = vec3(paletteColor2R, paletteColor2G, paletteColor2B);
-        vec3 paletteColor3 = vec3(paletteColor3R, paletteColor3G, paletteColor3B);
+        vec3 paletteColor1 = vec3(color1R, color1G, color1B);
+        vec3 paletteColor2 = vec3(color2R, color2G, color2B);
+        vec3 paletteColor3 = vec3(color3R, color3G, color3B);
         color = paletteColor1 * clamp(pow(trap.x, 20.0), 0.0, 1.0);
         color += paletteColor2 * clamp(pow(trap.y, 20.0), 0.0, 1.0);
         color += paletteColor3 * clamp(pow(trap.z, 20.0), 0.0, 1.0);

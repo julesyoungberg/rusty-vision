@@ -7,14 +7,20 @@ pub fn update_ui(model: &mut app::Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
 
+    let current_program_label = format!("Shader");
+    widget::Text::new(&current_program_label)
+        .top_left_with_margin(20.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.current_program_label, ui);
+
     for selected in widget::DropDownList::new(config::PROGRAMS, Option::from(model.current_program))
         .w_h(200.0, 30.0)
-        .label_font_size(15)
+        .label_font_size(12)
         .rgb(0.3, 0.3, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
-        .top_left_with_margin(20.0)
-        .label("Current Program")
+        .down(10.0)
         .set(model.widget_ids.current_program, ui)
     {
         if selected != model.current_program {
@@ -22,6 +28,13 @@ pub fn update_ui(model: &mut app::Model) {
             model.current_program = selected;
         }
     }
+
+    let floor_btn_label = format!("Draw Floor");
+    widget::Text::new(&floor_btn_label)
+        .down(10.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.draw_floor_label, ui);
 
     let mut floor_btn_color = 0.3;
     let mut floor_btn_label = 1.0;
@@ -31,10 +44,8 @@ pub fn update_ui(model: &mut app::Model) {
     }
 
     for _click in widget::Button::new()
-        .down(10.0)
-        .w_h(200.0, 30.0)
-        .label_font_size(15)
-        .label("Draw Floor")
+        .right(100.0)
+        .w_h(30.0, 30.0)
         .rgb(floor_btn_color, floor_btn_color, floor_btn_color)
         .label_rgb(floor_btn_label, floor_btn_label, floor_btn_label)
         .border(0.0)
@@ -53,6 +64,7 @@ pub fn update_ui(model: &mut app::Model) {
     }
 
     for value in slider(model.uniforms.data.fog_dist, 15.0, 300.0)
+        .left(-30.0)
         .down(10.0)
         .label("Fog Distance")
         .set(model.widget_ids.fog_dist, ui)
@@ -67,6 +79,13 @@ pub fn update_ui(model: &mut app::Model) {
     {
         model.uniforms.data.quality = value;
     }
+
+    let color_mode_label = format!("Color Mode");
+    widget::Text::new(&color_mode_label)
+        .down(10.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.color_mode_label, ui);
 
     for selected in widget::DropDownList::new(
         config::COLOR_MODES,
@@ -87,7 +106,17 @@ pub fn update_ui(model: &mut app::Model) {
         }
     }
 
-    for value in widget::Slider::new(model.uniforms.data.shape_color_r, 0.0, 1.0)
+    let mut right: f32;
+    let step = 31.0;
+
+    let color_mode_label = format!("Color 1");
+    widget::Text::new(&color_mode_label)
+        .down(10.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.color1_label, ui);
+
+    for value in widget::Slider::new(model.uniforms.data.color1_r, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.8, 0.3, 0.3)
@@ -95,15 +124,14 @@ pub fn update_ui(model: &mut app::Model) {
         .border(0.0)
         .down(10.0)
         .label("R")
-        .set(model.widget_ids.shape_color_r, ui)
+        .set(model.widget_ids.color1_r, ui)
     {
-        model.uniforms.data.shape_color_r = value;
+        model.uniforms.data.color1_r = value;
     }
 
-    let mut right = 0.0;
-    let step = 40.0;
+    right = step;
 
-    for value in widget::Slider::new(model.uniforms.data.shape_color_g, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color1_g, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.8, 0.3)
@@ -111,14 +139,14 @@ pub fn update_ui(model: &mut app::Model) {
         .border(0.0)
         .right(10.0)
         .label("G")
-        .set(model.widget_ids.shape_color_g, ui)
+        .set(model.widget_ids.color1_g, ui)
     {
-        model.uniforms.data.shape_color_g = value;
+        model.uniforms.data.color1_g = value;
     }
 
     right = right + step;
 
-    for value in widget::Slider::new(model.uniforms.data.shape_color_b, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color1_b, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.3, 0.8)
@@ -126,147 +154,115 @@ pub fn update_ui(model: &mut app::Model) {
         .border(0.0)
         .right(10.0)
         .label("B")
-        .set(model.widget_ids.shape_color_b, ui)
+        .set(model.widget_ids.color1_b, ui)
     {
-        model.uniforms.data.shape_color_b = value;
+        model.uniforms.data.color1_b = value;
     }
 
     right = right + step;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color1_r, 0.0, 1.0)
+    let color_mode_label = format!("Color 2");
+    widget::Text::new(&color_mode_label)
+        .left(right as f64)
+        .down(10.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.color2_label, ui);
+
+    for value in widget::Slider::new(model.uniforms.data.color2_r, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.8, 0.3, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .down(10.0)
-        .left(right)
-        .label("P1R")
-        .set(model.widget_ids.palette_color1_r, ui)
+        .label("R")
+        .set(model.widget_ids.color2_r, ui)
     {
-        model.uniforms.data.palette_color1_r = value;
+        model.uniforms.data.color2_r = value;
     }
 
-    right = 0.0;
+    right = step;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color1_g, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color2_g, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.8, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .right(10.0)
-        .label("P1G")
-        .set(model.widget_ids.palette_color1_g, ui)
+        .label("G")
+        .set(model.widget_ids.color2_g, ui)
     {
-        model.uniforms.data.palette_color1_g = value;
+        model.uniforms.data.color2_g = value;
     }
 
     right = right + step;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color1_b, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color2_b, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.3, 0.8)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .right(10.0)
-        .label("P1B")
-        .set(model.widget_ids.palette_color1_b, ui)
+        .label("B")
+        .set(model.widget_ids.color2_b, ui)
     {
-        model.uniforms.data.palette_color1_b = value;
+        model.uniforms.data.color2_b = value;
     }
 
     right = right + step;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color2_r, 0.0, 1.0)
+    let color_mode_label = format!("Color 3");
+    widget::Text::new(&color_mode_label)
+        .left(right as f64)
+        .down(10.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(14)
+        .set(model.widget_ids.color3_label, ui);
+
+    for value in widget::Slider::new(model.uniforms.data.color3_r, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.8, 0.3, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .down(10.0)
-        .left(right)
-        .label("P2R")
-        .set(model.widget_ids.palette_color2_r, ui)
+        .label("R")
+        .set(model.widget_ids.color3_r, ui)
     {
-        model.uniforms.data.palette_color2_r = value;
-    }
-
-    right = 0.0;
-
-    for value in widget::Slider::new(model.uniforms.data.palette_color2_g, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.3, 0.8, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .right(10.0)
-        .label("P2G")
-        .set(model.widget_ids.palette_color2_g, ui)
-    {
-        model.uniforms.data.palette_color2_g = value;
-    }
-
-    right = right + step;
-
-    for value in widget::Slider::new(model.uniforms.data.palette_color1_b, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.3, 0.3, 0.8)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .right(10.0)
-        .label("P2B")
-        .set(model.widget_ids.palette_color2_b, ui)
-    {
-        model.uniforms.data.palette_color2_b = value;
-    }
-
-    right = right + step;
-
-    for value in widget::Slider::new(model.uniforms.data.palette_color3_r, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.8, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .down(10.0)
-        .left(right)
-        .label("P3R")
-        .set(model.widget_ids.palette_color3_r, ui)
-    {
-        model.uniforms.data.palette_color3_r = value;
+        model.uniforms.data.color3_r = value;
     }
 
     // right = 0.0;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color3_g, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color3_g, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.8, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .right(10.0)
-        .label("P3G")
-        .set(model.widget_ids.palette_color3_g, ui)
+        .label("G")
+        .set(model.widget_ids.color3_g, ui)
     {
-        model.uniforms.data.palette_color3_g = value;
+        model.uniforms.data.color3_g = value;
     }
 
     // right = right + step;
 
-    for value in widget::Slider::new(model.uniforms.data.palette_color3_b, 0.0, 1.0)
+    for value in widget::Slider::new(model.uniforms.data.color3_b, 0.0, 1.0)
         .w_h(60.0, 30.0)
         .label_font_size(15)
         .rgb(0.3, 0.3, 0.8)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
         .right(10.0)
-        .label("P3B")
-        .set(model.widget_ids.palette_color3_b, ui)
+        .label("B")
+        .set(model.widget_ids.color3_b, ui)
     {
-        model.uniforms.data.palette_color3_b = value;
+        model.uniforms.data.color3_b = value;
     }
 
     // right = right + step;
