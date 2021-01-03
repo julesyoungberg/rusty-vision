@@ -5,7 +5,7 @@ use std::time::SystemTime;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub color_mode: u32,
+    pub color_mode: i32,
     pub draw_floor: bool,
     pub fog_dist: f32,
     pub quality: f32,
@@ -25,7 +25,7 @@ impl Uniforms {
             data: Data {
                 color_mode: 0,
                 draw_floor: true,
-                fog_dist: 100.0,
+                fog_dist: 150.0,
                 quality: 1.0,
                 resolution,
                 time: 0.0,

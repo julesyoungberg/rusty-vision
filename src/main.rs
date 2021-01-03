@@ -24,6 +24,8 @@ const PIPELINES: &'static [&'static [&'static str]] = &[
 
 const PROGRAMS: &'static [&'static str] = &["basic", "basic2", "mandelbox"];
 
+const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
+
 #[allow(dead_code)]
 struct Model {
     bind_group: wgpu::BindGroup,
@@ -42,6 +44,7 @@ struct Model {
 
 widget_ids! {
     struct Ids {
+        color_mode,
         current_program,
         draw_floor,
         fog_dist,
@@ -176,29 +179,23 @@ fn update_ui(model: &mut Model) {
         }
     }
 
-    fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-        widget::Slider::new(val, min, max)
-            .w_h(200.0, 30.0)
-            .label_font_size(15)
-            .rgb(0.3, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
-    }
-
-    for value in slider(model.uniforms.data.fog_dist, 15.0, 200.0)
-        .down(10.0)
-        .label("Fog Distance")
-        .set(model.ids.fog_dist, ui)
+    for selected in widget::DropDownList::new(
+        COLOR_MODES,
+        Option::from(model.uniforms.data.color_mode as usize),
+    )
+    .w_h(200.0, 30.0)
+    .label_font_size(15)
+    .rgb(0.3, 0.3, 0.3)
+    .label_rgb(1.0, 1.0, 1.0)
+    .border(0.0)
+    .down(10.0)
+    .label("Color Mode")
+    .set(model.ids.color_mode, ui)
     {
-        model.uniforms.data.fog_dist = value;
-    }
-
-    for value in slider(model.uniforms.data.quality, 1.0, 3.0)
-        .down(10.0)
-        .label("Quality")
-        .set(model.ids.quality, ui)
-    {
-        model.uniforms.data.quality = value;
+        if selected as i32 != model.uniforms.data.color_mode {
+            println!("color mode selected: {}", COLOR_MODES[selected]);
+            model.uniforms.data.color_mode = selected as i32;
+        }
     }
 
     let mut floor_btn_color = 0.3;
@@ -219,6 +216,31 @@ fn update_ui(model: &mut Model) {
         .set(model.ids.draw_floor, ui)
     {
         model.uniforms.data.draw_floor = !model.uniforms.data.draw_floor;
+    }
+
+    fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+        widget::Slider::new(val, min, max)
+            .w_h(200.0, 30.0)
+            .label_font_size(15)
+            .rgb(0.3, 0.3, 0.3)
+            .label_rgb(1.0, 1.0, 1.0)
+            .border(0.0)
+    }
+
+    for value in slider(model.uniforms.data.fog_dist, 15.0, 300.0)
+        .down(10.0)
+        .label("Fog Distance")
+        .set(model.ids.fog_dist, ui)
+    {
+        model.uniforms.data.fog_dist = value;
+    }
+
+    for value in slider(model.uniforms.data.quality, 1.0, 3.0)
+        .down(10.0)
+        .label("Quality")
+        .set(model.ids.quality, ui)
+    {
+        model.uniforms.data.quality = value;
     }
 }
 

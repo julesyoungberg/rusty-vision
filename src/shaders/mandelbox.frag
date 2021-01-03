@@ -130,7 +130,7 @@ float calculateShadow(const vec3 position, const vec3 normal,
 vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 trap) {
     vec3 color = vec3(1); // shapeColor;
 
-    if (colorMode == 1) {
+    if (colorMode == 0) {
         vec3 paletteColor1 = vec3(1, 0, 0);
         vec3 paletteColor2 = vec3(0, 1, 0);
         vec3 paletteColor3 = vec3(0, 0, 1);
