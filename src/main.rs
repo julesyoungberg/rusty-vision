@@ -26,7 +26,7 @@ struct Model {
     current_program: usize,
     ids: Ids,
     main_window_id: WindowId,
-    render_pipeline: wgpu::RenderPipeline,
+    pipelines: pipelines::Pipelines,
     shader_channel: Receiver<DebouncedEvent>,
     shader_watcher: notify::FsEventWatcher,
     ui: Ui,
@@ -67,8 +67,7 @@ fn model(app: &App) -> Model {
 
     // compile shaders, build pipelines, and create GPU buffers
     let shaders = shaders::compile_shaders(device, SHADERS);
-    let mut pipelines = pipelines::create_pipelines(device, msaa_samples, &shaders, &PIPELINES);
-    let render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
+    let pipelines = pipelines::create_pipelines(device, msaa_samples, &shaders, &PIPELINES);
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     // create UI
@@ -81,7 +80,7 @@ fn model(app: &App) -> Model {
         current_program: 0,
         ids,
         main_window_id,
-        render_pipeline,
+        pipelines,
         shader_channel,
         shader_watcher,
         ui,
@@ -103,9 +102,8 @@ fn update_shaders(app: &App, model: &mut Model) {
             let window = app.window(model.main_window_id).unwrap();
             let device = window.swap_chain_device();
             let shaders = shaders::compile_shaders(device, SHADERS);
-            let mut pipelines =
+            model.pipelines =
                 pipelines::create_pipelines(device, window.msaa_samples(), &shaders, &PIPELINES);
-            model.render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
         }
     }
 }
@@ -143,12 +141,16 @@ fn update(app: &App, model: &mut Model, _update: Update) {
  * Draw the state of the app to the frame
  */
 fn draw(model: &Model, frame: &Frame) {
+    let render_pipeline = model
+        .pipelines
+        .get(PROGRAMS[model.current_program])
+        .expect("Invalid program");
     let mut encoder = frame.command_encoder();
     let mut render_pass = wgpu::RenderPassBuilder::new()
         .color_attachment(&frame.texture_view(), |color| color)
         .begin(&mut encoder);
 
-    render_pass.set_pipeline(&model.render_pipeline);
+    render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
 
     let vertex_range = 0..d2::VERTICES.len() as u32;

@@ -9,7 +9,7 @@ mod util;
 #[path = "shaders.rs"]
 mod shaders;
 
-pub type Pipelines<'a> = HashMap<&'a str, wgpu::RenderPipeline>;
+pub type Pipelines = HashMap<String, wgpu::RenderPipeline>;
 
 pub fn create_pipeline(
     device: &wgpu::Device,
@@ -29,12 +29,13 @@ pub fn create_pipelines<'a>(
     num_samples: u32,
     shaders: &shaders::Shaders,
     pipelines_desc: &'a [&[&str]],
-) -> Pipelines<'a> {
+) -> Pipelines {
     let mut pipelines = HashMap::new();
 
     for pipeline_desc in pipelines_desc {
+        let name = String::from(pipeline_desc[0]);
         pipelines.insert(
-            pipeline_desc[0],
+            name,
             create_pipeline(
                 device,
                 num_samples,
