@@ -11,5 +11,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
 //@import util2
 
 void main() {
-    frag_color = vec4(time, time, time, 1);
+    vec3 color = vec3(abs(sin(time)));
+    frag_color = vec4(color, 1);
 }
