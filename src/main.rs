@@ -12,11 +12,14 @@ mod util;
 
 static SIZE: u32 = 1024;
 
-const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag"];
+const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag", "basic2.frag"];
 
-const PIPELINES: &'static [&'static [&'static str]] = &[&["basic", "basic.vert", "basic.frag"]];
+const PIPELINES: &'static [&'static [&'static str]] = &[
+    &["basic", "basic.vert", "basic.frag"],
+    &["basic2", "basic.vert", "basic2.frag"],
+];
 
-const PIPELINE_NAMES: &'static [&'static str] = &["basic", "fractal"];
+const PROGRAMS: &'static [&'static str] = &["basic", "basic2"];
 
 #[allow(dead_code)]
 struct Model {
@@ -110,19 +113,21 @@ fn update_shaders(app: &App, model: &mut Model) {
 fn update_ui(model: &mut Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
-    let program_select =
-        widget::DropDownList::new(PIPELINE_NAMES, Option::from(model.current_program))
-            .w_h(200.0, 30.0)
-            .label_font_size(15)
-            .rgb(0.3, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0);
-    for selected in program_select
+
+    for selected in widget::DropDownList::new(PROGRAMS, Option::from(model.current_program))
+        .w_h(200.0, 30.0)
+        .label_font_size(15)
+        .rgb(0.3, 0.3, 0.3)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
         .top_left_with_margin(20.0)
         .label("Current Program")
         .set(model.ids.current_program, ui)
     {
-        model.current_program = selected;
+        if selected != model.current_program {
+            println!("program selected: {}", PROGRAMS[selected]);
+            model.current_program = selected;
+        }
     }
 }
 
