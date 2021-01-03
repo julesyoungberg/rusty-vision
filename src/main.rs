@@ -128,43 +128,48 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 }
 
 /**
+ * Draw the state of the app to the frame
+ */
+fn draw(model: &Model, frame: &Frame) {
+    let mut encoder = frame.command_encoder();
+    let mut render_pass = wgpu::RenderPassBuilder::new()
+        .color_attachment(&frame.texture_view(), |color| color)
+        .begin(&mut encoder);
+
+    render_pass.set_pipeline(&model.render_pipeline);
+    render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
+
+    let vertex_range = 0..d2::VERTICES.len() as u32;
+    let instance_range = 0..1;
+
+    render_pass.draw(vertex_range, instance_range);
+}
+
+/**
+ * Draw the state of the `Ui` to the frame.
+ */
+fn draw_ui(app: &App, model: &Model, frame: &Frame) {
+    let color_attachment_desc = frame.color_attachment_descriptor();
+    let primitives = model.ui.draw();
+    let window = app
+        .window(model.main_window_id)
+        .ok_or(DrawToFrameError::InvalidWindow)
+        .unwrap();
+    let mut ui_encoder = frame.command_encoder();
+    ui::encode_render_pass(
+        &model.ui,
+        &window,
+        primitives,
+        color_attachment_desc,
+        &mut *ui_encoder,
+    )
+    .unwrap();
+}
+
+/**
  * Render app
  */
 fn view(app: &App, model: &Model, frame: Frame) {
-    let color_attachment_desc = frame.color_attachment_descriptor();
-
-    // Draw the state of the app to the frame
-    {
-        let mut encoder = frame.command_encoder();
-        let mut render_pass = wgpu::RenderPassBuilder::new()
-            .color_attachment(&frame.texture_view(), |color| color)
-            .begin(&mut encoder);
-
-        render_pass.set_pipeline(&model.render_pipeline);
-        render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
-
-        let vertex_range = 0..d2::VERTICES.len() as u32;
-        let instance_range = 0..1;
-
-        render_pass.draw(vertex_range, instance_range);
-    }
-
-    // Draw the state of the `Ui` to the frame.
-    // model.ui.draw_to_frame(app, &frame).unwrap();
-    {
-        let primitives = model.ui.draw();
-        let window = app
-            .window(model.main_window_id)
-            .ok_or(DrawToFrameError::InvalidWindow)
-            .unwrap();
-        let mut ui_encoder = frame.command_encoder();
-        ui::encode_render_pass(
-            &model.ui,
-            &window,
-            primitives,
-            color_attachment_desc,
-            &mut *ui_encoder,
-        )
-        .unwrap();
-    }
+    draw(model, &frame);
+    draw_ui(app, model, &frame);
 }
