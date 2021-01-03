@@ -8,6 +8,7 @@ use std::time;
 mod d2;
 mod pipelines;
 mod shaders;
+mod uniforms;
 mod util;
 
 static SIZE: u32 = 1024;
@@ -21,12 +22,6 @@ const PIPELINES: &'static [&'static [&'static str]] = &[
 
 const PROGRAMS: &'static [&'static str] = &["basic", "basic2"];
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct Uniforms {
-    time: f32,
-}
-
 #[allow(dead_code)]
 struct Model {
     bind_group: wgpu::BindGroup,
@@ -38,7 +33,7 @@ struct Model {
     shader_channel: Receiver<DebouncedEvent>,
     shader_watcher: notify::FsEventWatcher,
     ui: Ui,
-    uniforms: Uniforms,
+    uniforms: uniforms::Uniforms,
     uniform_buffer: wgpu::Buffer,
     vertex_buffer: wgpu::Buffer,
 }
@@ -53,14 +48,6 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
-fn create_uniforms() -> Uniforms {
-    Uniforms { time: 0.5 }
-}
-
-fn uniforms_as_bytes(u: &Uniforms) -> &[u8] {
-    unsafe { wgpu::bytes::from(u) }
-}
-
 fn create_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
     wgpu::BindGroupLayoutBuilder::new()
         .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
@@ -73,7 +60,7 @@ fn create_bind_group(
     uniform_buffer: &wgpu::Buffer,
 ) -> wgpu::BindGroup {
     wgpu::BindGroupBuilder::new()
-        .buffer::<Uniforms>(uniform_buffer, 0..1)
+        .buffer::<uniforms::Data>(uniform_buffer, 0..1)
         .build(device, layout)
 }
 
@@ -93,17 +80,13 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     // setup uniform buffer
-    println!("creating uniforms");
-    let uniforms = create_uniforms();
-    let uniforms_bytes = uniforms_as_bytes(&uniforms);
+    let uniform = uniforms::Uniforms::new();
     let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-    let uniform_buffer = device.create_buffer_with_data(uniforms_bytes, usage);
+    let uniform_buffer = device.create_buffer_with_data(uniform.as_bytes(), usage);
 
-    println!("creating bind group layout");
+    // create bind group
     let bind_group_layout = create_bind_group_layout(device);
-    println!("creating bind group");
     let bind_group = create_bind_group(device, &bind_group_layout, &uniform_buffer);
-    println!("all set");
 
     // setup shader watcher
     let (schannel, shader_channel) = channel();
@@ -125,8 +108,6 @@ fn model(app: &App) -> Model {
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
-
-    // generate ids for our widgets.
     let ids = Ids::new(ui.widget_id_generator());
 
     Model {
@@ -139,7 +120,7 @@ fn model(app: &App) -> Model {
         shader_channel,
         shader_watcher,
         ui,
-        uniforms,
+        uniforms: uniform,
         uniform_buffer,
         vertex_buffer,
     }
@@ -195,7 +176,7 @@ fn update_ui(model: &mut Model) {
  * Update app state
  */
 fn update(app: &App, model: &mut Model, _update: Update) {
-    // model.uniforms.update_time();
+    model.uniforms.update_time();
     update_shaders(app, model);
     update_ui(model);
 }
@@ -213,9 +194,8 @@ fn draw(model: &Model, frame: &Frame) {
     let mut encoder = frame.command_encoder();
 
     // update uniform buffer
-    let uniforms = create_uniforms();
-    let uniforms_size = std::mem::size_of::<Uniforms>() as wgpu::BufferAddress;
-    let uniforms_bytes = uniforms_as_bytes(&uniforms);
+    let uniforms_size = std::mem::size_of::<uniforms::Data>() as wgpu::BufferAddress;
+    let uniforms_bytes = model.uniforms.as_bytes();
     let uniforms_usage = wgpu::BufferUsage::COPY_SRC;
     let new_uniform_buffer = device.create_buffer_with_data(uniforms_bytes, uniforms_usage);
     encoder.copy_buffer_to_buffer(
