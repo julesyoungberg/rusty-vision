@@ -13,14 +13,16 @@ mod util;
 
 static SIZE: u32 = 1024;
 
-const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag", "basic2.frag"];
+const SHADERS: &'static [&'static str] =
+    &["basic.vert", "basic.frag", "basic2.frag", "mandelbox.frag"];
 
 const PIPELINES: &'static [&'static [&'static str]] = &[
     &["basic", "basic.vert", "basic.frag"],
     &["basic2", "basic.vert", "basic2.frag"],
+    &["mandelbox", "basic.vert", "mandelbox.frag"],
 ];
 
-const PROGRAMS: &'static [&'static str] = &["basic", "basic2"];
+const PROGRAMS: &'static [&'static str] = &["basic", "basic2", "mandelbox"];
 
 #[allow(dead_code)]
 struct Model {
@@ -80,7 +82,7 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     // setup uniform buffer
-    let uniform = uniforms::Uniforms::new();
+    let uniform = uniforms::Uniforms::new(pt2(SIZE as f32, SIZE as f32));
     let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
     let uniform_buffer = device.create_buffer_with_data(uniform.as_bytes(), usage);
 

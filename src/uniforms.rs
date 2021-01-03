@@ -3,8 +3,14 @@ use nannou::prelude::*;
 use std::time::SystemTime;
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Copy, Clone)]
 pub struct Data {
+    pub color_mode: u32,
+    pub draw_floor: bool,
+    pub fog_dist: f32,
+    pub quality: u32,
+    pub resolution: Vector2,
+    pub spin: bool,
     pub time: f32,
 }
 
@@ -14,10 +20,18 @@ pub struct Uniforms {
 }
 
 impl Uniforms {
-    pub fn new() -> Self {
+    pub fn new(resolution: Vector2) -> Self {
         Self {
             clock: SystemTime::now(),
-            data: Data { time: 0.0 },
+            data: Data {
+                color_mode: 0,
+                draw_floor: true,
+                fog_dist: 50.0,
+                quality: 1,
+                resolution,
+                spin: false,
+                time: 0.0,
+            },
         }
     }
 

@@ -9,6 +9,8 @@ use std::fs;
 #[path = "util.rs"]
 mod util;
 
+pub static DEBUG: bool = true;
+
 pub static SHADERS_PATH: &str = "./src/shaders/";
 
 pub type Shaders = HashMap<String, wgpu::ShaderModule>;

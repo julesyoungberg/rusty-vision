@@ -4,6 +4,12 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 frag_color;
 
 layout(set = 0, binding = 0) uniform Uniforms {
+    int colorMode;
+    bool drawFloor;
+    float fogDist;
+    int quality;
+    vec2 resolution;
+    bool spin;
     float time;
 };
 
@@ -11,6 +17,5 @@ layout(set = 0, binding = 0) uniform Uniforms {
 //@import util2
 
 void main() {
-    vec3 color = vec3(abs(sin(time)));
-    frag_color = vec4(color, 1);
+    frag_color = vec4(uv, abs(sin(time)), 1);
 }
