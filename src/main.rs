@@ -43,6 +43,7 @@ struct Model {
 widget_ids! {
     struct Ids {
         current_program,
+        draw_floor,
         fog_dist,
         quality,
     }
@@ -198,6 +199,26 @@ fn update_ui(model: &mut Model) {
         .set(model.ids.quality, ui)
     {
         model.uniforms.data.quality = value;
+    }
+
+    let mut floor_btn_color = 0.3;
+    let mut floor_btn_label = 1.0;
+    if model.uniforms.data.draw_floor {
+        floor_btn_color = 0.7;
+        floor_btn_label = 0.0;
+    }
+
+    for _click in widget::Button::new()
+        .down(10.0)
+        .w_h(200.0, 30.0)
+        .label_font_size(15)
+        .label("Draw Floor")
+        .rgb(floor_btn_color, floor_btn_color, floor_btn_color)
+        .label_rgb(floor_btn_label, floor_btn_label, floor_btn_label)
+        .border(0.0)
+        .set(model.ids.draw_floor, ui)
+    {
+        model.uniforms.data.draw_floor = !model.uniforms.data.draw_floor;
     }
 }
 
