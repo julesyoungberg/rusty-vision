@@ -40,7 +40,7 @@ fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
         .new_window()
-        .size(config::SIZE, config::SIZE)
+        .size(config::SIDEBAR_WIDTH + config::SIZE, config::SIZE)
         .view(view)
         .build()
         .unwrap();
@@ -161,6 +161,12 @@ fn draw(model: &app::Model, frame: &Frame) {
     render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
     render_pass.set_bind_group(0, &model.bind_group, &[]);
+    render_pass.set_scissor_rect(
+        config::SIDEBAR_WIDTH * 2,
+        0,
+        config::SIZE * 2,
+        config::SIZE * 2,
+    );
 
     // render
     let vertex_range = 0..d2::VERTICES.len() as u32;
