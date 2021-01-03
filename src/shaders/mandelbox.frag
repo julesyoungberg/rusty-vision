@@ -177,7 +177,7 @@ void main() {
         jitter.x += x / d;
         jitter.y += y / d;
 
-        currentUV = getUV(gl_FragCoord.xy + jitter, resolution);
+        currentUV = getUV(uv * resolution + jitter, resolution);
         if (spin) {
             getRayData(currentUV, camPos, lookAt, time, rayOrigin, rayDir);
         } else {

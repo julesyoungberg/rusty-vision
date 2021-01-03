@@ -115,7 +115,7 @@ fn model(app: &App) -> Model {
     Model {
         bind_group,
         bind_group_layout,
-        current_program: 0,
+        current_program: 2,
         ids,
         main_window_id,
         pipelines,
