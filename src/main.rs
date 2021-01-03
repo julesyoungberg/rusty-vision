@@ -139,16 +139,42 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     let camera_dir = model.uniforms.camera_dir();
     let scale = 0.2;
 
+    let camera_up = model.uniforms.camera_up();
+    let cross = camera_dir.cross(camera_up);
+    let sum = cross.x * cross.x + cross.y * cross.y + cross.z * cross.z;
+    let len = sum.sqrt();
+    let cross_dir = pt3(cross.x / len, cross.y / len, cross.z / len);
+
     if key == Key::H {
         model.show_controls = !model.show_controls;
     } else if key == Key::Up {
         model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + camera_dir.x * scale;
         model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + camera_dir.y * scale;
         model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + camera_dir.z * scale;
+        model.uniforms.data.camera_target_x =
+            model.uniforms.data.camera_target_x + camera_dir.x * scale;
+        model.uniforms.data.camera_target_y =
+            model.uniforms.data.camera_target_y + camera_dir.y * scale;
+        model.uniforms.data.camera_target_z =
+            model.uniforms.data.camera_target_z + camera_dir.z * scale;
     } else if key == Key::Down {
         model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - camera_dir.x * scale;
         model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - camera_dir.y * scale;
         model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - camera_dir.z * scale;
+        model.uniforms.data.camera_target_x =
+            model.uniforms.data.camera_target_x - camera_dir.x * scale;
+        model.uniforms.data.camera_target_y =
+            model.uniforms.data.camera_target_y - camera_dir.y * scale;
+        model.uniforms.data.camera_target_z =
+            model.uniforms.data.camera_target_z - camera_dir.z * scale;
+    } else if key == Key::Left {
+        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - cross_dir.x * scale;
+        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - cross_dir.y * scale;
+        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - cross_dir.z * scale;
+    } else if key == Key::Right {
+        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + cross_dir.x * scale;
+        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + cross_dir.y * scale;
+        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + cross_dir.z * scale;
     }
 }
 

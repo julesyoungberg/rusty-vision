@@ -88,4 +88,12 @@ impl Uniforms {
         let len = sum.sqrt();
         pt3(dir.x / len, dir.y / len, dir.z / len)
     }
+
+    pub fn camera_up(&self) -> Vector3 {
+        pt3(
+            self.data.camera_up_x,
+            self.data.camera_up_y,
+            self.data.camera_up_z,
+        )
+    }
 }
