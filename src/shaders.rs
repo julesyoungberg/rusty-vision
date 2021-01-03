@@ -6,12 +6,7 @@ use shaderc;
 use std::collections::HashMap;
 use std::fs;
 
-#[path = "util.rs"]
-mod util;
-
-pub static DEBUG: bool = true;
-
-pub static SHADERS_PATH: &str = "./src/shaders/";
+use crate::config;
 
 pub type Shaders = HashMap<String, wgpu::ShaderModule>;
 
@@ -32,7 +27,7 @@ pub fn compile_shader(
     error.push_str(filename);
 
     // build path
-    let mut path = SHADERS_PATH.to_owned();
+    let mut path = config::SHADERS_PATH.to_owned();
     path.push_str(filename);
 
     // read shader
@@ -44,7 +39,7 @@ pub fn compile_shader(
     let complete_src = re
         .replace_all(src, |captures: &regex::Captures| {
             let import = &captures[1];
-            let mut import_path = SHADERS_PATH.to_owned();
+            let mut import_path = config::SHADERS_PATH.to_owned();
             import_path.push_str(import);
             import_path.push_str(".glsl");
 

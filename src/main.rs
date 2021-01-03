@@ -1,59 +1,17 @@
 use nannou::prelude::*;
-use nannou::ui::prelude::*;
 use nannou::ui::DrawToFrameError;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::channel;
 use std::time;
 
+mod app;
+mod config;
 mod d2;
+mod interface;
 mod pipelines;
 mod shaders;
 mod uniforms;
 mod util;
-
-static SIZE: u32 = 1024;
-
-const SHADERS: &'static [&'static str] =
-    &["basic.vert", "basic.frag", "basic2.frag", "mandelbox.frag"];
-
-const PIPELINES: &'static [&'static [&'static str]] = &[
-    &["basic", "basic.vert", "basic.frag"],
-    &["basic2", "basic.vert", "basic2.frag"],
-    &["mandelbox", "basic.vert", "mandelbox.frag"],
-];
-
-const PROGRAMS: &'static [&'static str] = &["basic", "basic2", "mandelbox"];
-
-const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
-
-#[allow(dead_code)]
-struct Model {
-    bind_group: wgpu::BindGroup,
-    bind_group_layout: wgpu::BindGroupLayout,
-    current_program: usize,
-    ids: Ids,
-    main_window_id: WindowId,
-    pipelines: pipelines::Pipelines,
-    shader_channel: Receiver<DebouncedEvent>,
-    shader_watcher: notify::FsEventWatcher,
-    ui: Ui,
-    uniforms: uniforms::Uniforms,
-    uniform_buffer: wgpu::Buffer,
-    vertex_buffer: wgpu::Buffer,
-}
-
-widget_ids! {
-    struct Ids {
-        color_mode,
-        current_program,
-        draw_floor,
-        fog_dist,
-        quality,
-        shape_color_r,
-        shape_color_g,
-        shape_color_b,
-    }
-}
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -78,11 +36,11 @@ fn create_bind_group(
 /**
  * App setup
  */
-fn model(app: &App) -> Model {
+fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
         .new_window()
-        .size(SIZE, SIZE)
+        .size(config::SIZE, config::SIZE)
         .view(view)
         .build()
         .unwrap();
@@ -91,7 +49,7 @@ fn model(app: &App) -> Model {
     let msaa_samples = window.msaa_samples();
 
     // setup uniform buffer
-    let uniform = uniforms::Uniforms::new(pt2(SIZE as f32, SIZE as f32));
+    let uniform = uniforms::Uniforms::new(pt2(config::SIZE as f32, config::SIZE as f32));
     let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
     let uniform_buffer = device.create_buffer_with_data(uniform.as_bytes(), usage);
 
@@ -103,29 +61,29 @@ fn model(app: &App) -> Model {
     let (schannel, shader_channel) = channel();
     let mut shader_watcher = watcher(schannel, time::Duration::from_secs(1)).unwrap();
     shader_watcher
-        .watch(shaders::SHADERS_PATH, RecursiveMode::Recursive)
+        .watch(config::SHADERS_PATH, RecursiveMode::Recursive)
         .unwrap();
 
     // compile shaders, build pipelines, and create GPU buffers
-    let shaders = shaders::compile_shaders(device, SHADERS);
+    let shaders = shaders::compile_shaders(device, config::SHADERS);
     let pipelines = pipelines::create_pipelines(
         device,
         &bind_group_layout,
         msaa_samples,
         &shaders,
-        &PIPELINES,
+        &config::PIPELINES,
     );
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
-    let ids = Ids::new(ui.widget_id_generator());
+    let widget_ids = app::WidgetIds::new(ui.widget_id_generator());
 
-    Model {
+    app::Model {
         bind_group,
         bind_group_layout,
         current_program: 2,
-        ids,
+        widget_ids,
         main_window_id,
         pipelines,
         shader_channel,
@@ -137,7 +95,7 @@ fn model(app: &App) -> Model {
     }
 }
 
-fn update_shaders(app: &App, model: &mut Model) {
+fn update_shaders(app: &App, model: &mut app::Model) {
     // check for shader changes
     if let Ok(event) = model
         .shader_channel
@@ -150,160 +108,36 @@ fn update_shaders(app: &App, model: &mut Model) {
             // changes have been made, recompile the shaders and rebuild the pipelines
             let window = app.window(model.main_window_id).unwrap();
             let device = window.swap_chain_device();
-            let shaders = shaders::compile_shaders(device, SHADERS);
+            let shaders = shaders::compile_shaders(device, config::SHADERS);
             model.pipelines = pipelines::create_pipelines(
                 device,
                 &model.bind_group_layout,
                 window.msaa_samples(),
                 &shaders,
-                &PIPELINES,
+                &config::PIPELINES,
             );
         }
-    }
-}
-
-fn update_ui(model: &mut Model) {
-    // Calling `set_widgets` allows us to instantiate some widgets.
-    let ui = &mut model.ui.set_widgets();
-
-    for selected in widget::DropDownList::new(PROGRAMS, Option::from(model.current_program))
-        .w_h(200.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.3, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .top_left_with_margin(20.0)
-        .label("Current Program")
-        .set(model.ids.current_program, ui)
-    {
-        if selected != model.current_program {
-            println!("program selected: {}", PROGRAMS[selected]);
-            model.current_program = selected;
-        }
-    }
-
-    for selected in widget::DropDownList::new(
-        COLOR_MODES,
-        Option::from(model.uniforms.data.color_mode as usize),
-    )
-    .w_h(200.0, 30.0)
-    .label_font_size(15)
-    .rgb(0.3, 0.3, 0.3)
-    .label_rgb(1.0, 1.0, 1.0)
-    .border(0.0)
-    .down(10.0)
-    .label("Color Mode")
-    .set(model.ids.color_mode, ui)
-    {
-        if selected as i32 != model.uniforms.data.color_mode {
-            println!("color mode selected: {}", COLOR_MODES[selected]);
-            model.uniforms.data.color_mode = selected as i32;
-        }
-    }
-
-    let mut floor_btn_color = 0.3;
-    let mut floor_btn_label = 1.0;
-    if model.uniforms.data.draw_floor {
-        floor_btn_color = 0.7;
-        floor_btn_label = 0.0;
-    }
-
-    for _click in widget::Button::new()
-        .down(10.0)
-        .w_h(200.0, 30.0)
-        .label_font_size(15)
-        .label("Draw Floor")
-        .rgb(floor_btn_color, floor_btn_color, floor_btn_color)
-        .label_rgb(floor_btn_label, floor_btn_label, floor_btn_label)
-        .border(0.0)
-        .set(model.ids.draw_floor, ui)
-    {
-        model.uniforms.data.draw_floor = !model.uniforms.data.draw_floor;
-    }
-
-    fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-        widget::Slider::new(val, min, max)
-            .w_h(200.0, 30.0)
-            .label_font_size(15)
-            .rgb(0.3, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
-    }
-
-    for value in slider(model.uniforms.data.fog_dist, 15.0, 300.0)
-        .down(10.0)
-        .label("Fog Distance")
-        .set(model.ids.fog_dist, ui)
-    {
-        model.uniforms.data.fog_dist = value;
-    }
-
-    for value in slider(model.uniforms.data.quality, 1.0, 3.0)
-        .down(10.0)
-        .label("Quality")
-        .set(model.ids.quality, ui)
-    {
-        model.uniforms.data.quality = value;
-    }
-
-    for value in widget::Slider::new(model.uniforms.data.shape_color_r, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.8, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .down(10.0)
-        .label("R")
-        .set(model.ids.shape_color_r, ui)
-    {
-        model.uniforms.data.shape_color_r = value;
-    }
-
-    for value in widget::Slider::new(model.uniforms.data.shape_color_g, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.3, 0.8, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .right(10.0)
-        .label("G")
-        .set(model.ids.shape_color_g, ui)
-    {
-        model.uniforms.data.shape_color_g = value;
-    }
-
-    for value in widget::Slider::new(model.uniforms.data.shape_color_b, 0.0, 1.0)
-        .w_h(60.0, 30.0)
-        .label_font_size(15)
-        .rgb(0.3, 0.3, 0.8)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .right(10.0)
-        .label("B")
-        .set(model.ids.shape_color_b, ui)
-    {
-        model.uniforms.data.shape_color_b = value;
     }
 }
 
 /**
  * Update app state
  */
-fn update(app: &App, model: &mut Model, _update: Update) {
+fn update(app: &App, model: &mut app::Model, _update: Update) {
     model.uniforms.update_time();
     update_shaders(app, model);
-    update_ui(model);
+    interface::update_ui(model);
 }
 
 /**
  * Draw the state of the app to the frame
  */
-fn draw(model: &Model, frame: &Frame) {
+fn draw(model: &app::Model, frame: &Frame) {
     // setup environment
     let device = frame.device_queue_pair().device();
     let render_pipeline = model
         .pipelines
-        .get(PROGRAMS[model.current_program])
+        .get(config::PROGRAMS[model.current_program])
         .expect("Invalid program");
     let mut encoder = frame.command_encoder();
 
@@ -337,7 +171,7 @@ fn draw(model: &Model, frame: &Frame) {
 /**
  * Draw the state of the `Ui` to the frame.
  */
-fn draw_ui(app: &App, model: &Model, frame: &Frame) {
+fn draw_ui(app: &App, model: &app::Model, frame: &Frame) {
     let color_attachment_desc = frame.color_attachment_descriptor();
     let primitives = model.ui.draw();
     let window = app
@@ -358,7 +192,7 @@ fn draw_ui(app: &App, model: &Model, frame: &Frame) {
 /**
  * Render app
  */
-fn view(app: &App, model: &Model, frame: Frame) {
+fn view(app: &App, model: &app::Model, frame: Frame) {
     draw(model, &frame);
     draw_ui(app, model, &frame);
 }

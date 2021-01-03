@@ -3,11 +3,8 @@
 use nannou::prelude::*;
 use std::collections::HashMap;
 
-#[path = "util.rs"]
-mod util;
-
-#[path = "shaders.rs"]
-mod shaders;
+use crate::shaders;
+use crate::util;
 
 pub type Pipelines = HashMap<String, wgpu::RenderPipeline>;
 
