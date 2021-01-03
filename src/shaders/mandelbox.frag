@@ -6,10 +6,6 @@ layout(location = 0) out vec4 fragColor;
 
 // // uniform vec3 moRotation;
 // // uniform vec2 mousePosition;
-// // uniform vec3 paletteColor1;
-// // uniform vec3 paletteColor2;
-// // uniform vec3 paletteColor3;
-// // uniform vec3 shapeColor;
 // // uniform vec3 shapeRotation;
 layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
@@ -27,6 +23,15 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float color3R;
     float color3G;
     float color3B;
+    float cameraPosX;
+    float cameraPosY;
+    float cameraPosZ;
+    float cameraTargetX;
+    float cameraTargetY;
+    float cameraTargetZ;
+    float cameraUpX;
+    float cameraUpY;
+    float cameraUpZ;
 };
 
 // ray marching
@@ -167,8 +172,9 @@ vec3 calculateNormal(in vec3 point);
 
 void main() {
     vec2 st = uv * resolution.x / resolution.y;
-    const vec3 camPos = vec3(20.0, 3.0, 20.0);
-    const vec3 lookAt = vec3(0.0);
+    vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
+    vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
+    // vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
     const float zoom = 1.0;
 
     vec3 finalColor = vec3(0.0);

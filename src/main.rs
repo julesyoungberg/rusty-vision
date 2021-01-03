@@ -41,6 +41,7 @@ fn model(app: &App) -> app::Model {
     let main_window_id = app
         .new_window()
         .size(config::SIZE, config::SIZE)
+        .key_pressed(key_pressed)
         .view(view)
         .build()
         .unwrap();
@@ -88,6 +89,7 @@ fn model(app: &App) -> app::Model {
         pipelines,
         shader_channel,
         shader_watcher,
+        show_controls: true,
         ui,
         ui_show_general: false,
         uniforms: uniform,
@@ -128,6 +130,15 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
     model.uniforms.update_time();
     update_shaders(app, model);
     interface::update_ui(model);
+}
+
+/**
+ * Handle key pressed event
+ */
+fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
+    if key == Key::H {
+        model.show_controls = !model.show_controls;
+    }
 }
 
 /**
@@ -199,5 +210,7 @@ fn draw_ui(app: &App, model: &app::Model, frame: &Frame) {
  */
 fn view(app: &App, model: &app::Model, frame: Frame) {
     draw(model, &frame);
-    draw_ui(app, model, &frame);
+    if model.show_controls {
+        draw_ui(app, model, &frame);
+    }
 }

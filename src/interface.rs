@@ -7,9 +7,16 @@ pub fn update_ui(model: &mut app::Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
 
+    let toggle_controls_hint = format!("Press 'h' to hide controls");
+    widget::Text::new(&toggle_controls_hint)
+        .top_left_with_margin(20.0)
+        .rgb(0.1, 0.1, 0.1)
+        .font_size(10)
+        .set(model.widget_ids.toggle_controls_hint, ui);
+
     for _click in widget::Button::new()
         .w_h(200.0, 36.0)
-        .top_left_with_margin(20.0)
+        .down(10.0)
         .rgb(0.1, 0.1, 0.1)
         .label_rgb(1.0, 1.0, 1.0)
         .label_font_size(18)

@@ -29,6 +29,7 @@ widget_ids! {
         color1_label,
         color2_label,
         color3_label,
+        toggle_controls_hint,
     }
 }
 
@@ -42,6 +43,7 @@ pub struct Model {
     pub pipelines: pipelines::Pipelines,
     pub shader_channel: Receiver<DebouncedEvent>,
     pub shader_watcher: notify::FsEventWatcher,
+    pub show_controls: bool,
     pub ui: Ui,
     pub ui_show_general: bool,
     pub uniforms: uniforms::Uniforms,

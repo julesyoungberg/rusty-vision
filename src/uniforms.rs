@@ -20,6 +20,15 @@ pub struct Data {
     pub color3_r: f32,
     pub color3_g: f32,
     pub color3_b: f32,
+    pub camera_pos_x: f32,
+    pub camera_pos_y: f32,
+    pub camera_pos_z: f32,
+    pub camera_target_x: f32,
+    pub camera_target_y: f32,
+    pub camera_target_z: f32,
+    pub camera_up_x: f32,
+    pub camera_up_y: f32,
+    pub camera_up_z: f32,
 }
 
 pub struct Uniforms {
@@ -47,6 +56,15 @@ impl Uniforms {
                 color3_r: 0.0,
                 color3_g: 0.0,
                 color3_b: 1.0,
+                camera_pos_x: 20.0,
+                camera_pos_y: 0.0,
+                camera_pos_z: 20.0,
+                camera_target_x: 0.0,
+                camera_target_y: 0.0,
+                camera_target_z: 0.0,
+                camera_up_x: 0.0,
+                camera_up_y: 1.0,
+                camera_up_z: 0.0,
             },
         }
     }
