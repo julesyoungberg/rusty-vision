@@ -31,6 +31,9 @@ struct Model {
     shader_channel: Receiver<DebouncedEvent>,
     shader_watcher: notify::FsEventWatcher,
     ui: Ui,
+    uniforms: uniforms::Uniforms,
+    uniform_bind_group: wgpu::BindGroup,
+    uniform_buffer: wgpu::Buffer,
     vertex_buffer: wgpu::Buffer,
 }
 
@@ -42,6 +45,10 @@ widget_ids! {
 
 fn main() {
     nannou::app(model).update(update).run();
+}
+
+fn uniforms_as_bytes(u: &uniforms::Uniforms) -> &[u8] {
+    unsafe { wgpu::bytes::from(u) }
 }
 
 /**
@@ -77,6 +84,24 @@ fn model(app: &App) -> Model {
     // generate ids for our widgets.
     let ids = Ids::new(ui.widget_id_generator());
 
+    // setup uniform buffer
+    println!("creating uniforms");
+    let mut m_uniforms = uniforms::Uniforms::new();
+    m_uniforms.update_time();
+    let uniform_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
+    let uniform_buffer =
+        device.create_buffer_with_data(uniforms_as_bytes(&m_uniforms), uniform_usage);
+
+    println!("creating bind group layout");
+    let uniform_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
+        .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
+        .build(device);
+    println!("creating bind group");
+    let uniform_bind_group = wgpu::BindGroupBuilder::new()
+        .buffer::<uniforms::Uniforms>(&uniform_buffer, 0..1)
+        .build(device, &uniform_bind_group_layout);
+    println!("all set");
+
     Model {
         current_program: 0,
         ids,
@@ -85,6 +110,9 @@ fn model(app: &App) -> Model {
         shader_channel,
         shader_watcher,
         ui,
+        uniforms: m_uniforms,
+        uniform_bind_group,
+        uniform_buffer,
         vertex_buffer,
     }
 }
@@ -134,6 +162,7 @@ fn update_ui(model: &mut Model) {
  * Update app state
  */
 fn update(app: &App, model: &mut Model, _update: Update) {
+    model.uniforms.update_time();
     update_shaders(app, model);
     update_ui(model);
 }
@@ -142,21 +171,41 @@ fn update(app: &App, model: &mut Model, _update: Update) {
  * Draw the state of the app to the frame
  */
 fn draw(model: &Model, frame: &Frame) {
+    // setup environment
+    let device = frame.device_queue_pair().device();
     let render_pipeline = model
         .pipelines
         .get(PROGRAMS[model.current_program])
         .expect("Invalid program");
     let mut encoder = frame.command_encoder();
+
+    // update uniform buffer
+    let uniforms_size = std::mem::size_of::<uniforms::Uniforms>() as wgpu::BufferAddress;
+    let uniforms_bytes = uniforms_as_bytes(&model.uniforms);
+    let uniforms_usage = wgpu::BufferUsage::COPY_SRC;
+    let new_uniform_buffer = device.create_buffer_with_data(uniforms_bytes, uniforms_usage);
+    encoder.copy_buffer_to_buffer(
+        &new_uniform_buffer,
+        0,
+        &model.uniform_buffer,
+        0,
+        uniforms_size,
+    );
+
+    // configure pipeline
     let mut render_pass = wgpu::RenderPassBuilder::new()
         .color_attachment(&frame.texture_view(), |color| color)
         .begin(&mut encoder);
-
+    println!("render pass");
     render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
+    println!("setting bind group");
+    render_pass.set_bind_group(0, &model.uniform_bind_group, &[]);
+    println!("rendering");
 
+    // render
     let vertex_range = 0..d2::VERTICES.len() as u32;
     let instance_range = 0..1;
-
     render_pass.draw(vertex_range, instance_range);
 }
 
