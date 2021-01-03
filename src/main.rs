@@ -1,4 +1,6 @@
 use nannou::prelude::*;
+use nannou::ui::prelude::*;
+use nannou::ui::DrawToFrameError;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
@@ -14,13 +16,24 @@ const SHADERS: &'static [&'static str] = &["basic.vert", "basic.frag"];
 
 const PIPELINES: &'static [&'static [&'static str]] = &[&["basic", "basic.vert", "basic.frag"]];
 
+const PIPELINE_NAMES: &'static [&'static str] = &["basic", "fractal"];
+
 #[allow(dead_code)]
 struct Model {
+    current_program: usize,
+    ids: Ids,
     main_window_id: WindowId,
     render_pipeline: wgpu::RenderPipeline,
     shader_channel: Receiver<DebouncedEvent>,
     shader_watcher: notify::FsEventWatcher,
+    ui: Ui,
     vertex_buffer: wgpu::Buffer,
+}
+
+widget_ids! {
+    struct Ids {
+        current_program,
+    }
 }
 
 fn main() {
@@ -55,11 +68,20 @@ fn model(app: &App) -> Model {
     let render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
     let vertex_buffer = d2::create_vertex_buffer(device);
 
+    // create UI
+    let mut ui = app.new_ui().build().unwrap();
+
+    // generate ids for our widgets.
+    let ids = Ids::new(ui.widget_id_generator());
+
     Model {
+        current_program: 0,
+        ids,
         main_window_id,
         render_pipeline,
         shader_channel,
         shader_watcher,
+        ui,
         vertex_buffer,
     }
 }
@@ -73,6 +95,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         .shader_channel
         .recv_timeout(time::Duration::from_millis(10))
     {
+        // received event from notify - check if a write has been made
         if let DebouncedEvent::Write(path) = event {
             let path_str = path.into_os_string().into_string().unwrap();
             println!("changes written to: {}", path_str);
@@ -85,22 +108,63 @@ fn update(app: &App, model: &mut Model, _update: Update) {
             model.render_pipeline = pipelines.remove(&"basic").expect("Pipeline not found");
         }
     }
+
+    // Calling `set_widgets` allows us to instantiate some widgets.
+    let ui = &mut model.ui.set_widgets();
+    let program_select =
+        widget::DropDownList::new(PIPELINE_NAMES, Option::from(model.current_program))
+            .w_h(200.0, 30.0)
+            .label_font_size(15)
+            .rgb(0.3, 0.3, 0.3)
+            .label_rgb(1.0, 1.0, 1.0)
+            .border(0.0);
+    for selected in program_select
+        .top_left_with_margin(20.0)
+        .label("Current Program")
+        .set(model.ids.current_program, ui)
+    {
+        model.current_program = selected;
+    }
 }
 
 /**
  * Render app
  */
-fn view(_app: &App, model: &Model, frame: Frame) {
-    let mut encoder = frame.command_encoder();
-    let mut render_pass = wgpu::RenderPassBuilder::new()
-        .color_attachment(frame.texture_view(), |color| color)
-        .begin(&mut encoder);
+fn view(app: &App, model: &Model, frame: Frame) {
+    let color_attachment_desc = frame.color_attachment_descriptor();
 
-    render_pass.set_pipeline(&model.render_pipeline);
-    render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
+    // Draw the state of the app to the frame
+    {
+        let mut encoder = frame.command_encoder();
+        let mut render_pass = wgpu::RenderPassBuilder::new()
+            .color_attachment(&frame.texture_view(), |color| color)
+            .begin(&mut encoder);
 
-    let vertex_range = 0..d2::VERTICES.len() as u32;
-    let instance_range = 0..1;
+        render_pass.set_pipeline(&model.render_pipeline);
+        render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
 
-    render_pass.draw(vertex_range, instance_range);
+        let vertex_range = 0..d2::VERTICES.len() as u32;
+        let instance_range = 0..1;
+
+        render_pass.draw(vertex_range, instance_range);
+    }
+
+    // Draw the state of the `Ui` to the frame.
+    // model.ui.draw_to_frame(app, &frame).unwrap();
+    {
+        let primitives = model.ui.draw();
+        let window = app
+            .window(model.main_window_id)
+            .ok_or(DrawToFrameError::InvalidWindow)
+            .unwrap();
+        let mut ui_encoder = frame.command_encoder();
+        ui::encode_render_pass(
+            &model.ui,
+            &window,
+            primitives,
+            color_attachment_desc,
+            &mut *ui_encoder,
+        )
+        .unwrap();
+    }
 }
