@@ -49,6 +49,9 @@ widget_ids! {
         draw_floor,
         fog_dist,
         quality,
+        shape_color_r,
+        shape_color_g,
+        shape_color_b,
     }
 }
 
@@ -241,6 +244,45 @@ fn update_ui(model: &mut Model) {
         .set(model.ids.quality, ui)
     {
         model.uniforms.data.quality = value;
+    }
+
+    for value in widget::Slider::new(model.uniforms.data.shape_color_r, 0.0, 1.0)
+        .w_h(60.0, 30.0)
+        .label_font_size(15)
+        .rgb(0.8, 0.3, 0.3)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+        .down(10.0)
+        .label("R")
+        .set(model.ids.shape_color_r, ui)
+    {
+        model.uniforms.data.shape_color_r = value;
+    }
+
+    for value in widget::Slider::new(model.uniforms.data.shape_color_g, 0.0, 1.0)
+        .w_h(60.0, 30.0)
+        .label_font_size(15)
+        .rgb(0.3, 0.8, 0.3)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+        .right(10.0)
+        .label("G")
+        .set(model.ids.shape_color_g, ui)
+    {
+        model.uniforms.data.shape_color_g = value;
+    }
+
+    for value in widget::Slider::new(model.uniforms.data.shape_color_b, 0.0, 1.0)
+        .w_h(60.0, 30.0)
+        .label_font_size(15)
+        .rgb(0.3, 0.3, 0.8)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+        .right(10.0)
+        .label("B")
+        .set(model.ids.shape_color_b, ui)
+    {
+        model.uniforms.data.shape_color_b = value;
     }
 }
 

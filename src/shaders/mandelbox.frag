@@ -17,6 +17,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float fogDist;
     float quality;
     vec2 resolution;
+    float shapeColorR;
+    float shapeColorG;
+    float shapeColorB;
     float time;
 };
 
@@ -128,7 +131,7 @@ float calculateShadow(const vec3 position, const vec3 normal,
                       const vec3 lightPos);
 
 vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 trap) {
-    vec3 color = vec3(1); // shapeColor;
+    vec3 color = vec3(shapeColorR, shapeColorG, shapeColorB);
 
     if (colorMode == 0) {
         vec3 paletteColor1 = vec3(1, 0, 0);

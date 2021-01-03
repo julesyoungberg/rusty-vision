@@ -10,6 +10,9 @@ pub struct Data {
     pub fog_dist: f32,
     pub quality: f32,
     pub resolution: Vector2,
+    pub shape_color_r: f32,
+    pub shape_color_g: f32,
+    pub shape_color_b: f32,
     pub time: f32,
 }
 
@@ -28,6 +31,9 @@ impl Uniforms {
                 fog_dist: 150.0,
                 quality: 1.0,
                 resolution,
+                shape_color_r: 1.0,
+                shape_color_g: 1.0,
+                shape_color_b: 1.0,
                 time: 0.0,
             },
         }
