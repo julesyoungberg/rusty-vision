@@ -89,6 +89,7 @@ fn model(app: &App) -> app::Model {
         shader_channel,
         shader_watcher,
         ui,
+        ui_show_general: false,
         uniforms: uniform,
         uniform_buffer,
         vertex_buffer,
