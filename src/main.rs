@@ -171,11 +171,30 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
         model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - cross_dir.x * scale;
         model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - cross_dir.y * scale;
         model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - cross_dir.z * scale;
+        model.uniforms.data.camera_target_x =
+            model.uniforms.data.camera_target_x - cross_dir.x * scale;
+        model.uniforms.data.camera_target_y =
+            model.uniforms.data.camera_target_y - cross_dir.y * scale;
+        model.uniforms.data.camera_target_z =
+            model.uniforms.data.camera_target_z - cross_dir.z * scale;
     } else if key == Key::Right {
         model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + cross_dir.x * scale;
         model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + cross_dir.y * scale;
         model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + cross_dir.z * scale;
-    }
+        model.uniforms.data.camera_target_x =
+            model.uniforms.data.camera_target_x + cross_dir.x * scale;
+        model.uniforms.data.camera_target_y =
+            model.uniforms.data.camera_target_y + cross_dir.y * scale;
+        model.uniforms.data.camera_target_z =
+            model.uniforms.data.camera_target_z + cross_dir.z * scale;
+    } // else if key == Key::W {
+      //     // rotate camera dir and camera up around cross_dir
+      //     let theta = 0.2;
+      //     let rotation_matrix = util::rotate_around_axis(cross_dir, theta);
+      //     let next_dir = rotation_matrix.transform_point(camera_dir.into());
+      // } else if key == Key::S {
+      //     // rotate camera dir and camera up around cross_dir
+      // }
 }
 
 /**

@@ -35,7 +35,7 @@ layout(set = 0, binding = 0) uniform Uniforms {
 };
 
 // ray marching
-#define FRAME_OF_VIEW 1.0
+#define FRAME_OF_VIEW 4.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
 #define MIN_HIT_DISTANCE 0.001
@@ -67,13 +67,20 @@ layout(set = 0, binding = 0) uniform Uniforms {
 //@import util/calculateShadow
 //@import util/castRay
 //@import util/folding
-//@import util/getRayData
 //@import util/getUV
 //@import util/hash
 //@import util/marchRay
 //@import util/marchRayWithTrap
 //@import util/rayMarchWithTrap
 //@import util/rotate
+
+vec3 castRay(const vec2 uv, const vec3 camPos, const vec3 lookAt, const vec3 worldUp) {
+    vec3 cameraForward = normalize(lookAt - camPos);
+    vec3 cameraRight = normalize(cross(cameraForward, worldUp));
+    vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
+    mat3 cameraMatrix = mat3(cameraRight, cameraUp, cameraForward);
+    return normalize(cameraMatrix * vec3(uv, FRAME_OF_VIEW));
+}
 
 vec3 getBackgroundColor(const vec2 st) {
     return vec3(0) * smoothstep(1.0, 0.0, abs(0.5 - st.y));
@@ -180,7 +187,6 @@ void main() {
     vec3 finalColor = vec3(0.0);
     vec2 currentUV = st;
     vec3 backgroundColor;
-    vec3 rayOrigin;
     vec3 rayDir;
     float d = quality;
     float numSubPixels = pow(d, 2.0);
@@ -193,34 +199,34 @@ void main() {
         jitter.y += y / d;
 
         currentUV = getUV(st * resolution + jitter, resolution);
-        getRayData(currentUV, camPos, lookAt, 0.0, rayOrigin, rayDir);
+        rayDir = castRay(currentUV, camPos, lookAt, vec3(0, 1, 0));
         backgroundColor = getBackgroundColor(currentUV);
 
         vec3 trap;
-        float dist = marchRayWithTrap(rayOrigin, rayDir, 0.0, trap);
+        float dist = marchRayWithTrap(camPos, rayDir, 0.0, trap);
         vec3 lightPos = LIGHT_POS;
         vec3 color = vec3(1.0);
         bool isFloor = false;
         vec3 surfacePos, surfaceNorm;
         if (dist < 0.0) {
             if (drawFloor) {
-                dist = calculateFloorDist(rayOrigin, rayDir, FLOOR_LEVEL);
+                dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
                 if (dist >= 0.0) {
                     isFloor = true;
-                    surfacePos = rayOrigin + rayDir * dist;
+                    surfacePos = camPos + rayDir * dist;
                     surfaceNorm = vec3(0, 1, 0);
                     color = vec3(1.0);
-                    color = calculatePhong(surfacePos, surfaceNorm, rayOrigin, lightPos, color);
+                    color = calculatePhong(surfacePos, surfaceNorm, camPos, lightPos, color);
                     color *= calculateShadow(surfacePos, surfaceNorm, lightPos);
-                    color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, rayOrigin, vec3(0.0));
+                    color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, camPos, vec3(0.0));
                 }
             } else {
                 dist = fogDist;
             }
         } else {
-            surfacePos = rayOrigin + rayDir * dist;
+            surfacePos = camPos + rayDir * dist;
             surfaceNorm = calculateNormal(surfacePos);
-            color = calculateColor(surfacePos, surfaceNorm, rayOrigin, trap);
+            color = calculateColor(surfacePos, surfaceNorm, camPos, trap);
         }
 
         float backgroundBlend = smoothstep(FLOOR_FADE_START, FLOOR_FADE_END, dist);

@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use nannou::math::cgmath::Matrix3;
 use nannou::prelude::*;
 
 // The vertex type that we will use to represent a point on our triangle.
@@ -57,4 +58,19 @@ pub fn create_pipeline(
 // See the `nannou::wgpu::bytes` documentation for why this is necessary.
 pub fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
     unsafe { wgpu::bytes::from_slice(data) }
+}
+
+pub fn rotate_around_axis(axis: Vector3, theta: f32) -> Matrix3<f32> {
+    let cos = theta.cos();
+    let sin = theta.sin();
+    let m00 = cos + axis.x * axis.x * (1.0 - cos);
+    let m10 = axis.x * axis.y * (1.0 - cos) - axis.z * sin;
+    let m20 = axis.x * axis.z * (1.0 - cos) + axis.y * sin;
+    let m01 = axis.y * axis.x * (1.0 - cos) + axis.z * sin;
+    let m11 = cos + axis.y * axis.y * (1.0 - cos);
+    let m21 = axis.y * axis.z * (1.0 - cos) - axis.x * sin;
+    let m02 = axis.z * axis.x * (1.0 - cos) - axis.y * sin;
+    let m12 = axis.z * axis.y * (1.0 - cos) + axis.x * sin;
+    let m22 = cos + axis.z * axis.z * (1.0 - cos);
+    Matrix3::new(m00, m01, m02, m10, m11, m12, m20, m21, m22)
 }
