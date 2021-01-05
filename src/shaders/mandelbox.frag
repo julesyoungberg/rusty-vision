@@ -179,56 +179,40 @@ void main() {
     vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
     const float zoom = 1.0;
 
-    vec3 finalColor = vec3(0.0);
-    vec2 currentUV = st;
-    vec3 backgroundColor;
-    vec3 rayDir;
-    float d = 1.0;
-    float numSubPixels = pow(d, 2.0);
+    vec2 currentUV = getUV(st * resolution, resolution);
+    vec3 rayDir = castRay(currentUV, camPos, lookAt, camUp);
+    vec3 backgroundColor = getBackgroundColor(currentUV);
 
-    for (float i = 1.0; i <= numSubPixels; i += 1.0) {
-        float x = mod(i - 1.0, d);
-        float y = mod(floor(i / d), d);
-        vec2 jitter = hash(i) / d;
-        jitter.x += x / d;
-        jitter.y += y / d;
-
-        currentUV = getUV(st * resolution + jitter, resolution);
-        rayDir = castRay(currentUV, camPos, lookAt, camUp);
-        backgroundColor = getBackgroundColor(currentUV);
-
-        vec3 trap;
-        float dist = marchRayWithTrap(camPos, rayDir, 0.0, trap);
-        vec3 lightPos = LIGHT_POS;
-        vec3 color = vec3(1.0);
-        bool isFloor = false;
-        vec3 surfacePos, surfaceNorm;
-        if (dist < 0.0) {
-            if (drawFloor == 1) {
-                dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
-                if (dist >= 0.0) {
-                    isFloor = true;
-                    surfacePos = camPos + rayDir * dist;
-                    surfaceNorm = vec3(0, 1, 0);
-                    color = vec3(1.0);
-                    color = calculatePhong(surfacePos, surfaceNorm, camPos, lightPos, color);
-                    color *= calculateShadow(surfacePos, surfaceNorm, lightPos);
-                    color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, camPos, vec3(0.0));
-                }
-            } else {
-                dist = fogDist;
+    vec3 trap;
+    float dist = marchRayWithTrap(camPos, rayDir, 0.0, trap);
+    vec3 lightPos = LIGHT_POS;
+    vec3 color = vec3(1.0);
+    bool isFloor = false;
+    vec3 surfacePos, surfaceNorm;
+    if (dist < 0.0) {
+        if (drawFloor == 1) {
+            dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
+            if (dist >= 0.0) {
+                isFloor = true;
+                surfacePos = camPos + rayDir * dist;
+                surfaceNorm = vec3(0, 1, 0);
+                color = vec3(1.0);
+                color = calculatePhong(surfacePos, surfaceNorm, camPos, lightPos, color);
+                color *= calculateShadow(surfacePos, surfaceNorm, lightPos);
+                color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, camPos, vec3(0.0));
             }
         } else {
-            surfacePos = camPos + rayDir * dist;
-            surfaceNorm = calculateNormal(surfacePos);
-            color = calculateColor(surfacePos, surfaceNorm, camPos, trap);
+            dist = fogDist;
         }
-
-        float backgroundBlend = smoothstep(FLOOR_FADE_START, FLOOR_FADE_END, dist);
-        color = mix(color, backgroundColor, backgroundBlend);
-        color = mix(color, vec3(0.5), pow(dist / fogDist, 2.0));
-        finalColor = mix(finalColor, color, 1.0 / i);
+    } else {
+        surfacePos = camPos + rayDir * dist;
+        surfaceNorm = calculateNormal(surfacePos);
+        color = calculateColor(surfacePos, surfaceNorm, camPos, trap);
     }
 
-    fragColor = vec4(pow(finalColor, vec3(1. / 2.2)), 1);
+    float backgroundBlend = smoothstep(FLOOR_FADE_START, FLOOR_FADE_END, dist);
+    color = mix(color, backgroundColor, backgroundBlend);
+    color = mix(color, vec3(0.5), pow(dist / fogDist, 2.0));
+
+    fragColor = vec4(pow(color, vec3(1. / 2.2)), 1);
 }
