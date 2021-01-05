@@ -124,8 +124,8 @@ impl Uniforms {
         self.data.camera_target_z = self.data.camera_target_z + translation.z;
     }
 
-    pub fn rotate_camera(&mut self, rotation: &Matrix4<f32>) {
-        self.set_camera_dir(util::transform_vector(rotation, self.camera_dir()));
-        self.set_camera_up(util::transform_vector(rotation, self.camera_up()));
+    pub fn rotate_camera(&mut self, rotation: Matrix4<f32>) {
+        self.set_camera_dir(util::transform_vector(&rotation, self.camera_dir()));
+        self.set_camera_up(util::transform_vector(&rotation, self.camera_up()));
     }
 }

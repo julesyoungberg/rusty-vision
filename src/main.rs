@@ -144,32 +144,25 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     let cross = camera_dir.cross(camera_up);
     let cross_dir = util::normalize_vector(cross);
 
-    if key == Key::H {
-        model.show_controls = !model.show_controls;
-    } else if key == Key::Up {
-        let translation = camera_dir * scale;
-        model.uniforms.translate_camera(translation);
-    } else if key == Key::Down {
-        let translation = camera_dir * -scale;
-        model.uniforms.translate_camera(translation);
-    } else if key == Key::Left {
-        let translation = cross_dir * -scale;
-        model.uniforms.translate_camera(translation);
-    } else if key == Key::Right {
-        let translation = cross_dir * scale;
-        model.uniforms.translate_camera(translation);
-    } else if key == Key::W {
-        let rotation_matrix = util::rotate_around_axis(cross_dir, theta);
-        model.uniforms.rotate_camera(&rotation_matrix);
-    } else if key == Key::S {
-        let rotation_matrix = util::rotate_around_axis(cross_dir, -theta);
-        model.uniforms.rotate_camera(&rotation_matrix);
-    } else if key == Key::A {
-        let rotation_matrix = util::rotate_around_axis(camera_up, theta);
-        model.uniforms.rotate_camera(&rotation_matrix);
-    } else if key == Key::D {
-        let rotation_matrix = util::rotate_around_axis(camera_up, -theta);
-        model.uniforms.rotate_camera(&rotation_matrix);
+    match key {
+        Key::H => model.show_controls = !model.show_controls,
+        Key::Up => model.uniforms.translate_camera(camera_dir * scale),
+        Key::Down => model.uniforms.translate_camera(camera_dir * -scale),
+        Key::Left => model.uniforms.translate_camera(cross_dir * -scale),
+        Key::Right => model.uniforms.translate_camera(cross_dir * scale),
+        Key::W => model
+            .uniforms
+            .rotate_camera(util::rotate_around_axis(cross_dir, theta)),
+        Key::S => model
+            .uniforms
+            .rotate_camera(util::rotate_around_axis(cross_dir, -theta)),
+        Key::A => model
+            .uniforms
+            .rotate_camera(util::rotate_around_axis(camera_up, theta)),
+        Key::D => model
+            .uniforms
+            .rotate_camera(util::rotate_around_axis(camera_up, -theta)),
+        _ => (),
     }
 }
 
