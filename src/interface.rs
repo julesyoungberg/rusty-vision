@@ -71,8 +71,13 @@ pub fn update_ui(model: &mut app::Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
 
+    let mut height = 80.0;
+    if model.ui_show_general {
+        height = height + 400.0;
+    }
+
     // main UI wrapper
-    widget::BorderedRectangle::new([219.0, 500.0])
+    widget::BorderedRectangle::new([219.0, height])
         .top_left_with_margin(10.0)
         .rgba(0.9, 0.9, 0.9, 0.7)
         .border_rgb(0.5, 0.5, 0.5)

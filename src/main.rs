@@ -91,7 +91,7 @@ fn model(app: &App) -> app::Model {
         shader_watcher,
         show_controls: true,
         ui,
-        ui_show_general: true,
+        ui_show_general: false,
         uniforms: uniform,
         uniform_buffer,
         vertex_buffer,
