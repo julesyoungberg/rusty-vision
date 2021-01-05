@@ -397,13 +397,13 @@ pub fn update_ui(model: &mut app::Model) {
 
     /////////////////////////
     // info wrapper
-    container([190.0, 80.0])
+    container([250.0, 80.0])
         .no_parent()
         .top_right_with_margin(10.0)
         .set(model.widget_ids.info_wrapper, ui);
 
     text(&format!(
-        "Camera Position: <{}, {}, {}>",
+        "Camera Position: <{:.2}, {:.2}, {:.2}>",
         model.uniforms.data.camera_pos_x,
         model.uniforms.data.camera_pos_y,
         model.uniforms.data.camera_pos_z
@@ -413,7 +413,7 @@ pub fn update_ui(model: &mut app::Model) {
     .set(model.widget_ids.camera_pos_display, ui);
 
     text(&format!(
-        "Camera Target: <{}, {}, {}>",
+        "Camera Target: <{:.2}, {:.2}, {:.2}>",
         model.uniforms.data.camera_target_x,
         model.uniforms.data.camera_target_y,
         model.uniforms.data.camera_target_z
@@ -423,7 +423,7 @@ pub fn update_ui(model: &mut app::Model) {
     .set(model.widget_ids.camera_target_display, ui);
 
     text(&format!(
-        "Camera Up: <{}, {}, {}>",
+        "Camera Up: <{:.2}, {:.2}, {:.2}>",
         model.uniforms.data.camera_up_x,
         model.uniforms.data.camera_up_y,
         model.uniforms.data.camera_up_z
