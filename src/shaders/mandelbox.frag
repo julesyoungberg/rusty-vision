@@ -37,12 +37,12 @@ layout(set = 0, binding = 0) uniform Uniforms {
 };
 
 // ray marching
-#define FRAME_OF_VIEW 6.0
+#define FRAME_OF_VIEW 5.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
-#define MIN_HIT_DISTANCE 0.002
+#define MIN_HIT_DISTANCE 0.001
 #define NUM_STEPS 512
-#define RAY_PUSH 0.004
+#define RAY_PUSH 0.002
 
 // shading
 #define LIGHT_POS vec3(20.0, 10.0, 20.0)
@@ -67,8 +67,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
 //@import util/calculateReflectionsWithTrap
 //@import util/calculateShadow
 //@import util/folding
-//@import util/getUV
-//@import util/hash
 //@import util/marchRayWithTrap
 //@import util/rotate
 
@@ -127,7 +125,7 @@ float shapeDist(in vec3 pos, out vec3 orbitTrap) {
     vec3 shapeRotation = vec3(0);
     mat4 rot = createRotationMatrix(shapeRotation);
     vec3 p = (rot * vec4(pos, 1.)).xyz;
-    return sdMandelbox(p, 8, orbitTrap);
+    return sdMandelbox(p, 6, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {
@@ -162,8 +160,6 @@ vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 tr
     return color;
 }
 
-vec2 hash(float p);
-vec2 getUV(in vec2 coord, in vec2 res);
 float marchRayWithTrap(const vec3 rayOrg, const vec3 rayDir,
                        const float startDist, out vec3 trap);
 float calculateFloorDist(const vec3 rayOrigin, const vec3 rayDir,
@@ -173,22 +169,21 @@ vec3 calculateReflectionsWithTrap(in vec3 position, in vec3 normal,
 vec3 calculateNormal(in vec3 point);
 
 void main() {
-    vec2 st = uv * (resolution.x / resolution.y);
     vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
     vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
     vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
-    const float zoom = 1.0;
 
-    vec2 currentUV = getUV(st * resolution, resolution);
+    vec2 currentUV = uv;
+    currentUV.x *= resolution.x / resolution.y;
     vec3 rayDir = castRay(currentUV, camPos, lookAt, camUp);
     vec3 backgroundColor = getBackgroundColor(currentUV);
 
     vec3 trap;
     float dist = marchRayWithTrap(camPos, rayDir, 0.0, trap);
-    vec3 lightPos = LIGHT_POS;
     vec3 color = vec3(1.0);
     bool isFloor = false;
     vec3 surfacePos, surfaceNorm;
+
     if (dist < 0.0) {
         if (drawFloor == 1) {
             dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
@@ -197,8 +192,8 @@ void main() {
                 surfacePos = camPos + rayDir * dist;
                 surfaceNorm = vec3(0, 1, 0);
                 color = vec3(1.0);
-                color = calculatePhong(surfacePos, surfaceNorm, camPos, lightPos, color);
-                color *= calculateShadow(surfacePos, surfaceNorm, lightPos);
+                color = calculatePhong(surfacePos, surfaceNorm, camPos, LIGHT_POS, color);
+                color *= calculateShadow(surfacePos, surfaceNorm, LIGHT_POS);
                 color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, camPos, vec3(0.0));
             }
         } else {
