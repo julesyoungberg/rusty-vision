@@ -7,6 +7,13 @@ pub fn update_ui(model: &mut app::Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
 
+    widget::BorderedRectangle::new([219.0, 500.0])
+        .top_left_with_margin(10.0)
+        .rgba(0.9, 0.9, 0.9, 0.7)
+        .border_rgb(0.5, 0.5, 0.5)
+        .border(1.0)
+        .set(model.widget_ids.controls_rect, ui);
+
     let toggle_controls_hint = format!("Press 'h' to hide controls");
     widget::Text::new(&toggle_controls_hint)
         .top_left_with_margin(20.0)
@@ -33,17 +40,17 @@ pub fn update_ui(model: &mut app::Model) {
         widget::Text::new(&current_program_label)
             .down(10.0)
             .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
+            .font_size(12)
             .set(model.widget_ids.current_program_label, ui);
 
         for selected in
             widget::DropDownList::new(config::PROGRAMS, Option::from(model.current_program))
-                .w_h(200.0, 30.0)
+                .w_h(200.0, 27.0)
                 .label_font_size(12)
                 .rgb(0.3, 0.3, 0.3)
                 .label_rgb(1.0, 1.0, 1.0)
                 .border(0.0)
-                .down(10.0)
+                .down(5.0)
                 .set(model.widget_ids.current_program, ui)
         {
             if selected != model.current_program {
@@ -56,21 +63,18 @@ pub fn update_ui(model: &mut app::Model) {
         widget::Text::new(&floor_btn_label)
             .down(10.0)
             .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
+            .font_size(12)
             .set(model.widget_ids.draw_floor_label, ui);
 
-        let mut floor_btn_color = 0.3;
-        let mut floor_btn_label = 1.0;
+        let mut floor_btn_color = 0.0;
         if model.uniforms.data.draw_floor {
-            floor_btn_color = 0.7;
-            floor_btn_label = 0.0;
+            floor_btn_color = 0.5;
         }
 
         for _click in widget::Button::new()
-            .right(100.0)
-            .w_h(30.0, 30.0)
+            .right(110.0)
+            .w_h(30.0, 20.0)
             .rgb(floor_btn_color, floor_btn_color, floor_btn_color)
-            .label_rgb(floor_btn_label, floor_btn_label, floor_btn_label)
             .border(0.0)
             .set(model.widget_ids.draw_floor, ui)
         {
@@ -79,8 +83,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
             widget::Slider::new(val, min, max)
-                .w_h(200.0, 30.0)
-                .label_font_size(15)
+                .w_h(200.0, 27.0)
+                .label_font_size(12)
                 .rgb(0.3, 0.3, 0.3)
                 .label_rgb(1.0, 1.0, 1.0)
                 .border(0.0)
@@ -107,20 +111,19 @@ pub fn update_ui(model: &mut app::Model) {
         widget::Text::new(&color_mode_label)
             .down(10.0)
             .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
+            .font_size(12)
             .set(model.widget_ids.color_mode_label, ui);
 
         for selected in widget::DropDownList::new(
             config::COLOR_MODES,
             Option::from(model.uniforms.data.color_mode as usize),
         )
-        .w_h(200.0, 30.0)
-        .label_font_size(15)
+        .w_h(200.0, 27.0)
+        .label_font_size(12)
         .rgb(0.3, 0.3, 0.3)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
-        .down(10.0)
-        .label("Color Mode")
+        .down(5.0)
         .set(model.widget_ids.color_mode, ui)
         {
             if selected as i32 != model.uniforms.data.color_mode {
@@ -130,7 +133,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         let mut right: f32;
-        let step = 31.0;
+        let step = 34.0;
 
         let color_mode_label = format!("Color 1");
         widget::Text::new(&color_mode_label)
@@ -140,12 +143,12 @@ pub fn update_ui(model: &mut app::Model) {
             .set(model.widget_ids.color1_label, ui);
 
         for value in widget::Slider::new(model.uniforms.data.color1_r, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.8, 0.3, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
-            .down(10.0)
+            .down(5.0)
             .label("R")
             .set(model.widget_ids.color1_r, ui)
         {
@@ -155,8 +158,8 @@ pub fn update_ui(model: &mut app::Model) {
         right = step;
 
         for value in widget::Slider::new(model.uniforms.data.color1_g, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.8, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
@@ -170,8 +173,8 @@ pub fn update_ui(model: &mut app::Model) {
         right = right + step;
 
         for value in widget::Slider::new(model.uniforms.data.color1_b, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.3, 0.8)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
@@ -189,16 +192,16 @@ pub fn update_ui(model: &mut app::Model) {
             .left(right as f64)
             .down(10.0)
             .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
+            .font_size(12)
             .set(model.widget_ids.color2_label, ui);
 
         for value in widget::Slider::new(model.uniforms.data.color2_r, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.8, 0.3, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
-            .down(10.0)
+            .down(5.0)
             .label("R")
             .set(model.widget_ids.color2_r, ui)
         {
@@ -208,8 +211,8 @@ pub fn update_ui(model: &mut app::Model) {
         right = step;
 
         for value in widget::Slider::new(model.uniforms.data.color2_g, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.8, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
@@ -223,8 +226,8 @@ pub fn update_ui(model: &mut app::Model) {
         right = right + step;
 
         for value in widget::Slider::new(model.uniforms.data.color2_b, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.3, 0.8)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
@@ -242,16 +245,16 @@ pub fn update_ui(model: &mut app::Model) {
             .left(right as f64)
             .down(10.0)
             .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
+            .font_size(12)
             .set(model.widget_ids.color3_label, ui);
 
         for value in widget::Slider::new(model.uniforms.data.color3_r, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.8, 0.3, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
-            .down(10.0)
+            .down(5.0)
             .label("R")
             .set(model.widget_ids.color3_r, ui)
         {
@@ -261,8 +264,8 @@ pub fn update_ui(model: &mut app::Model) {
         // right = 0.0;
 
         for value in widget::Slider::new(model.uniforms.data.color3_g, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.8, 0.3)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
@@ -276,8 +279,8 @@ pub fn update_ui(model: &mut app::Model) {
         // right = right + step;
 
         for value in widget::Slider::new(model.uniforms.data.color3_b, 0.0, 1.0)
-            .w_h(60.0, 30.0)
-            .label_font_size(15)
+            .w_h(60.0, 27.0)
+            .label_font_size(12)
             .rgb(0.3, 0.3, 0.8)
             .label_rgb(1.0, 1.0, 1.0)
             .border(0.0)
