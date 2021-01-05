@@ -38,7 +38,7 @@ layout(set = 0, binding = 0) uniform Uniforms {
 };
 
 // ray marching
-#define FRAME_OF_VIEW 4.0
+#define FRAME_OF_VIEW 6.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
 #define MIN_HIT_DISTANCE 0.001
@@ -180,7 +180,7 @@ vec3 calculateNormal(in vec3 point);
 void main() {
     vec2 st = uv * resolution.x / resolution.y;
     vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
-    vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
+    vec3 lookAt = vec3(cameraTargetX - 15.0, cameraTargetY - 5.0, cameraTargetZ);
     vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
     const float zoom = 1.0;
 
