@@ -115,6 +115,15 @@ impl Uniforms {
         self.data.camera_up_z = next_dir.z;
     }
 
+    pub fn translate_camera(&mut self, translation: Vector3) {
+        self.data.camera_pos_x = self.data.camera_pos_x + translation.x;
+        self.data.camera_pos_y = self.data.camera_pos_y + translation.y;
+        self.data.camera_pos_z = self.data.camera_pos_z + translation.z;
+        self.data.camera_target_x = self.data.camera_target_x + translation.x;
+        self.data.camera_target_y = self.data.camera_target_y + translation.y;
+        self.data.camera_target_z = self.data.camera_target_z + translation.z;
+    }
+
     pub fn rotate_camera(&mut self, rotation: &Matrix4<f32>) {
         self.set_camera_dir(util::transform_vector(rotation, self.camera_dir()));
         self.set_camera_up(util::transform_vector(rotation, self.camera_up()));

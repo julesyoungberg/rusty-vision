@@ -147,45 +147,17 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     if key == Key::H {
         model.show_controls = !model.show_controls;
     } else if key == Key::Up {
-        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + camera_dir.x * scale;
-        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + camera_dir.y * scale;
-        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + camera_dir.z * scale;
-        model.uniforms.data.camera_target_x =
-            model.uniforms.data.camera_target_x + camera_dir.x * scale;
-        model.uniforms.data.camera_target_y =
-            model.uniforms.data.camera_target_y + camera_dir.y * scale;
-        model.uniforms.data.camera_target_z =
-            model.uniforms.data.camera_target_z + camera_dir.z * scale;
+        let translation = camera_dir * scale;
+        model.uniforms.translate_camera(translation);
     } else if key == Key::Down {
-        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - camera_dir.x * scale;
-        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - camera_dir.y * scale;
-        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - camera_dir.z * scale;
-        model.uniforms.data.camera_target_x =
-            model.uniforms.data.camera_target_x - camera_dir.x * scale;
-        model.uniforms.data.camera_target_y =
-            model.uniforms.data.camera_target_y - camera_dir.y * scale;
-        model.uniforms.data.camera_target_z =
-            model.uniforms.data.camera_target_z - camera_dir.z * scale;
+        let translation = camera_dir * -scale;
+        model.uniforms.translate_camera(translation);
     } else if key == Key::Left {
-        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x - cross_dir.x * scale;
-        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y - cross_dir.y * scale;
-        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z - cross_dir.z * scale;
-        model.uniforms.data.camera_target_x =
-            model.uniforms.data.camera_target_x - cross_dir.x * scale;
-        model.uniforms.data.camera_target_y =
-            model.uniforms.data.camera_target_y - cross_dir.y * scale;
-        model.uniforms.data.camera_target_z =
-            model.uniforms.data.camera_target_z - cross_dir.z * scale;
+        let translation = cross_dir * -scale;
+        model.uniforms.translate_camera(translation);
     } else if key == Key::Right {
-        model.uniforms.data.camera_pos_x = model.uniforms.data.camera_pos_x + cross_dir.x * scale;
-        model.uniforms.data.camera_pos_y = model.uniforms.data.camera_pos_y + cross_dir.y * scale;
-        model.uniforms.data.camera_pos_z = model.uniforms.data.camera_pos_z + cross_dir.z * scale;
-        model.uniforms.data.camera_target_x =
-            model.uniforms.data.camera_target_x + cross_dir.x * scale;
-        model.uniforms.data.camera_target_y =
-            model.uniforms.data.camera_target_y + cross_dir.y * scale;
-        model.uniforms.data.camera_target_z =
-            model.uniforms.data.camera_target_z + cross_dir.z * scale;
+        let translation = cross_dir * scale;
+        model.uniforms.translate_camera(translation);
     } else if key == Key::W {
         let rotation_matrix = util::rotate_around_axis(cross_dir, theta);
         model.uniforms.rotate_camera(&rotation_matrix);
