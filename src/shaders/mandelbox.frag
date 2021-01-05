@@ -8,9 +8,8 @@ layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
     int drawFloor;
     float fogDist;
-    float quality;
-    vec2 resolution;
     float time;
+    vec2 resolution;
     float color1R;
     float color1G;
     float color1B;
@@ -174,7 +173,7 @@ vec3 calculateReflectionsWithTrap(in vec3 position, in vec3 normal,
 vec3 calculateNormal(in vec3 point);
 
 void main() {
-    vec2 st = uv * resolution.x / resolution.y;
+    vec2 st = uv * (resolution.x / resolution.y);
     vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
     vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
     vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
@@ -184,7 +183,7 @@ void main() {
     vec2 currentUV = st;
     vec3 backgroundColor;
     vec3 rayDir;
-    float d = quality;
+    float d = 1.0;
     float numSubPixels = pow(d, 2.0);
 
     for (float i = 1.0; i <= numSubPixels; i += 1.0) {

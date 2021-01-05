@@ -173,17 +173,6 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         /////////////////////////
-        // quality control
-        for value in slider(model.uniforms.data.quality, 1.0, 3.0)
-            .parent(model.widget_ids.controls_wrapper)
-            .down(10.0)
-            .label("Quality")
-            .set(model.widget_ids.quality, ui)
-        {
-            model.uniforms.data.quality = value;
-        }
-
-        /////////////////////////
         // color mode select
         text(&format!("Color Mode"))
             .parent(model.widget_ids.controls_wrapper)
