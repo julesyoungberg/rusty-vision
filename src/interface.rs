@@ -3,6 +3,64 @@ use nannou::ui::prelude::*;
 use crate::app;
 use crate::config;
 
+fn text<'a>(text: &'a str) -> widget::Text<'a> {
+    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(12)
+}
+
+fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
+    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(10)
+}
+
+fn button_small(active: bool) -> widget::Button<'static, widget::button::Flat> {
+    let mut btn_color = 0.0;
+    if active {
+        btn_color = 0.5;
+    }
+
+    widget::Button::new()
+        .w_h(30.0, 20.0)
+        .rgb(btn_color, btn_color, btn_color)
+        .border(0.0)
+}
+
+fn button_big() -> widget::Button<'static, widget::button::Flat> {
+    widget::Button::new()
+        .w_h(200.0, 36.0)
+        .rgb(0.1, 0.1, 0.1)
+        .label_rgb(1.0, 1.0, 1.0)
+        .label_font_size(18)
+        .border(0.0)
+}
+
+fn drop_down(
+    items: &'static [&str],
+    selected: usize,
+) -> widget::DropDownList<'static, &'static str> {
+    widget::DropDownList::new(items, Option::from(selected))
+        .w_h(200.0, 27.0)
+        .label_font_size(12)
+        .rgb(0.3, 0.3, 0.3)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+}
+
+fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    widget::Slider::new(val, min, max)
+        .w_h(200.0, 27.0)
+        .label_font_size(12)
+        .rgb(0.3, 0.3, 0.3)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+}
+
+fn unit_slider(val: f32) -> widget::Slider<'static, f32> {
+    widget::Slider::new(val, 0.0, 1.0)
+        .w_h(60.0, 27.0)
+        .label_font_size(12)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+}
+
 pub fn update_ui(model: &mut app::Model) {
     // Calling `set_widgets` allows us to instantiate some widgets.
     let ui = &mut model.ui.set_widgets();
@@ -14,21 +72,14 @@ pub fn update_ui(model: &mut app::Model) {
         .border(1.0)
         .set(model.widget_ids.controls_rect, ui);
 
-    let toggle_controls_hint = format!("Press 'h' to hide controls");
-    widget::Text::new(&toggle_controls_hint)
-        .top_left_with_margin(20.0)
-        .rgb(0.1, 0.1, 0.1)
-        .font_size(10)
+    text_small(&format!("Press 'h' to hide controls"))
+        .top_left_with_margin(10.0)
+        .parent(model.widget_ids.controls_rect)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
-    for _click in widget::Button::new()
-        .w_h(200.0, 36.0)
+    for _click in button_big()
         .down(10.0)
-        .rgb(0.1, 0.1, 0.1)
-        .label_rgb(1.0, 1.0, 1.0)
-        .label_font_size(18)
         .label("General")
-        .border(0.0)
         .set(model.widget_ids.general_folder, ui)
     {
         println!("toggle general controls");
@@ -36,22 +87,13 @@ pub fn update_ui(model: &mut app::Model) {
     }
 
     if model.ui_show_general {
-        let current_program_label = format!("Shader");
-        widget::Text::new(&current_program_label)
+        text(&format!("Shader"))
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(12)
             .set(model.widget_ids.current_program_label, ui);
 
-        for selected in
-            widget::DropDownList::new(config::PROGRAMS, Option::from(model.current_program))
-                .w_h(200.0, 27.0)
-                .label_font_size(12)
-                .rgb(0.3, 0.3, 0.3)
-                .label_rgb(1.0, 1.0, 1.0)
-                .border(0.0)
-                .down(5.0)
-                .set(model.widget_ids.current_program, ui)
+        for selected in drop_down(config::PROGRAMS, model.current_program)
+            .down(5.0)
+            .set(model.widget_ids.current_program, ui)
         {
             if selected != model.current_program {
                 println!("program selected: {}", config::PROGRAMS[selected]);
@@ -59,35 +101,15 @@ pub fn update_ui(model: &mut app::Model) {
             }
         }
 
-        let floor_btn_label = format!("Draw Floor");
-        widget::Text::new(&floor_btn_label)
+        text(&format!("Draw Floor"))
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(12)
             .set(model.widget_ids.draw_floor_label, ui);
 
-        let mut floor_btn_color = 0.0;
-        if model.uniforms.data.draw_floor {
-            floor_btn_color = 0.5;
-        }
-
-        for _click in widget::Button::new()
+        for _click in button_small(model.uniforms.data.draw_floor)
             .right(110.0)
-            .w_h(30.0, 20.0)
-            .rgb(floor_btn_color, floor_btn_color, floor_btn_color)
-            .border(0.0)
             .set(model.widget_ids.draw_floor, ui)
         {
             model.uniforms.data.draw_floor = !model.uniforms.data.draw_floor;
-        }
-
-        fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-            widget::Slider::new(val, min, max)
-                .w_h(200.0, 27.0)
-                .label_font_size(12)
-                .rgb(0.3, 0.3, 0.3)
-                .label_rgb(1.0, 1.0, 1.0)
-                .border(0.0)
         }
 
         for value in slider(model.uniforms.data.fog_dist, 15.0, 300.0)
@@ -107,24 +129,13 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.quality = value;
         }
 
-        let color_mode_label = format!("Color Mode");
-        widget::Text::new(&color_mode_label)
+        text(&format!("Color Mode"))
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(12)
             .set(model.widget_ids.color_mode_label, ui);
 
-        for selected in widget::DropDownList::new(
-            config::COLOR_MODES,
-            Option::from(model.uniforms.data.color_mode as usize),
-        )
-        .w_h(200.0, 27.0)
-        .label_font_size(12)
-        .rgb(0.3, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-        .down(5.0)
-        .set(model.widget_ids.color_mode, ui)
+        for selected in drop_down(config::COLOR_MODES, model.uniforms.data.color_mode as usize)
+            .down(5.0)
+            .set(model.widget_ids.color_mode, ui)
         {
             if selected as i32 != model.uniforms.data.color_mode {
                 println!("color mode selected: {}", config::COLOR_MODES[selected]);
@@ -135,20 +146,12 @@ pub fn update_ui(model: &mut app::Model) {
         let mut right: f32;
         let step = 34.0;
 
-        let color_mode_label = format!("Color 1");
-        widget::Text::new(&color_mode_label)
+        text(&format!("Color 1"))
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(14)
             .set(model.widget_ids.color1_label, ui);
 
-        for value in widget::Slider::new(model.uniforms.data.color1_r, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color1_r)
             .rgb(0.8, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
-            .down(5.0)
             .label("R")
             .set(model.widget_ids.color1_r, ui)
         {
@@ -157,12 +160,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = step;
 
-        for value in widget::Slider::new(model.uniforms.data.color1_g, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color1_g)
             .rgb(0.3, 0.8, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("G")
             .set(model.widget_ids.color1_g, ui)
@@ -172,12 +171,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = right + step;
 
-        for value in widget::Slider::new(model.uniforms.data.color1_b, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color1_b)
             .rgb(0.3, 0.3, 0.8)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("B")
             .set(model.widget_ids.color1_b, ui)
@@ -187,20 +182,13 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = right + step;
 
-        let color_mode_label = format!("Color 2");
-        widget::Text::new(&color_mode_label)
+        text(&format!("Color 2"))
             .left(right as f64)
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(12)
             .set(model.widget_ids.color2_label, ui);
 
-        for value in widget::Slider::new(model.uniforms.data.color2_r, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color2_r)
             .rgb(0.8, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .down(5.0)
             .label("R")
             .set(model.widget_ids.color2_r, ui)
@@ -210,12 +198,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = step;
 
-        for value in widget::Slider::new(model.uniforms.data.color2_g, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color2_g)
             .rgb(0.3, 0.8, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("G")
             .set(model.widget_ids.color2_g, ui)
@@ -225,12 +209,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = right + step;
 
-        for value in widget::Slider::new(model.uniforms.data.color2_b, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color2_b)
             .rgb(0.3, 0.3, 0.8)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("B")
             .set(model.widget_ids.color2_b, ui)
@@ -240,20 +220,13 @@ pub fn update_ui(model: &mut app::Model) {
 
         right = right + step;
 
-        let color_mode_label = format!("Color 3");
-        widget::Text::new(&color_mode_label)
+        text(&format!("Color 3"))
             .left(right as f64)
             .down(10.0)
-            .rgb(0.1, 0.1, 0.1)
-            .font_size(12)
             .set(model.widget_ids.color3_label, ui);
 
-        for value in widget::Slider::new(model.uniforms.data.color3_r, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color3_r)
             .rgb(0.8, 0.3, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .down(5.0)
             .label("R")
             .set(model.widget_ids.color3_r, ui)
@@ -263,12 +236,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         // right = 0.0;
 
-        for value in widget::Slider::new(model.uniforms.data.color3_g, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color3_g)
             .rgb(0.3, 0.8, 0.3)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("G")
             .set(model.widget_ids.color3_g, ui)
@@ -278,12 +247,8 @@ pub fn update_ui(model: &mut app::Model) {
 
         // right = right + step;
 
-        for value in widget::Slider::new(model.uniforms.data.color3_b, 0.0, 1.0)
-            .w_h(60.0, 27.0)
-            .label_font_size(12)
+        for value in unit_slider(model.uniforms.data.color3_b)
             .rgb(0.3, 0.3, 0.8)
-            .label_rgb(1.0, 1.0, 1.0)
-            .border(0.0)
             .right(10.0)
             .label("B")
             .set(model.widget_ids.color3_b, ui)
