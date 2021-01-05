@@ -58,8 +58,8 @@ fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
 
 fn unit_slider(val: f32) -> widget::Slider<'static, f32> {
     widget::Slider::new(val, 0.0, 1.0)
-        .w_h(60.0, 27.0)
-        .label_font_size(12)
+        .w_h(60.0, 25.0)
+        .label_font_size(10)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
 }
@@ -76,9 +76,9 @@ pub fn update_ui(model: &mut app::Model) {
         height = height + 400.0;
     }
     let border = 40.0;
-    let scroll = height > config::SIZE as f32 - border;
+    let scroll = height > config::SIZE[1] as f32 - border;
     if scroll {
-        height = config::SIZE as f32 - border;
+        height = config::SIZE[1] as f32 - border;
     }
 
     /////////////////////////
@@ -87,8 +87,7 @@ pub fn update_ui(model: &mut app::Model) {
         .top_left_with_margin(10.0)
         .rgba(0.9, 0.9, 0.9, 0.7)
         .border_rgb(0.5, 0.5, 0.5)
-        .border(1.0)
-        .scroll_kids_vertically();
+        .border(1.0);
     if scroll {
         wrapper = wrapper.scroll_kids_vertically();
     }

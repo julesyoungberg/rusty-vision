@@ -1,4 +1,4 @@
-pub static SIZE: u32 = 1024;
+pub static SIZE: [u32; 2] = [1920, 1080];
 
 pub static SHADERS_PATH: &str = "./src/shaders/";
 

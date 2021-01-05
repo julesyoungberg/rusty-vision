@@ -40,7 +40,7 @@ fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
         .new_window()
-        .size(config::SIZE, config::SIZE)
+        .size(config::SIZE[0], config::SIZE[1])
         .key_pressed(key_pressed)
         .view(view)
         .build()
@@ -50,7 +50,7 @@ fn model(app: &App) -> app::Model {
     let msaa_samples = window.msaa_samples();
 
     // setup uniform buffer
-    let uniform = uniforms::Uniforms::new(pt2(config::SIZE as f32, config::SIZE as f32));
+    let uniform = uniforms::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
     let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
     let uniform_buffer = device.create_buffer_with_data(uniform.as_bytes(), usage);
 
