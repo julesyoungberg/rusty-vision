@@ -6,6 +6,13 @@ use crate::config;
 /**
  * UI Components
  */
+fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
+    widget::BorderedRectangle::new(dimensions)
+        .rgba(0.9, 0.9, 0.9, 0.7)
+        .border_rgb(0.5, 0.5, 0.5)
+        .border(1.0)
+}
+
 fn text<'a>(text: &'a str) -> widget::Text<'a> {
     widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(12)
 }
@@ -77,7 +84,7 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 440.0;
+        height = height + 450.0;
     }
     let border = 40.0;
     let scroll = height > config::SIZE[1] as f32 - border;
@@ -86,28 +93,24 @@ pub fn update_ui(model: &mut app::Model) {
     }
 
     /////////////////////////
-    // main UI wrapper
-    let mut wrapper = widget::BorderedRectangle::new([219.0, height as f64])
-        .top_left_with_margin(10.0)
-        .rgba(0.9, 0.9, 0.9, 0.7)
-        .border_rgb(0.5, 0.5, 0.5)
-        .border(1.0);
+    // controls wrapper
+    let mut controls_wrapper = container([219.0, height as f64]).top_left_with_margin(10.0);
     if scroll {
-        wrapper = wrapper.scroll_kids_vertically();
+        controls_wrapper = controls_wrapper.scroll_kids_vertically();
     }
-    wrapper.set(model.widget_ids.controls_rect, ui);
+    controls_wrapper.set(model.widget_ids.controls_wrapper, ui);
 
     /////////////////////////
     // hint
-    text_small(&format!("Press 'h' to hide controls"))
-        .parent(model.widget_ids.controls_rect)
+    text_small(&format!("Press 'h' to hide"))
+        .parent(model.widget_ids.controls_wrapper)
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
     /////////////////////////
     // general controls tab
     for _click in button_big()
-        .parent(model.widget_ids.controls_rect)
+        .parent(model.widget_ids.controls_wrapper)
         .down(10.0)
         .label("General")
         .set(model.widget_ids.general_folder, ui)
@@ -123,11 +126,11 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // current program select
         text(&format!("Shader"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(10.0)
             .set(model.widget_ids.current_program_label, ui);
         for selected in drop_down(config::PROGRAMS, model.current_program)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.current_program, ui)
         {
@@ -140,12 +143,12 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // draw floor toggle
         text(&format!("Draw Floor"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(10.0)
             .set(model.widget_ids.draw_floor_label, ui);
         let draw_floor = model.uniforms.data.draw_floor == 1;
         for _click in button_small(draw_floor)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .right(110.0)
             .set(model.widget_ids.draw_floor, ui)
         {
@@ -160,7 +163,7 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // fog control
         for value in slider(model.uniforms.data.fog_dist, 15.0, 300.0)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .left(-30.0)
             .down(10.0)
             .label("Fog Distance")
@@ -172,7 +175,7 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // quality control
         for value in slider(model.uniforms.data.quality, 1.0, 3.0)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(10.0)
             .label("Quality")
             .set(model.widget_ids.quality, ui)
@@ -183,11 +186,11 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // color mode select
         text(&format!("Color Mode"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(10.0)
             .set(model.widget_ids.color_mode_label, ui);
         for selected in drop_down(config::COLOR_MODES, model.uniforms.data.color_mode as usize)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.color_mode, ui)
         {
@@ -203,12 +206,12 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // color 1 select
         text(&format!("Color 1"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(10.0)
             .set(model.widget_ids.color1_label, ui);
 
         for value in unit_slider(model.uniforms.data.color1_r)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .rgb(0.8, 0.3, 0.3)
             .label("R")
@@ -220,7 +223,7 @@ pub fn update_ui(model: &mut app::Model) {
         right = step;
 
         for value in unit_slider(model.uniforms.data.color1_g)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.8, 0.3)
             .right(10.0)
             .label("G")
@@ -232,7 +235,7 @@ pub fn update_ui(model: &mut app::Model) {
         right = right + step;
 
         for value in unit_slider(model.uniforms.data.color1_b)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.8)
             .right(10.0)
             .label("B")
@@ -245,13 +248,13 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // color 2 select
         text(&format!("Color 2"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .left(right as f64)
             .down(10.0)
             .set(model.widget_ids.color2_label, ui);
 
         for value in unit_slider(model.uniforms.data.color2_r)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.8, 0.3, 0.3)
             .down(5.0)
             .label("R")
@@ -263,7 +266,7 @@ pub fn update_ui(model: &mut app::Model) {
         right = step;
 
         for value in unit_slider(model.uniforms.data.color2_g)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.8, 0.3)
             .right(10.0)
             .label("G")
@@ -275,7 +278,7 @@ pub fn update_ui(model: &mut app::Model) {
         right = right + step;
 
         for value in unit_slider(model.uniforms.data.color2_b)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.8)
             .right(10.0)
             .label("B")
@@ -289,13 +292,13 @@ pub fn update_ui(model: &mut app::Model) {
         /////////////////////////
         // color 3 select
         text(&format!("Color 3"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .left(right as f64)
             .down(10.0)
             .set(model.widget_ids.color3_label, ui);
 
         for value in unit_slider(model.uniforms.data.color3_r)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.8, 0.3, 0.3)
             .down(5.0)
             .label("R")
@@ -305,7 +308,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in unit_slider(model.uniforms.data.color3_g)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.8, 0.3)
             .right(10.0)
             .label("G")
@@ -315,7 +318,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in unit_slider(model.uniforms.data.color3_b)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.8)
             .right(10.0)
             .label("B")
@@ -328,13 +331,13 @@ pub fn update_ui(model: &mut app::Model) {
         // rotation1
         let twopi = 360.0;
         text(&format!("Rotation 1"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .left(85.0 as f64)
             .down(10.0)
             .set(model.widget_ids.rotation1_label, ui);
 
         for value in slider_small(model.uniforms.data.rotation1_x, 0.0, twopi)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .down(5.0)
             .label("X")
@@ -344,7 +347,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in slider_small(model.uniforms.data.rotation1_y, 0.0, twopi)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .right(10.0)
             .label("Y")
@@ -354,7 +357,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in slider_small(model.uniforms.data.rotation1_z, 0.0, twopi)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .right(10.0)
             .label("Z")
@@ -367,13 +370,13 @@ pub fn update_ui(model: &mut app::Model) {
         // offset1
         let offset_max = 10.0;
         text(&format!("Offset 1"))
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .left(100.0 as f64)
             .down(10.0)
             .set(model.widget_ids.offset1_label, ui);
 
         for value in slider_small(model.uniforms.data.offset1_x, 0.0, offset_max)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .down(5.0)
             .label("X")
@@ -383,7 +386,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in slider_small(model.uniforms.data.offset1_y, 0.0, offset_max)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .right(10.0)
             .label("Y")
@@ -393,7 +396,7 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         for value in slider_small(model.uniforms.data.offset1_z, 0.0, offset_max)
-            .parent(model.widget_ids.controls_rect)
+            .parent(model.widget_ids.controls_wrapper)
             .rgb(0.3, 0.3, 0.3)
             .right(10.0)
             .label("Z")
@@ -402,4 +405,41 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.offset1_z = value;
         }
     }
+
+    /////////////////////////
+    // info wrapper
+    container([190.0, 80.0])
+        .no_parent()
+        .top_right_with_margin(10.0)
+        .set(model.widget_ids.info_wrapper, ui);
+
+    text(&format!(
+        "Camera Position: <{}, {}, {}>",
+        model.uniforms.data.camera_pos_x,
+        model.uniforms.data.camera_pos_y,
+        model.uniforms.data.camera_pos_z
+    ))
+    .parent(model.widget_ids.info_wrapper)
+    .top_left_with_margin(10.0)
+    .set(model.widget_ids.camera_pos_display, ui);
+
+    text(&format!(
+        "Camera Target: <{}, {}, {}>",
+        model.uniforms.data.camera_target_x,
+        model.uniforms.data.camera_target_y,
+        model.uniforms.data.camera_target_z
+    ))
+    .parent(model.widget_ids.info_wrapper)
+    .down(10.0)
+    .set(model.widget_ids.camera_target_display, ui);
+
+    text(&format!(
+        "Camera Up: <{}, {}, {}>",
+        model.uniforms.data.camera_up_x,
+        model.uniforms.data.camera_up_y,
+        model.uniforms.data.camera_up_z
+    ))
+    .parent(model.widget_ids.info_wrapper)
+    .down(10.0)
+    .set(model.widget_ids.camera_up_display, ui);
 }

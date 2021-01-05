@@ -30,7 +30,7 @@ widget_ids! {
         color2_label,
         color3_label,
         toggle_controls_hint,
-        controls_rect,
+        controls_wrapper,
         rotation1_label,
         rotation1_x,
         rotation1_y,
@@ -39,6 +39,10 @@ widget_ids! {
         offset1_x,
         offset1_y,
         offset1_z,
+        info_wrapper,
+        camera_pos_display,
+        camera_target_display,
+        camera_up_display,
     }
 }
 

@@ -41,9 +41,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
 #define FRAME_OF_VIEW 6.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
-#define MIN_HIT_DISTANCE 0.001
+#define MIN_HIT_DISTANCE 0.002
 #define NUM_STEPS 512
-#define RAY_PUSH 0.002
+#define RAY_PUSH 0.004
 
 // shading
 #define LIGHT_POS vec3(20.0, 10.0, 20.0)
@@ -62,19 +62,15 @@ layout(set = 0, binding = 0) uniform Uniforms {
 
 #define EPSILON 1e-5
 
-//@import util/calculateAmbientOcclusion
 //@import util/calculateFloorDist
 //@import util/calculateNormal
 //@import util/calculatePhong
 //@import util/calculateReflectionsWithTrap
 //@import util/calculateShadow
-//@import util/castRay
 //@import util/folding
 //@import util/getUV
 //@import util/hash
-//@import util/marchRay
 //@import util/marchRayWithTrap
-//@import util/rayMarchWithTrap
 //@import util/rotate
 
 vec3 castRay(const vec2 uv, const vec3 camPos, const vec3 lookAt, const vec3 camUp) {
@@ -132,7 +128,7 @@ float shapeDist(in vec3 pos, out vec3 orbitTrap) {
     vec3 shapeRotation = vec3(0);
     mat4 rot = createRotationMatrix(shapeRotation);
     vec3 p = (rot * vec4(pos, 1.)).xyz;
-    return sdMandelbox(p, 10, orbitTrap);
+    return sdMandelbox(p, 8, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {
@@ -180,7 +176,7 @@ vec3 calculateNormal(in vec3 point);
 void main() {
     vec2 st = uv * resolution.x / resolution.y;
     vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
-    vec3 lookAt = vec3(cameraTargetX - 15.0, cameraTargetY - 5.0, cameraTargetZ);
+    vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
     vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
     const float zoom = 1.0;
 
