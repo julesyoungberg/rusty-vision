@@ -35,6 +35,10 @@ widget_ids! {
         rotation1_x,
         rotation1_y,
         rotation1_z,
+        offset1_label,
+        offset1_x,
+        offset1_y,
+        offset1_z,
     }
 }
 

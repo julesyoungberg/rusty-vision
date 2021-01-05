@@ -77,7 +77,7 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 420.0;
+        height = height + 440.0;
     }
     let border = 40.0;
     let scroll = height > config::SIZE[1] as f32 - border;
@@ -304,8 +304,6 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.color3_r = value;
         }
 
-        right = step;
-
         for value in unit_slider(model.uniforms.data.color3_g)
             .parent(model.widget_ids.controls_rect)
             .rgb(0.3, 0.8, 0.3)
@@ -316,8 +314,6 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.color3_g = value;
         }
 
-        right = right + step;
-
         for value in unit_slider(model.uniforms.data.color3_b)
             .parent(model.widget_ids.controls_rect)
             .rgb(0.3, 0.3, 0.8)
@@ -327,8 +323,6 @@ pub fn update_ui(model: &mut app::Model) {
         {
             model.uniforms.data.color3_b = value;
         }
-
-        right = right + step;
 
         /////////////////////////
         // rotation1
@@ -349,8 +343,6 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.rotation1_x = value;
         }
 
-        right = step;
-
         for value in slider_small(model.uniforms.data.rotation1_y, 0.0, twopi)
             .parent(model.widget_ids.controls_rect)
             .rgb(0.3, 0.3, 0.3)
@@ -360,8 +352,6 @@ pub fn update_ui(model: &mut app::Model) {
         {
             model.uniforms.data.rotation1_y = value;
         }
-
-        right = right + step;
 
         for value in slider_small(model.uniforms.data.rotation1_z, 0.0, twopi)
             .parent(model.widget_ids.controls_rect)
@@ -373,7 +363,43 @@ pub fn update_ui(model: &mut app::Model) {
             model.uniforms.data.rotation1_z = value;
         }
 
-        right = right + step;
-        println!("{}", right);
+        /////////////////////////
+        // offset1
+        let offset_max = 10.0;
+        text(&format!("Offset 1"))
+            .parent(model.widget_ids.controls_rect)
+            .left(100.0 as f64)
+            .down(10.0)
+            .set(model.widget_ids.offset1_label, ui);
+
+        for value in slider_small(model.uniforms.data.offset1_x, 0.0, offset_max)
+            .parent(model.widget_ids.controls_rect)
+            .rgb(0.3, 0.3, 0.3)
+            .down(5.0)
+            .label("X")
+            .set(model.widget_ids.offset1_x, ui)
+        {
+            model.uniforms.data.offset1_x = value;
+        }
+
+        for value in slider_small(model.uniforms.data.offset1_y, 0.0, offset_max)
+            .parent(model.widget_ids.controls_rect)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Y")
+            .set(model.widget_ids.offset1_y, ui)
+        {
+            model.uniforms.data.offset1_y = value;
+        }
+
+        for value in slider_small(model.uniforms.data.offset1_z, 0.0, offset_max)
+            .parent(model.widget_ids.controls_rect)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Z")
+            .set(model.widget_ids.offset1_z, ui)
+        {
+            model.uniforms.data.offset1_z = value;
+        }
     }
 }
