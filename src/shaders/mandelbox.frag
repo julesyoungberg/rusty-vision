@@ -9,7 +9,7 @@ layout(location = 0) out vec4 fragColor;
 // // uniform vec3 shapeRotation;
 layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
-    bool drawFloor;
+    int drawFloor;
     float fogDist;
     float quality;
     vec2 resolution;
@@ -208,7 +208,7 @@ void main() {
         bool isFloor = false;
         vec3 surfacePos, surfaceNorm;
         if (dist < 0.0) {
-            if (drawFloor) {
+            if (drawFloor == 1) {
                 dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
                 if (dist >= 0.0) {
                     isFloor = true;

@@ -73,21 +73,26 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 420.0;
+        height = height + 400.0;
     }
     let border = 40.0;
+    let mut scroll = false;
     if height > config::SIZE as f32 - border {
         height = config::SIZE as f32 - border;
+        scroll = true;
     }
 
     // main UI wrapper
-    widget::BorderedRectangle::new([219.0, height as f64])
+    let mut wrapper = widget::BorderedRectangle::new([219.0, height as f64])
         .top_left_with_margin(10.0)
         .rgba(0.9, 0.9, 0.9, 0.7)
         .border_rgb(0.5, 0.5, 0.5)
         .border(1.0)
-        .scroll_kids_vertically()
-        .set(model.widget_ids.controls_rect, ui);
+        .scroll_kids_vertically();
+    if scroll {
+        wrapper = wrapper.scroll_kids_vertically();
+    }
+    wrapper.set(model.widget_ids.controls_rect, ui);
 
     // hint
     text_small(&format!("Press 'h' to hide controls"))
@@ -133,12 +138,18 @@ pub fn update_ui(model: &mut app::Model) {
             .parent(model.widget_ids.controls_rect)
             .down(10.0)
             .set(model.widget_ids.draw_floor_label, ui);
-        for _click in button_small(model.uniforms.data.draw_floor)
+        let draw_floor = model.uniforms.data.draw_floor == 1;
+        for _click in button_small(draw_floor)
             .parent(model.widget_ids.controls_rect)
             .right(110.0)
             .set(model.widget_ids.draw_floor, ui)
         {
-            model.uniforms.data.draw_floor = !model.uniforms.data.draw_floor;
+            if draw_floor {
+                model.uniforms.data.draw_floor = 0;
+            } else {
+                model.uniforms.data.draw_floor = 1;
+            }
+            println!("draw floor: {}", model.uniforms.data.draw_floor);
         }
 
         /////////////////////////
@@ -193,6 +204,7 @@ pub fn update_ui(model: &mut app::Model) {
 
         for value in unit_slider(model.uniforms.data.color1_r)
             .parent(model.widget_ids.controls_rect)
+            .down(5.0)
             .rgb(0.8, 0.3, 0.3)
             .label("R")
             .set(model.widget_ids.color1_r, ui)

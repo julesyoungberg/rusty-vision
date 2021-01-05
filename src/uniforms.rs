@@ -9,7 +9,7 @@ use crate::util;
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
     pub color_mode: i32,
-    pub draw_floor: bool,
+    pub draw_floor: i32,
     pub fog_dist: f32,
     pub quality: f32,
     pub resolution: Vector2,
@@ -45,7 +45,7 @@ impl Uniforms {
             clock: SystemTime::now(),
             data: Data {
                 color_mode: 0,
-                draw_floor: true,
+                draw_floor: 1,
                 fog_dist: 150.0,
                 quality: 1.0,
                 resolution,
@@ -59,9 +59,9 @@ impl Uniforms {
                 color3_r: 0.0,
                 color3_g: 0.0,
                 color3_b: 1.0,
-                camera_pos_x: 20.0,
+                camera_pos_x: 25.0,
                 camera_pos_y: 0.0,
-                camera_pos_z: 10.0,
+                camera_pos_z: 15.0,
                 camera_target_x: 0.0,
                 camera_target_y: 0.0,
                 camera_target_z: 0.0,
