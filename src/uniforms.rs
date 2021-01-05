@@ -32,6 +32,9 @@ pub struct Data {
     pub camera_up_x: f32,
     pub camera_up_y: f32,
     pub camera_up_z: f32,
+    pub rotation1_x: f32,
+    pub rotation1_y: f32,
+    pub rotation1_z: f32,
 }
 
 pub struct Uniforms {
@@ -68,6 +71,9 @@ impl Uniforms {
                 camera_up_x: 0.0,
                 camera_up_y: 1.0,
                 camera_up_z: 0.0,
+                rotation1_x: 0.0,
+                rotation1_y: 0.0,
+                rotation1_z: 0.0,
             },
         }
     }

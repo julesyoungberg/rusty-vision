@@ -5,7 +5,6 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
 // // uniform vec3 moRotation;
-// // uniform vec2 mousePosition;
 // // uniform vec3 shapeRotation;
 layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
@@ -32,6 +31,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float cameraUpX;
     float cameraUpY;
     float cameraUpZ;
+    float rotation1X;
+    float rotation1Y;
+    float rotation1Z;
 };
 
 // ray marching
@@ -102,7 +104,7 @@ float sdMandelbox(const vec3 pos, const int iterations, out vec3 orbitTrap) {
 
     orbitTrap = vec3(1e20);
 
-    vec3 moRotation = vec3(0);
+    vec3 moRotation = vec3(rotation1X, rotation1Y, rotation1Z);
     mat4 rotationMatrix = createRotationMatrix(moRotation);
 
     for (int i = 0; i < iterations; i++) {

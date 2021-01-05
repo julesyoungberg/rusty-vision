@@ -31,6 +31,10 @@ widget_ids! {
         color3_label,
         toggle_controls_hint,
         controls_rect,
+        rotation1_label,
+        rotation1_x,
+        rotation1_y,
+        rotation1_z,
     }
 }
 
