@@ -10,3 +10,7 @@ Designed to be used as a creative coding environment and/or performance tool.
 cargo install
 cargo run --release
 ```
+
+## controls
+
+The camera can be moved with the arrow keys and rotated with WASD.
