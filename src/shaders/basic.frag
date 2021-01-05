@@ -5,27 +5,35 @@ layout(location = 0) out vec4 frag_color;
 
 layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
-    bool drawFloor;
+    int drawFloor;
     float fogDist;
-    float quality;
-    vec2 resolution;
-    float shapeColorR;
-    float shapeColorG;
-    float shapeColorB;
     float time;
-    float paletteColor1R;
-    float paletteColor1G;
-    float paletteColor1B;
-    float paletteColor2R;
-    float paletteColor2G;
-    float paletteColor2B;
-    float paletteColor3R;
-    float paletteColor3G;
-    float paletteColor3B;
+    vec2 resolution;
+    float color1R;
+    float color1G;
+    float color1B;
+    float color2R;
+    float color2G;
+    float color2B;
+    float color3R;
+    float color3G;
+    float color3B;
+    float cameraPosX;
+    float cameraPosY;
+    float cameraPosZ;
+    float cameraTargetX;
+    float cameraTargetY;
+    float cameraTargetZ;
+    float cameraUpX;
+    float cameraUpY;
+    float cameraUpZ;
+    float rotation1X;
+    float rotation1Y;
+    float rotation1Z;
+    float offset1X;
+    float offset1Y;
+    float offset1Z;
 };
-
-//@import util
-//@import util2
 
 void main() {
     frag_color = vec4(uv, abs(sin(time)), 1);
