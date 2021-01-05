@@ -73,15 +73,20 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 400.0;
+        height = height + 420.0;
+    }
+    let border = 40.0;
+    if height > config::SIZE as f32 - border {
+        height = config::SIZE as f32 - border;
     }
 
     // main UI wrapper
-    widget::BorderedRectangle::new([219.0, height])
+    widget::BorderedRectangle::new([219.0, height as f64])
         .top_left_with_margin(10.0)
         .rgba(0.9, 0.9, 0.9, 0.7)
         .border_rgb(0.5, 0.5, 0.5)
         .border(1.0)
+        .scroll_kids_vertically()
         .set(model.widget_ids.controls_rect, ui);
 
     // hint
