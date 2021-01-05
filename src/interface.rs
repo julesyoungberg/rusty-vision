@@ -76,12 +76,12 @@ pub fn update_ui(model: &mut app::Model) {
         height = height + 400.0;
     }
     let border = 40.0;
-    let mut scroll = false;
-    if height > config::SIZE as f32 - border {
+    let scroll = height > config::SIZE as f32 - border;
+    if scroll {
         height = config::SIZE as f32 - border;
-        scroll = true;
     }
 
+    /////////////////////////
     // main UI wrapper
     let mut wrapper = widget::BorderedRectangle::new([219.0, height as f64])
         .top_left_with_margin(10.0)
@@ -94,12 +94,14 @@ pub fn update_ui(model: &mut app::Model) {
     }
     wrapper.set(model.widget_ids.controls_rect, ui);
 
+    /////////////////////////
     // hint
     text_small(&format!("Press 'h' to hide controls"))
         .parent(model.widget_ids.controls_rect)
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
+    /////////////////////////
     // general controls tab
     for _click in button_big()
         .parent(model.widget_ids.controls_rect)
