@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 
-#[path = "util.rs"]
-mod util;
+use crate::util;
 
 // The vertices that make up the rectangle to which the image will be drawn.
 pub const VERTICES: [util::Vertex; 4] = [

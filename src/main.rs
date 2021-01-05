@@ -136,14 +136,13 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
  * Handle key pressed event
  */
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
-    let camera_dir = model.uniforms.camera_dir();
     let scale = 0.2;
+    let theta = 0.1;
 
+    let camera_dir = model.uniforms.camera_dir();
     let camera_up = model.uniforms.camera_up();
     let cross = camera_dir.cross(camera_up);
-    let sum = cross.x * cross.x + cross.y * cross.y + cross.z * cross.z;
-    let len = sum.sqrt();
-    let cross_dir = pt3(cross.x / len, cross.y / len, cross.z / len);
+    let cross_dir = util::normalize_vector(cross);
 
     if key == Key::H {
         model.show_controls = !model.show_controls;
@@ -187,14 +186,19 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
             model.uniforms.data.camera_target_y + cross_dir.y * scale;
         model.uniforms.data.camera_target_z =
             model.uniforms.data.camera_target_z + cross_dir.z * scale;
-    } // else if key == Key::W {
-      //     // rotate camera dir and camera up around cross_dir
-      //     let theta = 0.2;
-      //     let rotation_matrix = util::rotate_around_axis(cross_dir, theta);
-      //     let next_dir = rotation_matrix.transform_point(camera_dir.into());
-      // } else if key == Key::S {
-      //     // rotate camera dir and camera up around cross_dir
-      // }
+    } else if key == Key::W {
+        let rotation_matrix = util::rotate_around_axis(cross_dir, theta);
+        model.uniforms.rotate_camera(&rotation_matrix);
+    } else if key == Key::S {
+        let rotation_matrix = util::rotate_around_axis(cross_dir, -theta);
+        model.uniforms.rotate_camera(&rotation_matrix);
+    } else if key == Key::A {
+        let rotation_matrix = util::rotate_around_axis(camera_up, theta);
+        model.uniforms.rotate_camera(&rotation_matrix);
+    } else if key == Key::D {
+        let rotation_matrix = util::rotate_around_axis(camera_up, -theta);
+        model.uniforms.rotate_camera(&rotation_matrix);
+    }
 }
 
 /**

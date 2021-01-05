@@ -74,12 +74,11 @@ layout(set = 0, binding = 0) uniform Uniforms {
 //@import util/rayMarchWithTrap
 //@import util/rotate
 
-vec3 castRay(const vec2 uv, const vec3 camPos, const vec3 lookAt, const vec3 worldUp) {
-    vec3 cameraForward = normalize(lookAt - camPos);
-    vec3 cameraRight = normalize(cross(cameraForward, worldUp));
-    vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
-    mat3 cameraMatrix = mat3(cameraRight, cameraUp, cameraForward);
-    return normalize(cameraMatrix * vec3(uv, FRAME_OF_VIEW));
+vec3 castRay(const vec2 uv, const vec3 camPos, const vec3 lookAt, const vec3 camUp) {
+    vec3 camForward = normalize(lookAt - camPos);
+    vec3 camRight = normalize(cross(camForward, camUp));
+    mat3 camMatrix = mat3(camRight, camUp, camForward);
+    return normalize(camMatrix * vec3(uv, FRAME_OF_VIEW));
 }
 
 vec3 getBackgroundColor(const vec2 st) {
@@ -181,7 +180,7 @@ void main() {
     vec2 st = uv * resolution.x / resolution.y;
     vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
     vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
-    // vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
+    vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
     const float zoom = 1.0;
 
     vec3 finalColor = vec3(0.0);
@@ -199,7 +198,7 @@ void main() {
         jitter.y += y / d;
 
         currentUV = getUV(st * resolution + jitter, resolution);
-        rayDir = castRay(currentUV, camPos, lookAt, vec3(0, 1, 0));
+        rayDir = castRay(currentUV, camPos, lookAt, camUp);
         backgroundColor = getBackgroundColor(currentUV);
 
         vec3 trap;

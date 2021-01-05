@@ -1,6 +1,9 @@
 #![allow(dead_code)]
+use nannou::math::cgmath::Matrix4;
 use nannou::prelude::*;
 use std::time::SystemTime;
+
+use crate::util;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -78,15 +81,12 @@ impl Uniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    pub fn camera_dir(&self) -> Vector3 {
-        let dir = pt3(
+    pub fn camera_forward(&self) -> Vector3 {
+        pt3(
             self.data.camera_target_x - self.data.camera_pos_x,
             self.data.camera_target_y - self.data.camera_pos_y,
             self.data.camera_target_z - self.data.camera_pos_z,
-        );
-        let sum = dir.x * dir.x + dir.y * dir.y + dir.z * dir.z;
-        let len = sum.sqrt();
-        pt3(dir.x / len, dir.y / len, dir.z / len)
+        )
     }
 
     pub fn camera_up(&self) -> Vector3 {
@@ -95,5 +95,28 @@ impl Uniforms {
             self.data.camera_up_y,
             self.data.camera_up_z,
         )
+    }
+
+    pub fn camera_dir(&self) -> Vector3 {
+        util::normalize_vector(self.camera_forward())
+    }
+
+    pub fn set_camera_dir(&mut self, next_dir: Vector3) {
+        let len = util::vector_length(self.camera_forward());
+        let next_forward = pt3(next_dir.x * len, next_dir.y * len, next_dir.z * len);
+        self.data.camera_target_x = self.data.camera_pos_x + next_forward.x;
+        self.data.camera_target_y = self.data.camera_pos_y + next_forward.y;
+        self.data.camera_target_z = self.data.camera_pos_z + next_forward.z;
+    }
+
+    pub fn set_camera_up(&mut self, next_dir: Vector3) {
+        self.data.camera_up_x = next_dir.x;
+        self.data.camera_up_y = next_dir.y;
+        self.data.camera_up_z = next_dir.z;
+    }
+
+    pub fn rotate_camera(&mut self, rotation: &Matrix4<f32>) {
+        self.set_camera_dir(util::transform_vector(rotation, self.camera_dir()));
+        self.set_camera_up(util::transform_vector(rotation, self.camera_up()));
     }
 }
