@@ -84,10 +84,10 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 360.0;
+        height = height + 410.0;
 
         if model.uniforms.data.color_mode == 0 {
-            height = height + 100.0;
+            height = height + 90.0;
         }
     }
     let border = 40.0;
@@ -361,6 +361,7 @@ pub fn update_ui(model: &mut app::Model) {
         {
             model.uniforms.data.shape_rotation_z = value;
         }
+
         /////////////////////////
         // rotation1
         let twopi = 360.0;
@@ -398,6 +399,45 @@ pub fn update_ui(model: &mut app::Model) {
             .set(model.widget_ids.rotation1_z, ui)
         {
             model.uniforms.data.rotation1_z = value;
+        }
+
+        /////////////////////////
+        // rotation2
+        let twopi = 360.0;
+        text(&format!("Rotation 2"))
+            .parent(model.widget_ids.controls_wrapper)
+            .left(85.0 as f64)
+            .down(10.0)
+            .set(model.widget_ids.rotation2_label, ui);
+
+        for value in slider_small(model.uniforms.data.rotation2_x, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .down(5.0)
+            .label("X")
+            .set(model.widget_ids.rotation2_x, ui)
+        {
+            model.uniforms.data.rotation2_x = value;
+        }
+
+        for value in slider_small(model.uniforms.data.rotation2_y, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Y")
+            .set(model.widget_ids.rotation2_y, ui)
+        {
+            model.uniforms.data.rotation2_y = value;
+        }
+
+        for value in slider_small(model.uniforms.data.rotation2_z, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Z")
+            .set(model.widget_ids.rotation2_z, ui)
+        {
+            model.uniforms.data.rotation2_z = value;
         }
 
         /////////////////////////

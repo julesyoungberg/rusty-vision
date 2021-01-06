@@ -4,24 +4,9 @@ precision highp float;
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
-// uniform int colorMode;
-// uniform bool drawFloor;
-// uniform float fogDist;
-// uniform vec2 mousePosition;
-// uniform vec3 paletteColor1;
-// uniform vec3 paletteColor2;
-// uniform vec3 paletteColor3;
-// uniform float quality;
-// uniform vec2 resolution;
-// uniform int rsBaseShape;
 // uniform vec3 rsCenterScale;
-// uniform bool rsRenderTrap;
 // uniform vec3 rsRotation1;
 // uniform vec3 rsRotation2;
-// uniform vec3 shapeColor;
-// uniform vec3 shapeRotation;
-// uniform bool spin;
-// uniform float time;
 layout(set = 0, binding = 0) uniform Uniforms {
     int colorMode;
     int drawFloor;
@@ -49,6 +34,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float rotation1X;
     float rotation1Y;
     float rotation1Z;
+    float rotation2X;
+    float rotation2Y;
+    float rotation2Z;
     float offset1X;
     float offset1Y;
     float offset1Z;
@@ -61,9 +49,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
 #define FRAME_OF_VIEW 5.0
 #define MAX_RAY_LENGTH 50.0
 #define MAX_TRACE_DISTANCE 50.0
-#define MIN_HIT_DISTANCE 0.001
+#define MIN_HIT_DISTANCE 0.01
 #define NUM_STEPS 512
-#define RAY_PUSH 0.002
+#define RAY_PUSH 0.02
 
 // shading
 #define LIGHT_POS vec3(2.0, 10.0, 8.0)
@@ -82,16 +70,12 @@ layout(set = 0, binding = 0) uniform Uniforms {
 
 #define EPSILON 1e-5
 
-//@import util/calculateAmbientOcclusion
 //@import util/calculateFloorDist
 //@import util/calculateNormal
 //@import util/calculatePhong
 //@import util/calculateReflectionsWithTrap
 //@import util/calculateShadow
 //@import util/castRay
-//@import util/getRayData
-//@import util/getUV
-//@import util/hash
 //@import util/marchRayWithTrap
 //@import util/rotate
 
@@ -106,7 +90,7 @@ float sdShape(const vec3 pos, const float scale, const int iterations, const vec
     vec3 p = pos;
     float r = dot(p, p);
     mat4 rotation1 = createRotationMatrix(vec3(rotation1X, rotation1Y, rotation1Z));
-    mat4 rotation2 = createRotationMatrix(vec3(0));
+    mat4 rotation2 = createRotationMatrix(vec3(rotation2X, rotation2Y, rotation2Z));
     vec3 centerScale = vec3(1);
     
     orbitTrap = vec3(1e20);
@@ -144,7 +128,7 @@ float sdShape(const vec3 pos, const float scale, const int iterations, const vec
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
     mat4 rot = createRotationMatrix(vec3(shapeRotationX, shapeRotationY, shapeRotationZ));
     vec3 p = (rot * vec4(pos, 1.)).xyz;
-    return sdShape(p, 2.0, 10, vec3(0, 1, 0), orbitTrap);
+    return sdShape(p, 2.0, 15, vec3(0, 1, 0), orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {

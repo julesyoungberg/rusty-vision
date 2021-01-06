@@ -31,6 +31,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float rotation1X;
     float rotation1Y;
     float rotation1Z;
+    float rotation2X;
+    float rotation2Y;
+    float rotation2Z;
     float offset1X;
     float offset1Y;
     float offset1Z;
