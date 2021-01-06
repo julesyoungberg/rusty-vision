@@ -22,6 +22,10 @@ fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
     widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(10)
 }
 
+fn label(txt: &'static str) -> widget::Text<'static> {
+    text(txt).down(10.0)
+}
+
 fn button_small(active: bool) -> widget::Button<'static, widget::button::Flat> {
     let mut btn_color = 0.0;
     if active {
@@ -119,9 +123,8 @@ fn general_conrols(
 ) {
     /////////////////////////
     // draw floor toggle
-    text(&format!("Draw Floor"))
+    label("Draw Floor")
         .parent(widget_ids.controls_wrapper)
-        .down(10.0)
         .set(widget_ids.draw_floor_label, ui);
     let draw_floor = uniforms.data.draw_floor == 1;
     for _click in button_small(draw_floor)
@@ -151,9 +154,8 @@ fn general_conrols(
 
     /////////////////////////
     // color mode select
-    text(&format!("Color Mode"))
+    label("Color Mode")
         .parent(widget_ids.controls_wrapper)
-        .down(10.0)
         .set(widget_ids.color_mode_label, ui);
     for selected in drop_down(config::COLOR_MODES, uniforms.data.color_mode as usize)
         .parent(widget_ids.controls_wrapper)
@@ -171,9 +173,8 @@ fn general_conrols(
 
     /////////////////////////
     // color 1 select
-    text(&format!("Color 1"))
+    label("Color 1")
         .parent(widget_ids.controls_wrapper)
-        .down(10.0)
         .set(widget_ids.color1_label, ui);
     for value in red_slider(uniforms.data.color1_r)
         .parent(widget_ids.controls_wrapper)
@@ -200,10 +201,9 @@ fn general_conrols(
     if uniforms.data.color_mode == 0 {
         /////////////////////////
         // color 2 select
-        text(&format!("Color 2"))
+        label("Color 2")
             .parent(widget_ids.controls_wrapper)
             .left(right as f64)
-            .down(10.0)
             .set(widget_ids.color2_label, ui);
         for value in red_slider(uniforms.data.color2_r)
             .parent(widget_ids.controls_wrapper)
@@ -229,10 +229,9 @@ fn general_conrols(
 
         /////////////////////////
         // color 3 select
-        text(&format!("Color 3"))
+        label("Color 3")
             .parent(widget_ids.controls_wrapper)
             .left(right as f64)
-            .down(10.0)
             .set(widget_ids.color3_label, ui);
         for value in red_slider(uniforms.data.color3_r)
             .parent(widget_ids.controls_wrapper)
@@ -257,10 +256,9 @@ fn general_conrols(
     /////////////////////////
     // shape rotation
     let twopi = 360.0;
-    text(&format!("Shape Rotation"))
+    label("Shape Rotation")
         .parent(widget_ids.controls_wrapper)
         .left(55.0 as f64)
-        .down(10.0)
         .set(widget_ids.shape_rotation_label, ui);
     for value in x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
@@ -284,10 +282,9 @@ fn general_conrols(
     /////////////////////////
     // rotation1
     let twopi = 360.0;
-    text(&format!("Rotation 1"))
+    label("Rotation 1")
         .parent(widget_ids.controls_wrapper)
         .left(85.0 as f64)
-        .down(10.0)
         .set(widget_ids.rotation1_label, ui);
     for value in x_slider(uniforms.data.rotation1_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
@@ -311,10 +308,9 @@ fn general_conrols(
     /////////////////////////
     // rotation2
     let twopi = 360.0;
-    text(&format!("Rotation 2"))
+    label("Rotation 2")
         .parent(widget_ids.controls_wrapper)
         .left(85.0 as f64)
-        .down(10.0)
         .set(widget_ids.rotation2_label, ui);
     for value in x_slider(uniforms.data.rotation2_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
@@ -338,10 +334,9 @@ fn general_conrols(
     /////////////////////////
     // offset1
     let offset_max = 10.0;
-    text(&format!("Offset 1"))
+    label("Offset 1")
         .parent(widget_ids.controls_wrapper)
         .left(100.0 as f64)
-        .down(10.0)
         .set(widget_ids.offset1_label, ui);
     for value in x_slider(uniforms.data.offset1_x, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
@@ -453,9 +448,8 @@ pub fn update_ui(model: &mut app::Model) {
     if model.ui_show_general {
         /////////////////////////
         // current program select
-        text(&format!("Shader"))
+        label("Shader")
             .parent(model.widget_ids.controls_wrapper)
-            .down(10.0)
             .set(model.widget_ids.current_program_label, ui);
         for selected in drop_down(config::PROGRAMS, model.current_program)
             .parent(model.widget_ids.controls_wrapper)
