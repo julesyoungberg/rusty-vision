@@ -1,12 +1,7 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
-use notify::DebouncedEvent;
-use shaderc;
-use std::collections::HashMap;
-use std::sync::mpsc::Receiver;
 
-use crate::pipelines;
-use crate::uniforms;
+use crate::shader_store;
 
 widget_ids! {
     /**
@@ -62,27 +57,17 @@ widget_ids! {
     }
 }
 
-pub type CompilationErrors = HashMap<String, shaderc::Error>;
-
 /**
  * Main application state
  */
 #[allow(dead_code)] // needed for shader_watcher
 pub struct Model {
-    pub bind_group: wgpu::BindGroup,
-    pub bind_group_layout: wgpu::BindGroupLayout,
-    pub compilation_errors: CompilationErrors,
-    pub current_program: usize,
     pub widget_ids: WidgetIds,
     pub main_window_id: WindowId,
-    pub pipelines: pipelines::Pipelines,
-    pub shader_channel: Receiver<DebouncedEvent>,
-    pub shader_watcher: notify::FsEventWatcher,
+    pub shader_store: shader_store::ShaderStore,
     pub show_controls: bool,
     pub ui: Ui,
     pub ui_show_general: bool,
     pub ui_show_geometry: bool,
-    pub uniforms: uniforms::Uniforms,
-    pub uniform_buffer: wgpu::Buffer,
     pub vertex_buffer: wgpu::Buffer,
 }

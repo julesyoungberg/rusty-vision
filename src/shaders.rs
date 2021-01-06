@@ -6,13 +6,14 @@ use shaderc;
 use std::collections::HashMap;
 use std::fs;
 
-use crate::app;
 use crate::config;
 
 pub type Shaders = HashMap<String, wgpu::ShaderModule>;
 
+pub type CompilationErrors = HashMap<String, shaderc::Error>;
+
 pub struct CompilationResult {
-    pub errors: app::CompilationErrors,
+    pub errors: CompilationErrors,
     pub shaders: Shaders,
 }
 

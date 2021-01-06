@@ -66,19 +66,19 @@ pub fn update(model: &mut app::Model) {
         components::label("Shader")
             .parent(model.widget_ids.controls_wrapper)
             .set(model.widget_ids.current_program_label, ui);
-        for selected in components::drop_down(config::PROGRAMS, model.current_program)
+        for selected in components::drop_down(config::PROGRAMS, model.shader_store.current_program)
             .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.current_program, ui)
         {
-            if selected != model.current_program {
+            if selected != model.shader_store.current_program {
                 println!("program selected: {}", config::PROGRAMS[selected]);
-                model.current_program = selected;
-                model.uniforms.set_program_defaults(selected);
+                model.shader_store.current_program = selected;
+                model.shader_store.uniforms.set_program_defaults(selected);
             }
         }
 
-        general_controls::update(&model.widget_ids, ui, &mut model.uniforms);
+        general_controls::update(&model.widget_ids, ui, &mut model.shader_store.uniforms);
         geometry_left = -60.0;
     }
 
@@ -97,16 +97,20 @@ pub fn update(model: &mut app::Model) {
     }
 
     if model.ui_show_geometry {
-        geometry_controls::update(&model.widget_ids, ui, &mut model.uniforms);
+        geometry_controls::update(&model.widget_ids, ui, &mut model.shader_store.uniforms);
     }
 
     //////////////////////////////////////////////////
     // Other UI
     //////////////////////////////////////////////////
-    info_box::update(&model.widget_ids, ui, &mut model.uniforms);
+    info_box::update(&model.widget_ids, ui, &mut model.shader_store.uniforms);
 
-    if model.compilation_errors.keys().len() > 0 {
-        compilation_errors::update(&model.widget_ids, ui, &model.compilation_errors);
+    if model.shader_store.compilation_errors.keys().len() > 0 {
+        compilation_errors::update(
+            &model.widget_ids,
+            ui,
+            &model.shader_store.compilation_errors,
+        );
     }
 }
 
