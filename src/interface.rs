@@ -88,6 +88,27 @@ fn blue_slider(val: f32) -> widget::Slider<'static, f32> {
     unit_slider(val).rgb(0.3, 0.3, 0.8).right(10.0).label("B")
 }
 
+fn x_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_small(val, min, max)
+        .rgb(0.3, 0.3, 0.3)
+        .down(5.0)
+        .label("X")
+}
+
+fn y_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_small(val, min, max)
+        .rgb(0.3, 0.3, 0.3)
+        .right(10.0)
+        .label("Y")
+}
+
+fn z_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_small(val, min, max)
+        .rgb(0.3, 0.3, 0.3)
+        .right(10.0)
+        .label("Z")
+}
+
 /**
  * General controls
  */
@@ -241,32 +262,20 @@ fn general_conrols(
         .left(55.0 as f64)
         .down(10.0)
         .set(widget_ids.shape_rotation_label, ui);
-
-    for value in slider_small(uniforms.data.shape_rotation_x, 0.0, twopi)
+    for value in x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .down(5.0)
-        .label("X")
         .set(widget_ids.shape_rotation_x, ui)
     {
         uniforms.data.shape_rotation_x = value;
     }
-
-    for value in slider_small(uniforms.data.shape_rotation_y, 0.0, twopi)
+    for value in y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Y")
         .set(widget_ids.shape_rotation_y, ui)
     {
         uniforms.data.shape_rotation_y = value;
     }
-
-    for value in slider_small(uniforms.data.shape_rotation_z, 0.0, twopi)
+    for value in z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Z")
         .set(widget_ids.shape_rotation_z, ui)
     {
         uniforms.data.shape_rotation_z = value;
@@ -280,32 +289,20 @@ fn general_conrols(
         .left(85.0 as f64)
         .down(10.0)
         .set(widget_ids.rotation1_label, ui);
-
-    for value in slider_small(uniforms.data.rotation1_x, 0.0, twopi)
+    for value in x_slider(uniforms.data.rotation1_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .down(5.0)
-        .label("X")
         .set(widget_ids.rotation1_x, ui)
     {
         uniforms.data.rotation1_x = value;
     }
-
-    for value in slider_small(uniforms.data.rotation1_y, 0.0, twopi)
+    for value in y_slider(uniforms.data.rotation1_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Y")
         .set(widget_ids.rotation1_y, ui)
     {
         uniforms.data.rotation1_y = value;
     }
-
-    for value in slider_small(uniforms.data.rotation1_z, 0.0, twopi)
+    for value in z_slider(uniforms.data.rotation1_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Z")
         .set(widget_ids.rotation1_z, ui)
     {
         uniforms.data.rotation1_z = value;
@@ -319,32 +316,20 @@ fn general_conrols(
         .left(85.0 as f64)
         .down(10.0)
         .set(widget_ids.rotation2_label, ui);
-
-    for value in slider_small(uniforms.data.rotation2_x, 0.0, twopi)
+    for value in x_slider(uniforms.data.rotation2_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .down(5.0)
-        .label("X")
         .set(widget_ids.rotation2_x, ui)
     {
         uniforms.data.rotation2_x = value;
     }
-
-    for value in slider_small(uniforms.data.rotation2_y, 0.0, twopi)
+    for value in y_slider(uniforms.data.rotation2_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Y")
         .set(widget_ids.rotation2_y, ui)
     {
         uniforms.data.rotation2_y = value;
     }
-
-    for value in slider_small(uniforms.data.rotation2_z, 0.0, twopi)
+    for value in z_slider(uniforms.data.rotation2_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Z")
         .set(widget_ids.rotation2_z, ui)
     {
         uniforms.data.rotation2_z = value;
@@ -358,32 +343,20 @@ fn general_conrols(
         .left(100.0 as f64)
         .down(10.0)
         .set(widget_ids.offset1_label, ui);
-
-    for value in slider_small(uniforms.data.offset1_x, 0.0, offset_max)
+    for value in x_slider(uniforms.data.offset1_x, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .down(5.0)
-        .label("X")
         .set(widget_ids.offset1_x, ui)
     {
         uniforms.data.offset1_x = value;
     }
-
-    for value in slider_small(uniforms.data.offset1_y, 0.0, offset_max)
+    for value in y_slider(uniforms.data.offset1_y, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Y")
         .set(widget_ids.offset1_y, ui)
     {
         uniforms.data.offset1_y = value;
     }
-
-    for value in slider_small(uniforms.data.offset1_z, 0.0, offset_max)
+    for value in z_slider(uniforms.data.offset1_z, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Z")
         .set(widget_ids.offset1_z, ui)
     {
         uniforms.data.offset1_z = value;
