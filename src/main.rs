@@ -127,18 +127,9 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     };
     let mut encoder = frame.command_encoder();
 
-    // update uniform buffer
-    let uniforms_size = std::mem::size_of::<uniforms::Data>() as wgpu::BufferAddress;
-    let uniforms_bytes = model.shader_store.uniforms.as_bytes();
-    let uniforms_usage = wgpu::BufferUsage::COPY_SRC;
-    let new_uniform_buffer = device.create_buffer_with_data(uniforms_bytes, uniforms_usage);
-    encoder.copy_buffer_to_buffer(
-        &new_uniform_buffer,
-        0,
-        &model.shader_store.uniform_buffer,
-        0,
-        uniforms_size,
-    );
+    model
+        .shader_store
+        .update_uniform_buffer(device, &mut encoder);
 
     // configure pipeline
     let mut render_pass = wgpu::RenderPassBuilder::new()

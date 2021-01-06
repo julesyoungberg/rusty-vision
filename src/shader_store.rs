@@ -101,4 +101,22 @@ impl ShaderStore {
     pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
         self.pipelines.get(config::PROGRAMS[self.current_program])
     }
+
+    pub fn update_uniform_buffer(
+        &self,
+        device: &wgpu::Device,
+        encoder: &mut nannou::wgpu::CommandEncoder,
+    ) {
+        let uniforms_size = std::mem::size_of::<uniforms::Data>() as wgpu::BufferAddress;
+        let uniforms_bytes = self.uniforms.as_bytes();
+        let uniforms_usage = wgpu::BufferUsage::COPY_SRC;
+        let new_uniform_buffer = device.create_buffer_with_data(uniforms_bytes, uniforms_usage);
+        encoder.copy_buffer_to_buffer(
+            &new_uniform_buffer,
+            0,
+            &self.uniform_buffer,
+            0,
+            uniforms_size,
+        );
+    }
 }
