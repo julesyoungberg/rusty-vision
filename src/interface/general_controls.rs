@@ -15,7 +15,7 @@ pub fn height(model: &mut app::Model) -> f32 {
     if model.ui_show_general {
         h = 270.0;
 
-        if model.shader_store.uniforms.data.color_mode == 0 {
+        if model.program_store.uniforms.data.color_mode == 0 {
             h = h + 100.0;
         }
     }

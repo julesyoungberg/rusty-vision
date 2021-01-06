@@ -1,7 +1,7 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
 
-use crate::shader_store;
+use crate::program_store;
 
 widget_ids! {
     /**
@@ -64,7 +64,7 @@ widget_ids! {
 pub struct Model {
     pub widget_ids: WidgetIds,
     pub main_window_id: WindowId,
-    pub shader_store: shader_store::ShaderStore,
+    pub program_store: program_store::ProgramStore,
     pub show_controls: bool,
     pub ui: Ui,
     pub ui_show_general: bool,

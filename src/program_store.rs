@@ -10,9 +10,9 @@ use crate::shaders;
 use crate::uniforms;
 
 /**
- * Stores shader source code
+ * Stores GPU programs and related data
  */
-pub struct ShaderStore {
+pub struct ProgramStore {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub changes_channel: Receiver<DebouncedEvent>,
@@ -25,9 +25,15 @@ pub struct ShaderStore {
 }
 
 /**
- * Manages the maintenance (listening and loading) of shader code
+ * Manages the maintenance of shader programs.
+ * - listens to directory
+ * - compiles code
+ * - manages modules
+ * - handles errors
+ * - builds render pipelines
+ * - manages uniform buffers
  */
-impl ShaderStore {
+impl ProgramStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // setup uniform buffer
         let mut uniforms =
