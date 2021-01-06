@@ -4,7 +4,6 @@ use crate::app;
 use crate::config;
 use crate::uniforms;
 
-#[path = "./components.rs"]
 mod components;
 
 /**
