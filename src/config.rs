@@ -33,7 +33,7 @@ pub const PIPELINES: &'static [&'static [&'static str]] = &[
  */
 pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbulb", "tetrahedron"];
 
-pub const DEFAULT_PROGRAM: usize = 3;
+pub const DEFAULT_PROGRAM: usize = 1;
 
 /**
  * Program defaults.
