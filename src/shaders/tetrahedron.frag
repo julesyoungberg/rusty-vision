@@ -86,7 +86,7 @@ vec3 getBackgroundColor(const vec2 st) {
 mat4 createRotationMatrix(vec3 rotationEuler);
 vec3 rotateVec(in vec3 v, in mat4 m);
 
-float sdShape(const vec3 pos, const float scale, const int iterations, const vec3 offset, out vec3 orbitTrap) {
+float sdShape(const vec3 pos, const float scale, const int iterations, out vec3 orbitTrap) {
     vec3 p = pos;
     float r = dot(p, p);
     mat4 rotation1 = createRotationMatrix(vec3(rotation1X, rotation1Y, rotation1Z));
@@ -128,7 +128,7 @@ float sdShape(const vec3 pos, const float scale, const int iterations, const vec
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
     mat4 rot = createRotationMatrix(vec3(shapeRotationX, shapeRotationY, shapeRotationZ));
     vec3 p = (rot * vec4(pos, 1.)).xyz;
-    return sdShape(p, 2.0, 15, vec3(0, 1, 0), orbitTrap);
+    return sdShape(p, 2.0, 15, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {

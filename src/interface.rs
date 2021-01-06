@@ -172,13 +172,21 @@ fn general_conrols(
     {
         uniforms.data.shape_rotation_z = value;
     }
+}
 
+/**
+ * Geometry controls
+ */
+fn geometry_controls(
+    widget_ids: &app::WidgetIds,
+    uniforms: &mut uniforms::Uniforms,
+    ui: &mut UiCell,
+) {
     /////////////////////////
     // rotation1
     let twopi = 360.0;
     components::label("Rotation 1")
         .parent(widget_ids.controls_wrapper)
-        .left(85.0 as f64)
         .set(widget_ids.rotation1_label, ui);
     for value in components::x_slider(uniforms.data.rotation1_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
@@ -295,13 +303,15 @@ pub fn update_ui(model: &mut app::Model) {
 
     ////////////////////////
     // compute height
-    let mut height = 80.0;
+    let mut height = 130.0;
     if model.ui_show_general {
-        height = height + 410.0;
-
+        height = height + 270.0;
         if model.uniforms.data.color_mode == 0 {
-            height = height + 90.0;
+            height = height + 100.0;
         }
+    }
+    if model.ui_show_geometry {
+        height = height + 150.0;
     }
     let border = 40.0;
     let scroll = height > config::SIZE[1] as f32 - border;
@@ -325,8 +335,9 @@ pub fn update_ui(model: &mut app::Model) {
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
-    /////////////////////////
-    // general controls tab
+    //////////////////////////////////////////////////
+    // General Controls
+    //////////////////////////////////////////////////
     for _click in components::button_big()
         .parent(model.widget_ids.controls_wrapper)
         .down(10.0)
@@ -337,9 +348,8 @@ pub fn update_ui(model: &mut app::Model) {
         model.ui_show_general = !model.ui_show_general;
     }
 
-    //////////////////////////////////////////////////
-    // General Controls
-    //////////////////////////////////////////////////
+    let mut geometry_left = -200.0;
+
     if model.ui_show_general {
         /////////////////////////
         // current program select
@@ -359,6 +369,25 @@ pub fn update_ui(model: &mut app::Model) {
         }
 
         general_conrols(&model.widget_ids, &mut model.uniforms, ui);
+        geometry_left = -60.0;
+    }
+
+    //////////////////////////////////////////////////
+    // Geometry Controls
+    //////////////////////////////////////////////////
+    for _click in components::button_big()
+        .parent(model.widget_ids.controls_wrapper)
+        .down(20.0)
+        .left(geometry_left as f64)
+        .label("Geometry")
+        .set(model.widget_ids.geometry_folder, ui)
+    {
+        println!("toggle geometry controls");
+        model.ui_show_geometry = !model.ui_show_geometry;
+    }
+
+    if model.ui_show_geometry {
+        geometry_controls(&model.widget_ids, &mut model.uniforms, ui);
     }
 
     info_box(&model.widget_ids, &mut model.uniforms, ui);
