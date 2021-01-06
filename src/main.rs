@@ -5,7 +5,7 @@ mod config;
 mod d2;
 mod interface;
 mod pipelines;
-mod program_store;
+mod programs;
 mod shaders;
 mod uniforms;
 mod util;
@@ -30,7 +30,7 @@ fn model(app: &App) -> app::Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
-    let mut program_store = program_store::ProgramStore::new(device);
+    let mut program_store = programs::ProgramStore::new(device);
     program_store.compile_shaders(device, msaa_samples);
     let vertex_buffer = d2::create_vertex_buffer(device);
 
