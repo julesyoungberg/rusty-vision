@@ -34,6 +34,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float offset1X;
     float offset1Y;
     float offset1Z;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
 };
 
 // ray marching
@@ -126,9 +129,9 @@ float sdMandelbulb(const vec3 pos, const int iterations,
 }
 
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
-    // mat4 rot = createRotationMatrix(vec3(0, 0, 0));
-    // vec3 p = rotateVec(pos, rot);
-    return sdMandelbulb(pos, 10, 2.0, orbitTrap);
+    mat4 rot = createRotationMatrix(vec3(shapeRotationX, shapeRotationY, shapeRotationZ));
+    vec3 p = rotateVec(pos, rot);
+    return sdMandelbulb(p, 10, 2.0, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {

@@ -34,6 +34,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float offset1X;
     float offset1Y;
     float offset1Z;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
 };
 
 // ray marching
@@ -116,7 +119,7 @@ float sdMandelbox(const vec3 pos, const int iterations, out vec3 orbitTrap) {
 }
 
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
-    vec3 shapeRotation = vec3(0);
+    vec3 shapeRotation = vec3(shapeRotationX, shapeRotationY, shapeRotationZ);
     mat4 rot = createRotationMatrix(shapeRotation);
     vec3 p = (rot * vec4(pos, 1.)).xyz;
     return sdMandelbox(p, 6, orbitTrap);

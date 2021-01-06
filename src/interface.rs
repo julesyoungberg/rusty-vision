@@ -84,7 +84,7 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 350.0;
+        height = height + 360.0;
 
         if model.uniforms.data.color_mode == 0 {
             height = height + 100.0;
@@ -323,6 +323,44 @@ pub fn update_ui(model: &mut app::Model) {
             }
         }
 
+        /////////////////////////
+        // shape rotation
+        let twopi = 360.0;
+        text(&format!("Shape Rotation"))
+            .parent(model.widget_ids.controls_wrapper)
+            .left(55.0 as f64)
+            .down(10.0)
+            .set(model.widget_ids.shape_rotation_label, ui);
+
+        for value in slider_small(model.uniforms.data.shape_rotation_x, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .down(5.0)
+            .label("X")
+            .set(model.widget_ids.shape_rotation_x, ui)
+        {
+            model.uniforms.data.shape_rotation_x = value;
+        }
+
+        for value in slider_small(model.uniforms.data.shape_rotation_y, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Y")
+            .set(model.widget_ids.shape_rotation_y, ui)
+        {
+            model.uniforms.data.shape_rotation_y = value;
+        }
+
+        for value in slider_small(model.uniforms.data.shape_rotation_z, 0.0, twopi)
+            .parent(model.widget_ids.controls_wrapper)
+            .rgb(0.3, 0.3, 0.3)
+            .right(10.0)
+            .label("Z")
+            .set(model.widget_ids.shape_rotation_z, ui)
+        {
+            model.uniforms.data.shape_rotation_z = value;
+        }
         /////////////////////////
         // rotation1
         let twopi = 360.0;

@@ -52,6 +52,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float offset1X;
     float offset1Y;
     float offset1Z;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
 };
 
 // ray marching
@@ -139,7 +142,7 @@ float sdShape(const vec3 pos, const float scale, const int iterations, const vec
 }
 
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
-    mat4 rot = createRotationMatrix(vec3(0));
+    mat4 rot = createRotationMatrix(vec3(shapeRotationX, shapeRotationY, shapeRotationZ));
     vec3 p = (rot * vec4(pos, 1.)).xyz;
     return sdShape(p, 2.0, 10, vec3(0, 1, 0), orbitTrap);
 }

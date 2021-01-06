@@ -38,6 +38,9 @@ pub struct Data {
     pub offset1_x: f32,
     pub offset1_y: f32,
     pub offset1_z: f32,
+    pub shape_rotation_x: f32,
+    pub shape_rotation_y: f32,
+    pub shape_rotation_z: f32,
 }
 
 pub struct Uniforms {
@@ -79,6 +82,9 @@ impl Uniforms {
                 offset1_x: 0.0,
                 offset1_y: 0.0,
                 offset1_z: 0.0,
+                shape_rotation_x: 0.0,
+                shape_rotation_y: 0.0,
+                shape_rotation_z: 0.0,
             },
         }
     }

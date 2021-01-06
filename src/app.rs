@@ -43,6 +43,10 @@ widget_ids! {
         camera_pos_display,
         camera_target_display,
         camera_up_display,
+        shape_rotation_label,
+        shape_rotation_x,
+        shape_rotation_y,
+        shape_rotation_z,
     }
 }
 
