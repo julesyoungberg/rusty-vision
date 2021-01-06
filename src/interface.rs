@@ -4,114 +4,8 @@ use crate::app;
 use crate::config;
 use crate::uniforms;
 
-/**
- * UI Components
- */
-fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
-    widget::BorderedRectangle::new(dimensions)
-        .rgba(0.9, 0.9, 0.9, 0.7)
-        .border_rgb(0.5, 0.5, 0.5)
-        .border(1.0)
-}
-
-fn text<'a>(text: &'a str) -> widget::Text<'a> {
-    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(12)
-}
-
-fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
-    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(10)
-}
-
-fn label(txt: &'static str) -> widget::Text<'static> {
-    text(txt).down(10.0)
-}
-
-fn button_small(active: bool) -> widget::Button<'static, widget::button::Flat> {
-    let mut btn_color = 0.0;
-    if active {
-        btn_color = 0.5;
-    }
-
-    widget::Button::new()
-        .w_h(30.0, 20.0)
-        .rgb(btn_color, btn_color, btn_color)
-        .border(0.0)
-}
-
-fn button_big() -> widget::Button<'static, widget::button::Flat> {
-    widget::Button::new()
-        .w_h(200.0, 36.0)
-        .rgb(0.1, 0.1, 0.1)
-        .label_rgb(1.0, 1.0, 1.0)
-        .label_font_size(18)
-        .border(0.0)
-}
-
-fn drop_down(
-    items: &'static [&str],
-    selected: usize,
-) -> widget::DropDownList<'static, &'static str> {
-    widget::DropDownList::new(items, Option::from(selected))
-        .w_h(200.0, 27.0)
-        .label_font_size(12)
-        .rgb(0.3, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-}
-
-fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    widget::Slider::new(val, min, max)
-        .w_h(200.0, 27.0)
-        .label_font_size(12)
-        .rgb(0.3, 0.3, 0.3)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-}
-
-fn slider_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    widget::Slider::new(val, min, max)
-        .w_h(60.0, 20.0)
-        .label_font_size(10)
-        .label_rgb(1.0, 1.0, 1.0)
-        .border(0.0)
-}
-
-fn unit_slider(val: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, 0.0, 1.0)
-}
-
-fn red_slider(val: f32) -> widget::Slider<'static, f32> {
-    unit_slider(val).rgb(0.8, 0.3, 0.3).down(5.0).label("R")
-}
-
-fn green_slider(val: f32) -> widget::Slider<'static, f32> {
-    unit_slider(val).rgb(0.3, 0.8, 0.3).right(10.0).label("G")
-}
-
-fn blue_slider(val: f32) -> widget::Slider<'static, f32> {
-    unit_slider(val).rgb(0.3, 0.3, 0.8).right(10.0).label("B")
-}
-
-fn x_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
-        .rgb(0.3, 0.3, 0.3)
-        .down(5.0)
-        .label("X")
-}
-
-fn y_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Y")
-}
-
-fn z_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
-        .rgb(0.3, 0.3, 0.3)
-        .right(10.0)
-        .label("Z")
-}
+#[path = "./components.rs"]
+mod components;
 
 /**
  * General controls
@@ -123,11 +17,11 @@ fn general_conrols(
 ) {
     /////////////////////////
     // draw floor toggle
-    label("Draw Floor")
+    components::label("Draw Floor")
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.draw_floor_label, ui);
     let draw_floor = uniforms.data.draw_floor == 1;
-    for _click in button_small(draw_floor)
+    for _click in components::button_small(draw_floor)
         .parent(widget_ids.controls_wrapper)
         .right(110.0)
         .set(widget_ids.draw_floor, ui)
@@ -142,7 +36,7 @@ fn general_conrols(
 
     /////////////////////////
     // fog control
-    for value in slider(uniforms.data.fog_dist, 15.0, 300.0)
+    for value in components::slider(uniforms.data.fog_dist, 15.0, 300.0)
         .parent(widget_ids.controls_wrapper)
         .left(-30.0)
         .down(10.0)
@@ -154,10 +48,10 @@ fn general_conrols(
 
     /////////////////////////
     // color mode select
-    label("Color Mode")
+    components::label("Color Mode")
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color_mode_label, ui);
-    for selected in drop_down(config::COLOR_MODES, uniforms.data.color_mode as usize)
+    for selected in components::drop_down(config::COLOR_MODES, uniforms.data.color_mode as usize)
         .parent(widget_ids.controls_wrapper)
         .down(5.0)
         .set(widget_ids.color_mode, ui)
@@ -173,24 +67,24 @@ fn general_conrols(
 
     /////////////////////////
     // color 1 select
-    label("Color 1")
+    components::label("Color 1")
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color1_label, ui);
-    for value in red_slider(uniforms.data.color1_r)
+    for value in components::red_slider(uniforms.data.color1_r)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color1_r, ui)
     {
         uniforms.data.color1_r = value;
     }
     right = step;
-    for value in green_slider(uniforms.data.color1_g)
+    for value in components::green_slider(uniforms.data.color1_g)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color1_g, ui)
     {
         uniforms.data.color1_g = value;
     }
     right = right + step;
-    for value in blue_slider(uniforms.data.color1_b)
+    for value in components::blue_slider(uniforms.data.color1_b)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color1_b, ui)
     {
@@ -201,25 +95,25 @@ fn general_conrols(
     if uniforms.data.color_mode == 0 {
         /////////////////////////
         // color 2 select
-        label("Color 2")
+        components::label("Color 2")
             .parent(widget_ids.controls_wrapper)
             .left(right as f64)
             .set(widget_ids.color2_label, ui);
-        for value in red_slider(uniforms.data.color2_r)
+        for value in components::red_slider(uniforms.data.color2_r)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color2_r, ui)
         {
             uniforms.data.color2_r = value;
         }
         right = step;
-        for value in green_slider(uniforms.data.color2_g)
+        for value in components::green_slider(uniforms.data.color2_g)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color2_g, ui)
         {
             uniforms.data.color2_g = value;
         }
         right = right + step;
-        for value in blue_slider(uniforms.data.color2_b)
+        for value in components::blue_slider(uniforms.data.color2_b)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color2_b, ui)
         {
@@ -229,23 +123,23 @@ fn general_conrols(
 
         /////////////////////////
         // color 3 select
-        label("Color 3")
+        components::label("Color 3")
             .parent(widget_ids.controls_wrapper)
             .left(right as f64)
             .set(widget_ids.color3_label, ui);
-        for value in red_slider(uniforms.data.color3_r)
+        for value in components::red_slider(uniforms.data.color3_r)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color3_r, ui)
         {
             uniforms.data.color3_r = value;
         }
-        for value in green_slider(uniforms.data.color3_g)
+        for value in components::green_slider(uniforms.data.color3_g)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color3_g, ui)
         {
             uniforms.data.color3_g = value;
         }
-        for value in blue_slider(uniforms.data.color3_b)
+        for value in components::blue_slider(uniforms.data.color3_b)
             .parent(widget_ids.controls_wrapper)
             .set(widget_ids.color3_b, ui)
         {
@@ -256,23 +150,23 @@ fn general_conrols(
     /////////////////////////
     // shape rotation
     let twopi = 360.0;
-    label("Shape Rotation")
+    components::label("Shape Rotation")
         .parent(widget_ids.controls_wrapper)
         .left(55.0 as f64)
         .set(widget_ids.shape_rotation_label, ui);
-    for value in x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
+    for value in components::x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_x, ui)
     {
         uniforms.data.shape_rotation_x = value;
     }
-    for value in y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
+    for value in components::y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_y, ui)
     {
         uniforms.data.shape_rotation_y = value;
     }
-    for value in z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
+    for value in components::z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_z, ui)
     {
@@ -282,23 +176,23 @@ fn general_conrols(
     /////////////////////////
     // rotation1
     let twopi = 360.0;
-    label("Rotation 1")
+    components::label("Rotation 1")
         .parent(widget_ids.controls_wrapper)
         .left(85.0 as f64)
         .set(widget_ids.rotation1_label, ui);
-    for value in x_slider(uniforms.data.rotation1_x, 0.0, twopi)
+    for value in components::x_slider(uniforms.data.rotation1_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_x, ui)
     {
         uniforms.data.rotation1_x = value;
     }
-    for value in y_slider(uniforms.data.rotation1_y, 0.0, twopi)
+    for value in components::y_slider(uniforms.data.rotation1_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_y, ui)
     {
         uniforms.data.rotation1_y = value;
     }
-    for value in z_slider(uniforms.data.rotation1_z, 0.0, twopi)
+    for value in components::z_slider(uniforms.data.rotation1_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_z, ui)
     {
@@ -308,23 +202,23 @@ fn general_conrols(
     /////////////////////////
     // rotation2
     let twopi = 360.0;
-    label("Rotation 2")
+    components::label("Rotation 2")
         .parent(widget_ids.controls_wrapper)
         .left(85.0 as f64)
         .set(widget_ids.rotation2_label, ui);
-    for value in x_slider(uniforms.data.rotation2_x, 0.0, twopi)
+    for value in components::x_slider(uniforms.data.rotation2_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_x, ui)
     {
         uniforms.data.rotation2_x = value;
     }
-    for value in y_slider(uniforms.data.rotation2_y, 0.0, twopi)
+    for value in components::y_slider(uniforms.data.rotation2_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_y, ui)
     {
         uniforms.data.rotation2_y = value;
     }
-    for value in z_slider(uniforms.data.rotation2_z, 0.0, twopi)
+    for value in components::z_slider(uniforms.data.rotation2_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_z, ui)
     {
@@ -334,23 +228,23 @@ fn general_conrols(
     /////////////////////////
     // offset1
     let offset_max = 10.0;
-    label("Offset 1")
+    components::label("Offset 1")
         .parent(widget_ids.controls_wrapper)
         .left(100.0 as f64)
         .set(widget_ids.offset1_label, ui);
-    for value in x_slider(uniforms.data.offset1_x, 0.0, offset_max)
+    for value in components::x_slider(uniforms.data.offset1_x, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_x, ui)
     {
         uniforms.data.offset1_x = value;
     }
-    for value in y_slider(uniforms.data.offset1_y, 0.0, offset_max)
+    for value in components::y_slider(uniforms.data.offset1_y, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_y, ui)
     {
         uniforms.data.offset1_y = value;
     }
-    for value in z_slider(uniforms.data.offset1_z, 0.0, offset_max)
+    for value in components::z_slider(uniforms.data.offset1_z, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_z, ui)
     {
@@ -362,12 +256,12 @@ fn general_conrols(
  * Info Box
  */
 fn info_box(widget_ids: &app::WidgetIds, uniforms: &mut uniforms::Uniforms, ui: &mut UiCell) {
-    container([250.0, 80.0])
+    components::container([250.0, 80.0])
         .no_parent()
         .top_right_with_margin(10.0)
         .set(widget_ids.info_wrapper, ui);
 
-    text(&format!(
+    components::text(&format!(
         "Camera Position: <{:.2}, {:.2}, {:.2}>",
         uniforms.data.camera_pos_x, uniforms.data.camera_pos_y, uniforms.data.camera_pos_z
     ))
@@ -375,7 +269,7 @@ fn info_box(widget_ids: &app::WidgetIds, uniforms: &mut uniforms::Uniforms, ui: 
     .top_left_with_margin(10.0)
     .set(widget_ids.camera_pos_display, ui);
 
-    text(&format!(
+    components::text(&format!(
         "Camera Target: <{:.2}, {:.2}, {:.2}>",
         uniforms.data.camera_target_x, uniforms.data.camera_target_y, uniforms.data.camera_target_z
     ))
@@ -383,7 +277,7 @@ fn info_box(widget_ids: &app::WidgetIds, uniforms: &mut uniforms::Uniforms, ui: 
     .down(10.0)
     .set(widget_ids.camera_target_display, ui);
 
-    text(&format!(
+    components::text(&format!(
         "Camera Up: <{:.2}, {:.2}, {:.2}>",
         uniforms.data.camera_up_x, uniforms.data.camera_up_y, uniforms.data.camera_up_z
     ))
@@ -417,7 +311,8 @@ pub fn update_ui(model: &mut app::Model) {
 
     /////////////////////////
     // controls wrapper
-    let mut controls_wrapper = container([219.0, height as f64]).top_left_with_margin(10.0);
+    let mut controls_wrapper =
+        components::container([219.0, height as f64]).top_left_with_margin(10.0);
     if scroll {
         controls_wrapper = controls_wrapper.scroll_kids_vertically();
     }
@@ -425,14 +320,14 @@ pub fn update_ui(model: &mut app::Model) {
 
     /////////////////////////
     // hint
-    text_small(&format!("Press 'h' to hide"))
+    components::text_small(&format!("Press 'h' to hide"))
         .parent(model.widget_ids.controls_wrapper)
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
     /////////////////////////
     // general controls tab
-    for _click in button_big()
+    for _click in components::button_big()
         .parent(model.widget_ids.controls_wrapper)
         .down(10.0)
         .label("General")
@@ -448,10 +343,10 @@ pub fn update_ui(model: &mut app::Model) {
     if model.ui_show_general {
         /////////////////////////
         // current program select
-        label("Shader")
+        components::label("Shader")
             .parent(model.widget_ids.controls_wrapper)
             .set(model.widget_ids.current_program_label, ui);
-        for selected in drop_down(config::PROGRAMS, model.current_program)
+        for selected in components::drop_down(config::PROGRAMS, model.current_program)
             .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.current_program, ui)
