@@ -84,7 +84,11 @@ pub fn update_ui(model: &mut app::Model) {
 
     let mut height = 80.0;
     if model.ui_show_general {
-        height = height + 450.0;
+        height = height + 350.0;
+
+        if model.uniforms.data.color_mode == 0 {
+            height = height + 100.0;
+        }
     }
     let border = 40.0;
     let scroll = height > config::SIZE[1] as f32 - border;
@@ -137,6 +141,7 @@ pub fn update_ui(model: &mut app::Model) {
             if selected != model.current_program {
                 println!("program selected: {}", config::PROGRAMS[selected]);
                 model.current_program = selected;
+                model.uniforms.set_program_defaults(selected);
             }
         }
 
@@ -234,86 +239,88 @@ pub fn update_ui(model: &mut app::Model) {
         }
         right = right + step;
 
-        /////////////////////////
-        // color 2 select
-        text(&format!("Color 2"))
-            .parent(model.widget_ids.controls_wrapper)
-            .left(right as f64)
-            .down(10.0)
-            .set(model.widget_ids.color2_label, ui);
+        if model.uniforms.data.color_mode == 0 {
+            /////////////////////////
+            // color 2 select
+            text(&format!("Color 2"))
+                .parent(model.widget_ids.controls_wrapper)
+                .left(right as f64)
+                .down(10.0)
+                .set(model.widget_ids.color2_label, ui);
 
-        for value in unit_slider(model.uniforms.data.color2_r)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.8, 0.3, 0.3)
-            .down(5.0)
-            .label("R")
-            .set(model.widget_ids.color2_r, ui)
-        {
-            model.uniforms.data.color2_r = value;
-        }
+            for value in unit_slider(model.uniforms.data.color2_r)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.8, 0.3, 0.3)
+                .down(5.0)
+                .label("R")
+                .set(model.widget_ids.color2_r, ui)
+            {
+                model.uniforms.data.color2_r = value;
+            }
 
-        right = step;
+            right = step;
 
-        for value in unit_slider(model.uniforms.data.color2_g)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.3, 0.8, 0.3)
-            .right(10.0)
-            .label("G")
-            .set(model.widget_ids.color2_g, ui)
-        {
-            model.uniforms.data.color2_g = value;
-        }
+            for value in unit_slider(model.uniforms.data.color2_g)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.3, 0.8, 0.3)
+                .right(10.0)
+                .label("G")
+                .set(model.widget_ids.color2_g, ui)
+            {
+                model.uniforms.data.color2_g = value;
+            }
 
-        right = right + step;
+            right = right + step;
 
-        for value in unit_slider(model.uniforms.data.color2_b)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.3, 0.3, 0.8)
-            .right(10.0)
-            .label("B")
-            .set(model.widget_ids.color2_b, ui)
-        {
-            model.uniforms.data.color2_b = value;
-        }
+            for value in unit_slider(model.uniforms.data.color2_b)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.3, 0.3, 0.8)
+                .right(10.0)
+                .label("B")
+                .set(model.widget_ids.color2_b, ui)
+            {
+                model.uniforms.data.color2_b = value;
+            }
 
-        right = right + step;
+            right = right + step;
 
-        /////////////////////////
-        // color 3 select
-        text(&format!("Color 3"))
-            .parent(model.widget_ids.controls_wrapper)
-            .left(right as f64)
-            .down(10.0)
-            .set(model.widget_ids.color3_label, ui);
+            /////////////////////////
+            // color 3 select
+            text(&format!("Color 3"))
+                .parent(model.widget_ids.controls_wrapper)
+                .left(right as f64)
+                .down(10.0)
+                .set(model.widget_ids.color3_label, ui);
 
-        for value in unit_slider(model.uniforms.data.color3_r)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.8, 0.3, 0.3)
-            .down(5.0)
-            .label("R")
-            .set(model.widget_ids.color3_r, ui)
-        {
-            model.uniforms.data.color3_r = value;
-        }
+            for value in unit_slider(model.uniforms.data.color3_r)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.8, 0.3, 0.3)
+                .down(5.0)
+                .label("R")
+                .set(model.widget_ids.color3_r, ui)
+            {
+                model.uniforms.data.color3_r = value;
+            }
 
-        for value in unit_slider(model.uniforms.data.color3_g)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.3, 0.8, 0.3)
-            .right(10.0)
-            .label("G")
-            .set(model.widget_ids.color3_g, ui)
-        {
-            model.uniforms.data.color3_g = value;
-        }
+            for value in unit_slider(model.uniforms.data.color3_g)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.3, 0.8, 0.3)
+                .right(10.0)
+                .label("G")
+                .set(model.widget_ids.color3_g, ui)
+            {
+                model.uniforms.data.color3_g = value;
+            }
 
-        for value in unit_slider(model.uniforms.data.color3_b)
-            .parent(model.widget_ids.controls_wrapper)
-            .rgb(0.3, 0.3, 0.8)
-            .right(10.0)
-            .label("B")
-            .set(model.widget_ids.color3_b, ui)
-        {
-            model.uniforms.data.color3_b = value;
+            for value in unit_slider(model.uniforms.data.color3_b)
+                .parent(model.widget_ids.controls_wrapper)
+                .rgb(0.3, 0.3, 0.8)
+                .right(10.0)
+                .label("B")
+                .set(model.widget_ids.color3_b, ui)
+            {
+                model.uniforms.data.color3_b = value;
+            }
         }
 
         /////////////////////////

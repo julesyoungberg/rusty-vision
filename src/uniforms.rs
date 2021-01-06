@@ -3,6 +3,7 @@ use nannou::math::cgmath::Matrix4;
 use nannou::prelude::*;
 use std::time::SystemTime;
 
+use crate::config;
 use crate::util;
 
 #[repr(C)]
@@ -137,5 +138,19 @@ impl Uniforms {
     pub fn rotate_camera(&mut self, rotation: Matrix4<f32>) {
         self.set_camera_dir(util::transform_vector(&rotation, self.camera_dir()));
         self.set_camera_up(util::transform_vector(&rotation, self.camera_up()));
+    }
+
+    pub fn set_program_defaults(&mut self, selected: usize) {
+        let defaults = config::PROGRAM_DEFAULTS[selected];
+
+        self.data.camera_pos_x = defaults[0][0];
+        self.data.camera_pos_y = defaults[0][1];
+        self.data.camera_pos_z = defaults[0][2];
+
+        self.data.camera_target_x = defaults[1][0];
+        self.data.camera_target_y = defaults[1][1];
+        self.data.camera_target_z = defaults[1][2];
+
+        self.set_camera_up(pt3(defaults[2][0], defaults[2][1], defaults[2][2]));
     }
 }
