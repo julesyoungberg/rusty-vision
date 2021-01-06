@@ -1,5 +1,4 @@
 use nannou::prelude::*;
-use nannou::ui::DrawToFrameError;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 use std::time;
@@ -131,7 +130,7 @@ fn update_shaders(app: &App, model: &mut app::Model) {
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     model.uniforms.update_time();
     update_shaders(app, model);
-    interface::update_ui(model);
+    interface::update(model);
 }
 
 /**
@@ -208,36 +207,12 @@ fn draw(model: &app::Model, frame: &Frame) {
 }
 
 /**
- * Draw the state of the `Ui` to the frame.
- */
-fn draw_ui(app: &App, model: &app::Model, frame: &Frame) {
-    // let draw = app.draw();
-    // draw.quad().color(STEELBLUE).x_y(0.0, 0.0).w_h(200.0, 200.0);
-    // draw.to_frame(app, &frame).unwrap();
-
-    let color_attachment_desc = frame.color_attachment_descriptor();
-    let primitives = model.ui.draw();
-    let window = app
-        .window(model.main_window_id)
-        .ok_or(DrawToFrameError::InvalidWindow)
-        .unwrap();
-    let mut ui_encoder = frame.command_encoder();
-    ui::encode_render_pass(
-        &model.ui,
-        &window,
-        primitives,
-        color_attachment_desc,
-        &mut *ui_encoder,
-    )
-    .unwrap();
-}
-
-/**
  * Render app
  */
 fn view(app: &App, model: &app::Model, frame: Frame) {
     draw(model, &frame);
+
     if model.show_controls {
-        draw_ui(app, model, &frame);
+        interface::draw(app, model, &frame);
     }
 }

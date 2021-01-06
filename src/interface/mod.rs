@@ -1,4 +1,6 @@
+use nannou::prelude::*;
 use nannou::ui::prelude::*;
+use nannou::ui::DrawToFrameError;
 
 use crate::app;
 use crate::config;
@@ -11,7 +13,7 @@ mod info_box;
 /**
  * Main UI logic / layout
  */
-pub fn update_ui(model: &mut app::Model) {
+pub fn update(model: &mut app::Model) {
     ////////////////////////
     // compute height
     let mut height = 130.0;
@@ -101,4 +103,29 @@ pub fn update_ui(model: &mut app::Model) {
     // Other UI
     //////////////////////////////////////////////////
     info_box::update(&model.widget_ids, &mut model.uniforms, ui);
+}
+
+/**
+ * Draw the state of the `Ui` to the frame.
+ */
+pub fn draw(app: &App, model: &app::Model, frame: &Frame) {
+    // let draw = app.draw();
+    // draw.quad().color(STEELBLUE).x_y(0.0, 0.0).w_h(200.0, 200.0);
+    // draw.to_frame(app, &frame).unwrap();
+
+    let color_attachment_desc = frame.color_attachment_descriptor();
+    let primitives = model.ui.draw();
+    let window = app
+        .window(model.main_window_id)
+        .ok_or(DrawToFrameError::InvalidWindow)
+        .unwrap();
+    let mut ui_encoder = frame.command_encoder();
+    ui::encode_render_pass(
+        &model.ui,
+        &window,
+        primitives,
+        color_attachment_desc,
+        &mut *ui_encoder,
+    )
+    .unwrap();
 }
