@@ -5,17 +5,17 @@ use nannou::ui::prelude::*;
  */
 pub fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
     widget::BorderedRectangle::new(dimensions)
-        .rgba(0.9, 0.9, 0.9, 0.7)
+        .rgba(0.1, 0.1, 0.1, 0.9)
         .border_rgb(0.5, 0.5, 0.5)
         .border(1.0)
 }
 
 pub fn text<'a>(text: &'a str) -> widget::Text<'a> {
-    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(12)
+    widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(12)
 }
 
 pub fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
-    widget::Text::new(text).rgb(0.1, 0.1, 0.1).font_size(10)
+    widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(10)
 }
 
 pub fn label(txt: &'static str) -> widget::Text<'static> {

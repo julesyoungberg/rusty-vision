@@ -10,14 +10,15 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, errors: &app::Compil
     let container_id = widget_ids.compilation_errors_wrapper;
     components::container([1200.0, 600.0])
         .no_parent()
+        .rgba(0.2, 0.2, 0.2, 1.0)
         .x_y(0.0, 0.0)
         .set(container_id, ui);
 
     components::text("Compilation Errors")
         .parent(container_id)
-        .top_left_with_margin(30.0)
+        .top_left_with_margin(50.0)
         .font_size(36)
-        .rgb(0.8, 0.3, 0.3)
+        .rgb(1.0, 0.3, 0.3)
         .set(widget_ids.compilation_errors_title, ui);
 
     let mut error_string: String = "".to_owned();
@@ -30,6 +31,6 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, errors: &app::Compil
         .parent(container_id)
         .down(20.0)
         .font_size(18)
-        .rgb(0.2, 0.2, 0.2)
+        .rgb(0.9, 0.9, 0.9)
         .set(widget_ids.compilation_errors_message, ui);
 }

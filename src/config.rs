@@ -29,7 +29,7 @@ pub const PIPELINES: &'static [&'static [&'static str]] = &[
 
 /**
  * Program names, displayed to the user.
- * Must correspond with PIPELINES by index, name is irrellivant
+ * Must correspond with PIPELINES by name
  */
 pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbulb", "tetrahedron"];
 
@@ -38,7 +38,7 @@ pub const DEFAULT_PROGRAM: usize = 3;
 /**
  * Program defaults.
  * [cam_pos, cam_target, cam_up, shape_rotation, [color_mode, ?, ?]]
- * Must correspond with PIPELINES and PROGRAMS by index
+ * Must correspond with PROGRAMS by index
  */
 pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
     &[

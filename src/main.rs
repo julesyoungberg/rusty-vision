@@ -146,7 +146,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
  * Handle key pressed event
  */
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
-    let scale = 0.05;
+    let scale = 0.2;
     let theta = 0.002;
 
     let camera_dir = model.uniforms.camera_dir();
@@ -179,13 +179,13 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
 /**
  * Draw the state of the app to the frame
  */
-fn draw(model: &app::Model, frame: &Frame) {
+fn draw(model: &app::Model, frame: &Frame) -> bool {
     // setup environment
     let device = frame.device_queue_pair().device();
-    let render_pipeline = model
-        .pipelines
-        .get(config::PROGRAMS[model.current_program])
-        .expect("Invalid program");
+    let render_pipeline = match model.pipelines.get(config::PROGRAMS[model.current_program]) {
+        Some(pipeline) => pipeline,
+        None => return false,
+    };
     let mut encoder = frame.command_encoder();
 
     // update uniform buffer
@@ -213,17 +213,16 @@ fn draw(model: &app::Model, frame: &Frame) {
     let vertex_range = 0..d2::VERTICES.len() as u32;
     let instance_range = 0..1;
     render_pass.draw(vertex_range, instance_range);
+    true
 }
 
 /**
  * Render app
  */
 fn view(app: &App, model: &app::Model, frame: Frame) {
-    if model.compilation_errors.keys().len() == 0 {
-        draw(model, &frame);
-    } else {
+    if model.pipelines.keys().len() == 0 || !draw(model, &frame) {
         let draw = app.draw();
-        draw.background().color(STEELBLUE);
+        draw.background().color(DARKGRAY);
         draw.to_frame(app, &frame).unwrap();
     }
 

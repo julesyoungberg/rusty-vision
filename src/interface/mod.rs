@@ -32,7 +32,7 @@ pub fn update(model: &mut app::Model) {
     /////////////////////////
     // controls wrapper
     let mut controls_wrapper =
-        components::container([219.0, height as f64]).top_left_with_margin(10.0);
+        components::container([220.0, height as f64]).top_left_with_margin(10.0);
     if scroll {
         controls_wrapper = controls_wrapper.scroll_kids_vertically();
     }
