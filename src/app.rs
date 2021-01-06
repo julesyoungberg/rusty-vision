@@ -56,6 +56,9 @@ widget_ids! {
         shape_rotation_x,
         shape_rotation_y,
         shape_rotation_z,
+        compilation_errors_wrapper,
+        compilation_errors_title,
+        compilation_errors_message,
     }
 }
 

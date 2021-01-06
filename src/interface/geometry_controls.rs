@@ -21,7 +21,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(widget_ids: &app::WidgetIds, uniforms: &mut uniforms::Uniforms, ui: &mut UiCell) {
+pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut uniforms::Uniforms) {
     /////////////////////////
     // rotation1
     let twopi = 360.0;

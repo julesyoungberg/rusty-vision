@@ -5,6 +5,7 @@ use nannou::ui::DrawToFrameError;
 use crate::app;
 use crate::config;
 
+mod compilation_errors;
 mod components;
 mod general_controls;
 mod geometry_controls;
@@ -77,7 +78,7 @@ pub fn update(model: &mut app::Model) {
             }
         }
 
-        general_controls::update(&model.widget_ids, &mut model.uniforms, ui);
+        general_controls::update(&model.widget_ids, ui, &mut model.uniforms);
         geometry_left = -60.0;
     }
 
@@ -96,13 +97,17 @@ pub fn update(model: &mut app::Model) {
     }
 
     if model.ui_show_geometry {
-        geometry_controls::update(&model.widget_ids, &mut model.uniforms, ui);
+        geometry_controls::update(&model.widget_ids, ui, &mut model.uniforms);
     }
 
     //////////////////////////////////////////////////
     // Other UI
     //////////////////////////////////////////////////
-    info_box::update(&model.widget_ids, &mut model.uniforms, ui);
+    info_box::update(&model.widget_ids, ui, &mut model.uniforms);
+
+    if model.compilation_errors.keys().len() > 0 {
+        compilation_errors::update(&model.widget_ids, ui, &model.compilation_errors);
+    }
 }
 
 /**
