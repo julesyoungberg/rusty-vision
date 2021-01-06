@@ -70,6 +70,10 @@ impl ProgramStore {
         }
     }
 
+    /**
+     * Compile all shaders and [re]create pipelines.
+     * Call once after initialization.
+     */
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         let compilation_result = shaders::compile_shaders(device, config::SHADERS);
 
@@ -86,6 +90,10 @@ impl ProgramStore {
         self.compilation_errors = compilation_result.errors;
     }
 
+    /**
+     * Check if changes have been made to shaders and recompile if needed.
+     * Call every timestep.
+     */
     pub fn update_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         // check for changes
         if let Ok(event) = self
@@ -100,14 +108,25 @@ impl ProgramStore {
         }
     }
 
+    /**
+     * Update uniform data.
+     * Call every timestep.
+     */
     pub fn update_uniforms(&mut self) {
         self.uniforms.update_time();
     }
 
+    /**
+     * Fetch current GPU program.
+     */
     pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
         self.pipelines.get(config::PROGRAMS[self.current_program])
     }
 
+    /**
+     * Update GPU uniform buffer data with current uniforms.
+     * Call in draw() before rendering.
+     */
     pub fn update_uniform_buffer(
         &self,
         device: &wgpu::Device,
