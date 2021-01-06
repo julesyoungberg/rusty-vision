@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use std::collections::HashMap;
 use std::sync::mpsc::channel;
 use std::time;
 
@@ -66,14 +67,17 @@ fn model(app: &App) -> app::Model {
         .unwrap();
 
     // compile shaders, build pipelines, and create GPU buffers
-    let shaders = shaders::compile_shaders(device, config::SHADERS);
-    let pipelines = pipelines::create_pipelines(
-        device,
-        &bind_group_layout,
-        msaa_samples,
-        &shaders,
-        &config::PIPELINES,
-    );
+    let compilation_result = shaders::compile_shaders(device, config::SHADERS);
+    let mut pipelines: pipelines::Pipelines = HashMap::new();
+    if compilation_result.errors.keys().len() == 0 {
+        pipelines = pipelines::create_pipelines(
+            device,
+            &bind_group_layout,
+            msaa_samples,
+            &compilation_result.shaders,
+            &config::PIPELINES,
+        );
+    }
     let vertex_buffer = d2::create_vertex_buffer(device);
 
     // create UI
@@ -83,6 +87,7 @@ fn model(app: &App) -> app::Model {
     app::Model {
         bind_group,
         bind_group_layout,
+        compilation_errors: compilation_result.errors,
         current_program: config::DEFAULT_PROGRAM,
         widget_ids,
         main_window_id,
@@ -112,14 +117,18 @@ fn update_shaders(app: &App, model: &mut app::Model) {
             // changes have been made, recompile the shaders and rebuild the pipelines
             let window = app.window(model.main_window_id).unwrap();
             let device = window.swap_chain_device();
-            let shaders = shaders::compile_shaders(device, config::SHADERS);
-            model.pipelines = pipelines::create_pipelines(
-                device,
-                &model.bind_group_layout,
-                window.msaa_samples(),
-                &shaders,
-                &config::PIPELINES,
-            );
+
+            let compilation_result = shaders::compile_shaders(device, config::SHADERS);
+            if compilation_result.errors.keys().len() == 0 {
+                model.pipelines = pipelines::create_pipelines(
+                    device,
+                    &model.bind_group_layout,
+                    window.msaa_samples(),
+                    &compilation_result.shaders,
+                    &config::PIPELINES,
+                );
+            }
+            model.compilation_errors = compilation_result.errors;
         }
     }
 }
@@ -210,7 +219,13 @@ fn draw(model: &app::Model, frame: &Frame) {
  * Render app
  */
 fn view(app: &App, model: &app::Model, frame: Frame) {
-    draw(model, &frame);
+    if model.compilation_errors.keys().len() == 0 {
+        draw(model, &frame);
+    } else {
+        let draw = app.draw();
+        draw.background().color(STEELBLUE);
+        draw.to_frame(app, &frame).unwrap();
+    }
 
     if model.show_controls {
         interface::draw(app, model, &frame);

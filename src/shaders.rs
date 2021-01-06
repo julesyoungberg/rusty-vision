@@ -6,15 +6,21 @@ use shaderc;
 use std::collections::HashMap;
 use std::fs;
 
+use crate::app;
 use crate::config;
 
 pub type Shaders = HashMap<String, wgpu::ShaderModule>;
+
+pub struct CompilationResult {
+    pub errors: app::CompilationErrors,
+    pub shaders: Shaders,
+}
 
 pub fn compile_shader(
     device: &wgpu::Device,
     compiler: &mut shaderc::Compiler,
     filename: &str,
-) -> wgpu::ShaderModule {
+) -> Result<wgpu::ShaderModule, shaderc::Error> {
     let split = filename.split(".").collect::<Vec<&str>>();
     let ext = split[1];
     let mut kind = shaderc::ShaderKind::Fragment;
@@ -57,23 +63,34 @@ pub fn compile_shader(
         .to_string();
 
     // compile shader
-    let spirv = compiler
-        .compile_into_spirv(complete_src.as_str(), kind, filename, "main", None)
-        .unwrap();
-
-    wgpu::shader_from_spirv_bytes(device, &spirv.as_binary_u8())
+    match compiler.compile_into_spirv(complete_src.as_str(), kind, filename, "main", None) {
+        Ok(program) => Ok(wgpu::shader_from_spirv_bytes(
+            device,
+            &program.as_binary_u8(),
+        )),
+        Err(e) => Err(e),
+    }
 }
 
-pub fn compile_shaders(device: &wgpu::Device, shader_names: &[&str]) -> Shaders {
+pub fn compile_shaders(device: &wgpu::Device, shader_names: &[&str]) -> CompilationResult {
     let mut compiler = shaderc::Compiler::new().unwrap();
     let mut shaders = HashMap::new();
+    let mut errors = HashMap::new();
 
     for shader in shader_names {
         let key = shader.to_string();
-        shaders.insert(key, compile_shader(device, &mut compiler, shader));
+        match compile_shader(device, &mut compiler, shader) {
+            Ok(p) => {
+                shaders.insert(key, p);
+            }
+            Err(e) => {
+                println!("{}", e);
+                errors.insert(key, e);
+            }
+        }
     }
 
-    shaders
+    CompilationResult { errors, shaders }
 }
 
 pub fn get_shader<'a>(shaders: &'a Shaders, filename: &str) -> &'a wgpu::ShaderModule {

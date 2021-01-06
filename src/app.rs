@@ -1,6 +1,8 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
 use notify::DebouncedEvent;
+use shaderc;
+use std::collections::HashMap;
 use std::sync::mpsc::Receiver;
 
 use crate::pipelines;
@@ -57,6 +59,8 @@ widget_ids! {
     }
 }
 
+pub type CompilationErrors = HashMap<String, shaderc::Error>;
+
 /**
  * Main application state
  */
@@ -64,6 +68,7 @@ widget_ids! {
 pub struct Model {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
+    pub compilation_errors: CompilationErrors,
     pub current_program: usize,
     pub widget_ids: WidgetIds,
     pub main_window_id: WindowId,

@@ -45,5 +45,5 @@ layout(set = 0, binding = 0) uniform Uniforms {
 };
 
 void main() {
-    frag_color = vec4(uv, abs(sin(time)), 1);
+    frag_color = vec4(uv, abs(sin(time)), 1)
 }
