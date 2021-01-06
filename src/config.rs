@@ -10,7 +10,6 @@ pub const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
 pub const SHADERS: &'static [&'static str] = &[
     "basic.vert",
     "basic.frag",
-    "basic2.frag",
     "mandelbox.frag",
     "mandelbulb.frag",
     "tetrahedron.frag",
@@ -23,7 +22,6 @@ pub const SHADERS: &'static [&'static str] = &[
  */
 pub const PIPELINES: &'static [&'static [&'static str]] = &[
     &["basic", "basic.vert", "basic.frag"],
-    &["basic2", "basic.vert", "basic2.frag"],
     &["mandelbox", "basic.vert", "mandelbox.frag"],
     &["mandelbulb", "basic.vert", "mandelbulb.frag"],
     &["tetrahedron", "basic.vert", "tetrahedron.frag"],
@@ -33,8 +31,9 @@ pub const PIPELINES: &'static [&'static [&'static str]] = &[
  * Program names, displayed to the user.
  * Must correspond with PIPELINES by index, name is irrellivant
  */
-pub const PROGRAMS: &'static [&'static str] =
-    &["basic", "basic2", "mandelbox", "mandelbulb", "tetrahedron"];
+pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbulb", "tetrahedron"];
+
+pub const DEFAULT_PROGRAM: usize = 1;
 
 /**
  * Program defaults.
@@ -58,12 +57,7 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
         &[0.0, 1.0, 0.0],   // cam up
     ],
     &[
-        &[25.0, 0.0, 15.0], // cam pos
-        &[0.0, 0.0, 0.0],   // cam target
-        &[0.0, 1.0, 0.0],   // cam up
-    ],
-    &[
-        &[2.0, 0.0, 2.0], // cam pos
+        &[3.0, 0.0, 3.0], // cam pos
         &[0.0, 0.0, 0.0], // cam target
         &[0.0, 1.0, 0.0], // cam up
     ],

@@ -50,7 +50,8 @@ fn model(app: &App) -> app::Model {
     let msaa_samples = window.msaa_samples();
 
     // setup uniform buffer
-    let uniform = uniforms::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
+    let mut uniform = uniforms::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
+    uniform.set_program_defaults(config::DEFAULT_PROGRAM);
     let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
     let uniform_buffer = device.create_buffer_with_data(uniform.as_bytes(), usage);
 
@@ -83,7 +84,7 @@ fn model(app: &App) -> app::Model {
     app::Model {
         bind_group,
         bind_group_layout,
-        current_program: 2,
+        current_program: config::DEFAULT_PROGRAM,
         widget_ids,
         main_window_id,
         pipelines,
