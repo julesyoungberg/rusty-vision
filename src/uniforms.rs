@@ -158,5 +158,11 @@ impl Uniforms {
         self.data.camera_target_z = defaults[1][2];
 
         self.set_camera_up(pt3(defaults[2][0], defaults[2][1], defaults[2][2]));
+
+        self.data.shape_rotation_x = defaults[3][0];
+        self.data.shape_rotation_y = defaults[3][1];
+        self.data.shape_rotation_z = defaults[3][2];
+
+        self.data.color_mode = defaults[4][0] as i32;
     }
 }

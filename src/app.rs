@@ -7,6 +7,9 @@ use crate::pipelines;
 use crate::uniforms;
 
 widget_ids! {
+    /**
+     * UI widget ids
+     */
     pub struct WidgetIds {
         color_mode,
         color_mode_label,
@@ -50,7 +53,10 @@ widget_ids! {
     }
 }
 
-#[allow(dead_code)]
+/**
+ * Main application state
+ */
+#[allow(dead_code)] // needed for shader_watcher
 pub struct Model {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,

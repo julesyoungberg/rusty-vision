@@ -137,8 +137,8 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
  * Handle key pressed event
  */
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
-    let scale = 0.2;
-    let theta = 0.1;
+    let scale = 0.05;
+    let theta = 0.002;
 
     let camera_dir = model.uniforms.camera_dir();
     let camera_up = model.uniforms.camera_up();
