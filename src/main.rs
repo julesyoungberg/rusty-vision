@@ -135,6 +135,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
     render_pass.set_bind_group(0, &model.program_store.bind_group, &[]);
+    // render_pass.set_bind_group(1, &model.program_store.geometry_bind_group, &[]);
 
     // render
     let vertex_range = 0..quad_2d::VERTICES.len() as u32;

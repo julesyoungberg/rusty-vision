@@ -71,11 +71,7 @@ pub fn update(model: &mut app::Model) {
             .down(5.0)
             .set(model.widget_ids.current_program, ui)
         {
-            if selected != model.program_store.current_program {
-                println!("program selected: {}", config::PROGRAMS[selected]);
-                model.program_store.current_program = selected;
-                model.program_store.uniforms.set_program_defaults(selected);
-            }
+            model.program_store.select_program(selected);
         }
 
         general_controls::update(&model.widget_ids, ui, &mut model.program_store.uniforms);
@@ -97,7 +93,11 @@ pub fn update(model: &mut app::Model) {
     }
 
     if model.ui_show_geometry {
-        geometry_controls::update(&model.widget_ids, ui, &mut model.program_store.uniforms);
+        geometry_controls::update(
+            &model.widget_ids,
+            ui,
+            &mut model.program_store.geometry_uniforms,
+        );
     }
 
     //////////////////////////////////////////////////

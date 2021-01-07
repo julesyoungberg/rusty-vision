@@ -6,9 +6,12 @@ use std::time;
 
 use crate::config;
 
+pub mod geometry_uniforms;
 mod program;
 mod shaders;
 pub mod uniforms;
+
+use crate::programs::uniforms::UniformBuffer;
 
 pub type Programs = HashMap<String, program::Program>;
 
@@ -20,6 +23,10 @@ pub struct ProgramStore {
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
+    pub geometry_bind_group: wgpu::BindGroup,
+    pub geometry_bind_group_layout: wgpu::BindGroupLayout,
+    pub geometry_uniforms: geometry_uniforms::GeometryUniforms,
+    pub geometry_uniform_buffer: wgpu::Buffer,
     pub programs: Programs,
     pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
@@ -45,6 +52,12 @@ impl ProgramStore {
         let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let uniform_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
 
+        // setup geometry uniform buffer
+        let mut geometry_uniforms = geometry_uniforms::GeometryUniforms::new();
+        geometry_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let geometry_uniform_buffer =
+            device.create_buffer_with_data(geometry_uniforms.as_bytes(), usage);
+
         // create bind group
         let bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
             .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
@@ -52,6 +65,13 @@ impl ProgramStore {
         let bind_group = wgpu::BindGroupBuilder::new()
             .buffer::<uniforms::Data>(&uniform_buffer, 0..1)
             .build(device, &bind_group_layout);
+
+        let geometry_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
+            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
+            .build(device);
+        let geometry_bind_group = wgpu::BindGroupBuilder::new()
+            .buffer::<geometry_uniforms::Data>(&geometry_uniform_buffer, 0..1)
+            .build(device, &geometry_bind_group_layout);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
@@ -74,6 +94,10 @@ impl ProgramStore {
             bind_group_layout,
             changes_channel,
             current_program: config::DEFAULT_PROGRAM,
+            geometry_bind_group,
+            geometry_bind_group_layout,
+            geometry_uniforms,
+            geometry_uniform_buffer,
             programs,
             shader_store: shaders::ShaderStore::new(),
             shader_watcher,
@@ -89,11 +113,15 @@ impl ProgramStore {
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         self.shader_store.compile(device);
 
+        let layout_desc = wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts: &[&self.bind_group_layout], //, &self.geometry_bind_group_layout],
+        };
+
         // now update all the GPU programs to use the latest code
         for (_, program) in self.programs.iter_mut() {
             program.update(
                 device,
-                &self.bind_group_layout,
+                &layout_desc,
                 num_samples,
                 &self.shader_store.shaders,
             );
@@ -139,6 +167,20 @@ impl ProgramStore {
     }
 
     /**
+     * Selects the current program
+     * performs any housekeeping / initialization
+     */
+    pub fn select_program(&mut self, selected: usize) {
+        if selected == self.current_program {
+            return;
+        }
+
+        println!("program selected: {}", config::PROGRAMS[selected]);
+        self.current_program = selected;
+        self.uniforms.set_program_defaults(selected);
+    }
+
+    /**
      * Update GPU uniform buffer data with current uniforms.
      * Call in draw() before rendering.
      */
@@ -157,6 +199,17 @@ impl ProgramStore {
             &self.uniform_buffer,
             0,
             uniforms_size,
+        );
+
+        let geometry_size = std::mem::size_of::<geometry_uniforms::Data>() as wgpu::BufferAddress;
+        let geometry_bytes = self.geometry_uniforms.as_bytes();
+        let new_geometry_buffer = device.create_buffer_with_data(geometry_bytes, uniforms_usage);
+        encoder.copy_buffer_to_buffer(
+            &new_geometry_buffer,
+            0,
+            &self.geometry_uniform_buffer,
+            0,
+            geometry_size,
         );
     }
 }

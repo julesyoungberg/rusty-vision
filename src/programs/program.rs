@@ -33,7 +33,7 @@ impl Program {
     pub fn update(
         &mut self,
         device: &wgpu::Device,
-        bind_group_layout: &wgpu::BindGroupLayout,
+        layout_desc: &wgpu::PipelineLayoutDescriptor,
         num_samples: u32,
         shaders: &shaders::Shaders,
     ) {
@@ -56,13 +56,10 @@ impl Program {
         let frag_shader = frag.module.as_ref().unwrap();
 
         // both shaders are valid, create the render pipeline
-        let pipeline = util::create_pipeline(
-            device,
-            bind_group_layout,
-            vert_shader,
-            frag_shader,
-            num_samples,
-        );
+        println!("creating pipeline");
+        let pipeline =
+            util::create_pipeline(device, layout_desc, vert_shader, frag_shader, num_samples);
+        println!("created pipeline");
         self.pipeline = Some(pipeline);
         self.error = None;
     }

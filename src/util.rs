@@ -9,16 +9,6 @@ pub struct Vertex {
     pub position: [f32; 2],
 }
 
-fn create_pipeline_layout(
-    device: &wgpu::Device,
-    bind_group_layout: &wgpu::BindGroupLayout,
-) -> wgpu::PipelineLayout {
-    let desc = wgpu::PipelineLayoutDescriptor {
-        bind_group_layouts: &[&bind_group_layout],
-    };
-    device.create_pipeline_layout(&desc)
-}
-
 pub fn create_render_pipeline(
     device: &wgpu::Device,
     layout: &wgpu::PipelineLayout,
@@ -38,12 +28,12 @@ pub fn create_render_pipeline(
 
 pub fn create_pipeline(
     device: &wgpu::Device,
-    bind_group_layout: &wgpu::BindGroupLayout,
+    layout_desc: &wgpu::PipelineLayoutDescriptor,
     vs: &wgpu::ShaderModule,
     fs: &wgpu::ShaderModule,
     sample_count: u32,
 ) -> wgpu::RenderPipeline {
-    let pipeline_layout = create_pipeline_layout(device, bind_group_layout);
+    let pipeline_layout = device.create_pipeline_layout(layout_desc);
     create_render_pipeline(
         device,
         &pipeline_layout,
