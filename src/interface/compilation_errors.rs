@@ -1,13 +1,17 @@
 use nannou::ui::prelude::*;
+use std::collections::HashMap;
 
 use crate::app;
 use crate::interface::components;
-use crate::shaders;
 
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, errors: &shaders::CompilationErrors) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    errors: &HashMap<&String, &shaderc::Error>,
+) {
     let container_id = widget_ids.compilation_errors_wrapper;
     components::container([1200.0, 600.0])
         .no_parent()

@@ -3,7 +3,6 @@
 use nannou::prelude::*;
 use std::collections::HashMap;
 
-use crate::shaders;
 use crate::util;
 
 pub type Pipelines = HashMap<String, wgpu::RenderPipeline>;
@@ -12,12 +11,12 @@ pub fn create_pipeline(
     device: &wgpu::Device,
     bind_group_layout: &wgpu::BindGroupLayout,
     num_samples: u32,
-    shaders: &shaders::Shaders,
+    shaders: &HashMap<&String, &wgpu::ShaderModule>,
     vert_name: &str,
     frag_name: &str,
 ) -> wgpu::RenderPipeline {
-    let vert_shader = shaders::get_shader(shaders, vert_name);
-    let frag_shader = shaders::get_shader(shaders, frag_name);
+    let vert_shader = shaders.get(&vert_name.to_string()).unwrap();
+    let frag_shader = shaders.get(&frag_name.to_string()).unwrap();
     util::create_pipeline(
         device,
         bind_group_layout,
@@ -31,7 +30,7 @@ pub fn create_pipelines<'a>(
     device: &wgpu::Device,
     bind_group_layout: &wgpu::BindGroupLayout,
     num_samples: u32,
-    shaders: &shaders::Shaders,
+    shaders: &HashMap<&String, &wgpu::ShaderModule>,
     pipelines_desc: &'a [&[&str]],
 ) -> Pipelines {
     let mut pipelines = HashMap::new();

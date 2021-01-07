@@ -105,12 +105,9 @@ pub fn update(model: &mut app::Model) {
     //////////////////////////////////////////////////
     info_box::update(&model.widget_ids, ui, &mut model.program_store.uniforms);
 
-    if model.program_store.compilation_errors.keys().len() > 0 {
-        compilation_errors::update(
-            &model.widget_ids,
-            ui,
-            &model.program_store.compilation_errors,
-        );
+    let errors = model.program_store.shader_store.errors();
+    if errors.keys().len() > 0 {
+        compilation_errors::update(&model.widget_ids, ui, &errors);
     }
 }
 

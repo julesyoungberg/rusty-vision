@@ -6,8 +6,9 @@ use std::time;
 
 use crate::config;
 use crate::pipelines;
-use crate::shaders;
 use crate::uniforms;
+
+mod shaders;
 
 /**
  * Stores GPU programs and related data
@@ -16,9 +17,9 @@ pub struct ProgramStore {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub changes_channel: Receiver<DebouncedEvent>,
-    pub compilation_errors: shaders::CompilationErrors,
     pub current_program: usize,
     pub pipelines: pipelines::Pipelines,
+    pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
     pub uniforms: uniforms::Uniforms,
     pub uniform_buffer: wgpu::Buffer,
@@ -61,9 +62,9 @@ impl ProgramStore {
             bind_group,
             bind_group_layout,
             changes_channel,
-            compilation_errors: HashMap::new(),
             current_program: config::DEFAULT_PROGRAM,
             pipelines: HashMap::new(),
+            shader_store: shaders::ShaderStore::new(),
             shader_watcher,
             uniforms,
             uniform_buffer,
@@ -75,19 +76,19 @@ impl ProgramStore {
      * Call once after initialization.
      */
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
-        let compilation_result = shaders::compile_shaders(device, config::SHADERS);
+        self.shader_store.compile(device);
+        let errors = self.shader_store.errors();
+        let shader_modules = self.shader_store.shader_modules();
 
-        if compilation_result.errors.keys().len() == 0 {
+        if errors.keys().len() == 0 {
             self.pipelines = pipelines::create_pipelines(
                 device,
                 &self.bind_group_layout,
                 num_samples,
-                &compilation_result.shaders,
+                &shader_modules,
                 &config::PIPELINES,
             );
         }
-
-        self.compilation_errors = compilation_result.errors;
     }
 
     /**
