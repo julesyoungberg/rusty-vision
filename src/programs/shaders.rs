@@ -9,7 +9,7 @@ use crate::config;
 /**
  * Stores data that represents a single shader file
  */
-struct Shader {
+pub struct Shader {
     pub error: Option<shaderc::Error>,
     pub filename: String,
     pub module: Option<wgpu::ShaderModule>,
@@ -92,13 +92,13 @@ impl Shader {
     }
 }
 
-type Shaders = HashMap<String, Shader>;
+pub type Shaders = HashMap<String, Shader>;
 
 /**
  * Stores a collection of shaders
  */
 pub struct ShaderStore {
-    shaders: Shaders,
+    pub shaders: Shaders,
 }
 
 /**
@@ -130,15 +130,5 @@ impl ShaderStore {
             }
         }
         e
-    }
-
-    pub fn shader_modules(&self) -> HashMap<&String, &wgpu::ShaderModule> {
-        let mut s = HashMap::new();
-        for (name, shader) in self.shaders.iter() {
-            if let Some(module) = &shader.module {
-                s.insert(name, module);
-            }
-        }
-        s
     }
 }

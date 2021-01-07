@@ -5,10 +5,12 @@ use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::config;
-use crate::pipelines;
 use crate::uniforms;
 
+mod program;
 mod shaders;
+
+pub type Programs = HashMap<String, program::Program>;
 
 /**
  * Stores GPU programs and related data
@@ -18,7 +20,7 @@ pub struct ProgramStore {
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
-    pub pipelines: pipelines::Pipelines,
+    pub programs: Programs,
     pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
     pub uniforms: uniforms::Uniforms,
@@ -58,12 +60,21 @@ impl ProgramStore {
             .watch(config::SHADERS_PATH, RecursiveMode::Recursive)
             .unwrap();
 
+        let mut programs = HashMap::new();
+        for pipeline_desc in config::PIPELINES {
+            let name = String::from(pipeline_desc[0]);
+            programs.insert(
+                name,
+                program::Program::new(pipeline_desc[1], pipeline_desc[2]),
+            );
+        }
+
         Self {
             bind_group,
             bind_group_layout,
             changes_channel,
             current_program: config::DEFAULT_PROGRAM,
-            pipelines: HashMap::new(),
+            programs,
             shader_store: shaders::ShaderStore::new(),
             shader_watcher,
             uniforms,
@@ -77,16 +88,14 @@ impl ProgramStore {
      */
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         self.shader_store.compile(device);
-        let errors = self.shader_store.errors();
-        let shader_modules = self.shader_store.shader_modules();
 
-        if errors.keys().len() == 0 {
-            self.pipelines = pipelines::create_pipelines(
+        // now update all the GPU programs to use the latest code
+        for (_, program) in self.programs.iter_mut() {
+            program.update(
                 device,
                 &self.bind_group_layout,
                 num_samples,
-                &shader_modules,
-                &config::PIPELINES,
+                &self.shader_store.shaders,
             );
         }
     }
@@ -121,7 +130,12 @@ impl ProgramStore {
      * Fetch current GPU program.
      */
     pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
-        self.pipelines.get(config::PROGRAMS[self.current_program])
+        self.programs
+            .get(config::PROGRAMS[self.current_program])
+            .as_ref()
+            .unwrap()
+            .pipeline
+            .as_ref()
     }
 
     /**
