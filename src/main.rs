@@ -2,10 +2,9 @@ use nannou::prelude::*;
 
 mod app;
 mod config;
-mod d2;
 mod interface;
 mod programs;
-mod uniforms;
+mod quad_2d;
 mod util;
 
 fn main() {
@@ -30,7 +29,7 @@ fn model(app: &App) -> app::Model {
 
     let mut program_store = programs::ProgramStore::new(device);
     program_store.compile_shaders(device, msaa_samples);
-    let vertex_buffer = d2::create_vertex_buffer(device);
+    let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
@@ -138,7 +137,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     render_pass.set_bind_group(0, &model.program_store.bind_group, &[]);
 
     // render
-    let vertex_range = 0..d2::VERTICES.len() as u32;
+    let vertex_range = 0..quad_2d::VERTICES.len() as u32;
     let instance_range = 0..1;
     render_pass.draw(vertex_range, instance_range);
     true

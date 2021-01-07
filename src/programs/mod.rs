@@ -5,10 +5,10 @@ use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::config;
-use crate::uniforms;
 
 mod program;
 mod shaders;
+pub mod uniforms;
 
 pub type Programs = HashMap<String, program::Program>;
 

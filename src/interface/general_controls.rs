@@ -3,7 +3,7 @@ use nannou::ui::prelude::*;
 use crate::app;
 use crate::config;
 use crate::interface::components;
-use crate::uniforms;
+use crate::programs::uniforms;
 
 /**
  * Section height, computes and returns the current height.
