@@ -94,7 +94,10 @@ impl ProgramStore {
         self.shader_store.compile(device);
 
         let layout_desc = wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&self.uniform_buffer.bind_group_layout], //, &self.geometry_bind_group_layout],
+            bind_group_layouts: &[
+                &self.uniform_buffer.bind_group_layout,
+                &self.geometry_uniform_buffer.bind_group_layout,
+            ],
         };
 
         // now update all the GPU programs to use the latest code
@@ -173,6 +176,6 @@ impl ProgramStore {
             .update::<uniforms::Data>(device, encoder, self.uniforms.as_bytes());
 
         self.geometry_uniform_buffer
-            .update::<geometry_uniforms::Data>(device, encoder, self.uniforms.as_bytes());
+            .update::<geometry_uniforms::Data>(device, encoder, self.geometry_uniforms.as_bytes());
     }
 }

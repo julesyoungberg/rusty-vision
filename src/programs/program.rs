@@ -56,10 +56,8 @@ impl Program {
         let frag_shader = frag.module.as_ref().unwrap();
 
         // both shaders are valid, create the render pipeline
-        println!("creating pipeline");
         let pipeline =
             util::create_pipeline(device, layout_desc, vert_shader, frag_shader, num_samples);
-        println!("created pipeline");
         self.pipeline = Some(pipeline);
         self.error = None;
     }

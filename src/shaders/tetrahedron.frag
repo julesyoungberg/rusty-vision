@@ -31,6 +31,12 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float cameraUpX;
     float cameraUpY;
     float cameraUpZ;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
+};
+
+layout(set = 1, binding = 0) uniform GeometryUniforms {
     float rotation1X;
     float rotation1Y;
     float rotation1Z;
@@ -40,9 +46,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float offset1X;
     float offset1Y;
     float offset1Z;
-    float shapeRotationX;
-    float shapeRotationY;
-    float shapeRotationZ;
 };
 
 // ray marching
