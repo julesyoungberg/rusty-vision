@@ -8,7 +8,7 @@ use crate::util;
 /**
  * Generic interface
  */
-pub trait Bufferable {
+pub trait Bufferable: Sized {
     fn as_bytes(&self) -> &[u8];
 
     fn set_program_defaults(&mut self, _selected: usize) {}
@@ -131,7 +131,7 @@ impl Uniforms {
         }
     }
 
-    pub fn update_time(&mut self) {
+    pub fn update(&mut self) {
         let elapsed = self.clock.elapsed().unwrap();
         self.data.time = elapsed.as_millis() as f32 / 1000.0;
     }
