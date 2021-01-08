@@ -20,7 +20,7 @@ pub struct GeometryUniforms {
     pub data: Data,
 }
 
-impl uniforms::UniformBuffer for GeometryUniforms {
+impl uniforms::Bufferable for GeometryUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

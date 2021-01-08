@@ -8,7 +8,7 @@ use crate::util;
 /**
  * Generic interface
  */
-pub trait UniformBuffer {
+pub trait Bufferable {
     fn as_bytes(&self) -> &[u8];
 
     fn set_program_defaults(&mut self, _selected: usize) {}
@@ -65,7 +65,7 @@ pub struct Uniforms {
     pub data: Data,
 }
 
-impl UniformBuffer for Uniforms {
+impl Bufferable for Uniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

@@ -11,7 +11,7 @@ mod program;
 mod shaders;
 pub mod uniforms;
 
-use crate::programs::uniforms::UniformBuffer;
+use crate::programs::uniforms::Bufferable;
 
 pub type Programs = HashMap<String, program::Program>;
 
