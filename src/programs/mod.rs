@@ -167,7 +167,7 @@ impl ProgramStore {
      * Update GPU uniform buffer data with current uniforms.
      * Call in draw() before rendering.
      */
-    pub fn update_uniform_buffer(
+    pub fn update_uniform_buffers(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
@@ -177,5 +177,16 @@ impl ProgramStore {
 
         self.geometry_uniform_buffer
             .update::<geometry_uniforms::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+    }
+
+    /**
+     * Fetch the appropriate bind groups to set positions for
+     * the current program.
+     * Call in draw() right before rendering.
+     */
+    pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
+        let uniform_bind_group = &self.uniform_buffer.bind_group;
+        let geometry_bind_group = &self.geometry_uniform_buffer.bind_group;
+        vec![uniform_bind_group, geometry_bind_group]
     }
 }

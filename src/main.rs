@@ -124,9 +124,10 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     };
     let mut encoder = frame.command_encoder();
 
+    // send new uniform data to the GPU buffers
     model
         .program_store
-        .update_uniform_buffer(device, &mut encoder);
+        .update_uniform_buffers(device, &mut encoder);
 
     // configure pipeline
     let mut render_pass = wgpu::RenderPassBuilder::new()
@@ -134,14 +135,14 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
         .begin(&mut encoder);
     render_pass.set_pipeline(&render_pipeline);
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
-    render_pass.set_bind_group(0, &model.program_store.uniform_buffer.bind_group, &[]);
-    render_pass.set_bind_group(
-        1,
-        &model.program_store.geometry_uniform_buffer.bind_group,
-        &[],
-    );
 
-    // render
+    // attach appropriate bind groups for the current program
+    let bind_groups = model.program_store.get_bind_groups();
+    for (set, bind_group) in bind_groups.iter().enumerate() {
+        render_pass.set_bind_group(set as u32, bind_group, &[]);
+    }
+
+    // render quad
     let vertex_range = 0..quad_2d::VERTICES.len() as u32;
     let instance_range = 0..1;
     render_pass.draw(vertex_range, instance_range);
