@@ -16,6 +16,7 @@ pub struct Data {
     pub offset1_z: f32,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct GeometryUniforms {
     pub data: Data,
 }

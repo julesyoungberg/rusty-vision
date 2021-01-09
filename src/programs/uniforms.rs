@@ -51,6 +51,7 @@ pub struct Data {
 /**
  * General Uniforms
  */
+#[derive(Debug, Copy, Clone)]
 pub struct Uniforms {
     pub clock: SystemTime,
     pub data: Data,

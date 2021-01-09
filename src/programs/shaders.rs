@@ -9,6 +9,7 @@ use crate::config;
 /**
  * Stores data that represents a single shader file
  */
+#[derive(Debug)]
 pub struct Shader {
     pub error: Option<shaderc::Error>,
     pub filename: String,
@@ -97,6 +98,7 @@ pub type Shaders = HashMap<String, Shader>;
 /**
  * Stores a collection of shaders
  */
+#[derive(Debug)]
 pub struct ShaderStore {
     pub shaders: Shaders,
 }

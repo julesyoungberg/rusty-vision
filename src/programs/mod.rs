@@ -69,6 +69,7 @@ impl ProgramStore {
                     .collect::<Vec<String>>()
             })
             .collect::<Vec<Vec<String>>>();
+        println!("program_uniforms: {:?}", program_uniforms);
 
         Self {
             buffer_store,

@@ -4,7 +4,7 @@ use nannou::prelude::*;
 
 // The vertex type that we will use to represent a point on our triangle.
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vertex {
     pub position: [f32; 2],
 }

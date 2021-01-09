@@ -6,6 +6,7 @@ use crate::util;
 /**
  * represents a GPU program (series of shaders)
  */
+#[derive(Debug)]
 pub struct Program {
     pub error: Option<String>,
     pub pipeline: Option<wgpu::RenderPipeline>,

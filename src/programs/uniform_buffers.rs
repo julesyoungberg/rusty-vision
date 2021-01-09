@@ -9,6 +9,7 @@ use crate::programs::uniforms::Bufferable;
 /**
  * Stores a uniform buffer along with the relevant bind groups.
  */
+#[derive(Debug)]
 pub struct UniformBuffer {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
@@ -65,6 +66,7 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
 /**
  * Stores all different uniforms
  */
+#[derive(Debug)]
 pub struct UniformBufferStore {
     pub buffers: UniformBuffers,
     pub geometry_uniforms: geometry_uniforms::GeometryUniforms,
