@@ -7,10 +7,8 @@ use std::time;
 
 use crate::config;
 
-pub mod geometry_uniforms;
 pub mod program;
 mod shaders;
-mod uniform_buffers;
 pub mod uniforms;
 
 pub type Programs = HashMap<String, program::Program>;
@@ -21,7 +19,7 @@ pub type ProgramUniforms = Vec<Vec<String>>;
  * Stores GPU programs and related data
  */
 pub struct ProgramStore {
-    pub buffer_store: uniform_buffers::UniformBufferStore,
+    pub buffer_store: uniforms::BufferStore,
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
     pub programs: Programs,
@@ -40,7 +38,7 @@ pub struct ProgramStore {
  */
 impl ProgramStore {
     pub fn new(device: &wgpu::Device) -> Self {
-        let buffer_store = uniform_buffers::UniformBufferStore::new(device);
+        let buffer_store = uniforms::BufferStore::new(device);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();

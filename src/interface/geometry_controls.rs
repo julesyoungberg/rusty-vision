@@ -2,7 +2,7 @@ use nannou::ui::prelude::*;
 
 use crate::app;
 use crate::interface::components;
-use crate::programs::geometry_uniforms::GeometryUniforms;
+use crate::programs::uniforms;
 
 /**
  * Section height, computes and returns the current height.
@@ -21,7 +21,11 @@ pub fn height(model: &mut app::Model) -> f32 {
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut GeometryUniforms) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    uniforms: &mut uniforms::geometry::Uniforms,
+) {
     /////////////////////////
     // rotation1
     let twopi = 360.0;

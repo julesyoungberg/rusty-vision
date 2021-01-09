@@ -7,7 +7,11 @@ use crate::programs::uniforms;
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut uniforms::Uniforms) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    uniforms: &mut uniforms::general::Uniforms,
+) {
     components::container([250.0, 80.0])
         .no_parent()
         .top_right_with_margin(10.0)

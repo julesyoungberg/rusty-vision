@@ -3,16 +3,8 @@ use nannou::prelude::*;
 use std::time::SystemTime;
 
 use crate::config;
+use crate::programs::uniforms::base::Bufferable;
 use crate::util;
-
-/**
- * Generic interface
- */
-pub trait Bufferable: Sized {
-    fn as_bytes(&self) -> &[u8];
-
-    fn set_program_defaults(&mut self, _selected: usize) {}
-}
 
 /**
  * General uniforms data

@@ -15,7 +15,14 @@ pub fn height(model: &mut app::Model) -> f32 {
     if model.ui_show_general {
         h = 270.0;
 
-        if model.program_store.buffer_store.uniforms.data.color_mode == 0 {
+        if model
+            .program_store
+            .buffer_store
+            .general_uniforms
+            .data
+            .color_mode
+            == 0
+        {
             h = h + 100.0;
         }
     }
@@ -26,7 +33,11 @@ pub fn height(model: &mut app::Model) -> f32 {
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut uniforms::Uniforms) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    uniforms: &mut uniforms::general::Uniforms,
+) {
     /////////////////////////
     // draw floor toggle
     components::label("Draw Floor")

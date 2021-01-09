@@ -2,9 +2,11 @@ use nannou::prelude::*;
 use std::collections::HashMap;
 
 use crate::config;
-use crate::programs::geometry_uniforms;
-use crate::programs::uniforms;
-use crate::programs::uniforms::Bufferable;
+use crate::programs::uniforms::base::Bufferable;
+
+pub mod base;
+pub mod general;
+pub mod geometry;
 
 /**
  * Stores a uniform buffer along with the relevant bind groups.
@@ -67,26 +69,27 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
  * Stores all different uniforms
  */
 #[derive(Debug)]
-pub struct UniformBufferStore {
+pub struct BufferStore {
     pub buffers: UniformBuffers,
-    pub geometry_uniforms: geometry_uniforms::GeometryUniforms,
-    pub uniforms: uniforms::Uniforms,
+    pub general_uniforms: general::Uniforms,
+    pub geometry_uniforms: geometry::Uniforms,
 }
 
 /**
  * Mantains the uniform data and the corresponding GPU buffers
  */
-impl UniformBufferStore {
+impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
-        let mut uniforms =
-            uniforms::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
-        uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
-        let uniform_buffer = UniformBuffer::new::<uniforms::Data>(device, uniforms.as_bytes());
+        let mut general_uniforms =
+            general::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
+        general_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let uniform_buffer =
+            UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
 
-        let mut geometry_uniforms = geometry_uniforms::GeometryUniforms::new();
+        let mut geometry_uniforms = geometry::Uniforms::new();
         geometry_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let geometry_uniform_buffer =
-            UniformBuffer::new::<geometry_uniforms::Data>(device, geometry_uniforms.as_bytes());
+            UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
         let mut buffers = HashMap::new();
         buffers.insert(String::from("general"), uniform_buffer);
@@ -94,13 +97,13 @@ impl UniformBufferStore {
 
         Self {
             buffers,
+            general_uniforms,
             geometry_uniforms,
-            uniforms,
         }
     }
 
     pub fn set_program_defaults(&mut self, selected: usize) {
-        self.uniforms.set_program_defaults(selected);
+        self.general_uniforms.set_program_defaults(selected);
     }
 
     /**
@@ -108,13 +111,12 @@ impl UniformBufferStore {
      * Call every timestep.
      */
     pub fn update(&mut self) {
-        self.uniforms.update();
+        self.general_uniforms.update();
     }
 
     /**
      * Update GPU uniform buffers with current data.
      * Call in draw() before rendering.
-     * TODO: figure out a way to do this iteratively so that it can be left untouched when adding new buffers
      */
     pub fn update_buffers(
         &self,
@@ -124,11 +126,11 @@ impl UniformBufferStore {
         self.buffers
             .get("general")
             .unwrap()
-            .update::<uniforms::Data>(device, encoder, self.uniforms.as_bytes());
+            .update::<general::Data>(device, encoder, self.general_uniforms.as_bytes());
 
         self.buffers
             .get("geometry")
             .unwrap()
-            .update::<geometry_uniforms::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+            .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
     }
 }

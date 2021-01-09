@@ -77,7 +77,7 @@ pub fn update(model: &mut app::Model) {
         general_controls::update(
             &model.widget_ids,
             ui,
-            &mut model.program_store.buffer_store.uniforms,
+            &mut model.program_store.buffer_store.general_uniforms,
         );
         geometry_left = -60.0;
     }
@@ -110,7 +110,7 @@ pub fn update(model: &mut app::Model) {
     info_box::update(
         &model.widget_ids,
         ui,
-        &mut model.program_store.buffer_store.uniforms,
+        &mut model.program_store.buffer_store.general_uniforms,
     );
 
     let errors = model.program_store.errors();

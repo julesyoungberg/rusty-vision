@@ -1,6 +1,6 @@
 use nannou::prelude::*;
 
-use crate::programs::uniforms;
+use crate::programs::uniforms::base::Bufferable;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17,17 +17,17 @@ pub struct Data {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct GeometryUniforms {
+pub struct Uniforms {
     pub data: Data,
 }
 
-impl uniforms::Bufferable for GeometryUniforms {
+impl Bufferable for Uniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 }
 
-impl GeometryUniforms {
+impl Uniforms {
     pub fn new() -> Self {
         Self {
             data: Data {
