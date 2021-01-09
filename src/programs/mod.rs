@@ -85,7 +85,8 @@ impl ProgramStore {
      * Compile all shaders and [re]create pipelines.
      * Call once after initialization.
      * TODO: Potential optimization: only compile the shaders needed for the current program,
-     * then only update the current program
+     * then only update the current program. Compilation could be moved into the program,
+     * and then errors will need to be pulled from the current program rather than the shader store.
      */
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         self.shader_store.compile(device);

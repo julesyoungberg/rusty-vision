@@ -113,8 +113,8 @@ impl UniformBufferStore {
 
     /**
      * Update GPU uniform buffers with current data.
-     * TODO: figure out a way to do this iteratively so that it can be left untouched when adding new buffers
      * Call in draw() before rendering.
+     * TODO: figure out a way to do this iteratively so that it can be left untouched when adding new buffers
      */
     pub fn update_buffers(
         &self,
