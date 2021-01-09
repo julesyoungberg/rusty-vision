@@ -69,7 +69,6 @@ impl ProgramStore {
                     .collect::<Vec<String>>()
             })
             .collect::<Vec<Vec<String>>>();
-        println!("program_uniforms: {:?}", program_uniforms);
 
         Self {
             buffer_store,
@@ -92,8 +91,9 @@ impl ProgramStore {
         self.shader_store.compile(device);
 
         // now update all the GPU program's to use the latest code
-        for (i, p) in self.programs.iter_mut().enumerate() {
-            let program_uniforms = &self.program_uniforms[i];
+        for (name, program) in self.programs.iter_mut() {
+            let program_index = config::PROGRAMS.iter().position(|p| p == name).unwrap();
+            let program_uniforms = &self.program_uniforms[program_index];
             let uniform_buffers = &self.buffer_store.buffers;
 
             // map the current program's uniform list to a list of bind group layouts
@@ -107,7 +107,7 @@ impl ProgramStore {
             // update the program with the new shader code and appropriate layout description
             let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
             let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
-            p.1.update(
+            program.update(
                 device,
                 &layout_desc,
                 num_samples,
