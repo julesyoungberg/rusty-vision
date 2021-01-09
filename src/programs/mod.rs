@@ -1,6 +1,7 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use std::collections::HashMap;
+use std::iter::FromIterator;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
@@ -16,6 +17,10 @@ use crate::programs::uniforms::Bufferable;
 
 pub type Programs = HashMap<String, program::Program>;
 
+pub type UniformBuffers = HashMap<String, uniform_buffer::UniformBuffer>;
+
+pub type ProgramUniforms = Vec<Vec<String>>;
+
 /**
  * Stores GPU programs and related data
  */
@@ -23,12 +28,12 @@ pub struct ProgramStore {
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
     pub geometry_uniforms: geometry_uniforms::GeometryUniforms,
-    pub geometry_uniform_buffer: uniform_buffer::UniformBuffer,
     pub programs: Programs,
+    pub program_uniforms: ProgramUniforms,
     pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
     pub uniforms: uniforms::Uniforms,
-    pub uniform_buffer: uniform_buffer::UniformBuffer,
+    pub uniform_buffers: UniformBuffers,
 }
 
 /**
@@ -64,6 +69,7 @@ impl ProgramStore {
             .watch(config::SHADERS_PATH, RecursiveMode::Recursive)
             .unwrap();
 
+        // create the program map
         let mut programs = HashMap::new();
         for pipeline_desc in config::PIPELINES {
             let name = String::from(pipeline_desc[0]);
@@ -73,36 +79,61 @@ impl ProgramStore {
             );
         }
 
+        // create uniform buffer map
+        // TODO: encapsulate this in a UniformBufferStore struct?
+        let mut uniform_buffers = HashMap::new();
+        uniform_buffers.insert(String::from("general"), uniform_buffer);
+        uniform_buffers.insert(String::from("geometry"), geometry_uniform_buffer);
+
+        // parse the uniform configuration into a vector of vector of strings for easy lookup & iteration
+        let program_uniforms = config::PROGRAM_UNIFORMS
+            .iter()
+            .map(|u| {
+                u.split(",")
+                    .map(|s| String::from(s))
+                    .collect::<Vec<String>>()
+            })
+            .collect::<Vec<Vec<String>>>();
+
         Self {
             changes_channel,
             current_program: config::DEFAULT_PROGRAM,
             geometry_uniforms,
-            geometry_uniform_buffer,
             programs,
+            program_uniforms,
             shader_store: shaders::ShaderStore::new(),
             shader_watcher,
             uniforms,
-            uniform_buffer,
+            uniform_buffers,
         }
     }
 
     /**
      * Compile all shaders and [re]create pipelines.
      * Call once after initialization.
+     * TODO: Potential optimization: only compile the shaders needed for the current program,
+     * then only update the current program
      */
     pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         self.shader_store.compile(device);
 
-        let layout_desc = wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[
-                &self.uniform_buffer.bind_group_layout,
-                &self.geometry_uniform_buffer.bind_group_layout,
-            ],
-        };
+        // now update all the GPU program's to use the latest code
+        for (i, p) in self.programs.iter_mut().enumerate() {
+            let program_uniforms = &self.program_uniforms[i];
+            let uniform_buffers = &self.uniform_buffers;
 
-        // now update all the GPU programs to use the latest code
-        for (_, program) in self.programs.iter_mut() {
-            program.update(
+            // map the current program's uniform list to a list of bind group layouts
+            let bind_group_layout_iter = program_uniforms.iter().map(|u| {
+                &uniform_buffers
+                    .get(&u.to_string())
+                    .unwrap()
+                    .bind_group_layout
+            });
+
+            // update the program with the new shader code and appropriate layout description
+            let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
+            let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
+            p.1.update(
                 device,
                 &layout_desc,
                 num_samples,
@@ -150,8 +181,7 @@ impl ProgramStore {
     }
 
     /**
-     * Selects the current program
-     * performs any housekeeping / initialization
+     * Selects the current program performs any housekeeping / initialization
      */
     pub fn select_program(&mut self, selected: usize) {
         if selected == self.current_program {
@@ -166,27 +196,33 @@ impl ProgramStore {
     /**
      * Update GPU uniform buffer data with current uniforms.
      * Call in draw() before rendering.
+     * TODO: figure out a way to do this iteratively so that it can be left untouched when adding new buffers
      */
     pub fn update_uniform_buffers(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
-        self.uniform_buffer
+        self.uniform_buffers
+            .get("general")
+            .unwrap()
             .update::<uniforms::Data>(device, encoder, self.uniforms.as_bytes());
 
-        self.geometry_uniform_buffer
+        self.uniform_buffers
+            .get("geometry")
+            .unwrap()
             .update::<geometry_uniforms::Data>(device, encoder, self.geometry_uniforms.as_bytes());
     }
 
     /**
-     * Fetch the appropriate bind groups to set positions for
-     * the current program.
+     * Fetch the appropriate bind groups to set positions for the current program.
      * Call in draw() right before rendering.
      */
     pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
-        let uniform_bind_group = &self.uniform_buffer.bind_group;
-        let geometry_bind_group = &self.geometry_uniform_buffer.bind_group;
-        vec![uniform_bind_group, geometry_bind_group]
+        let program_uniforms = &self.program_uniforms[self.current_program];
+        let bind_group_iter = program_uniforms
+            .iter()
+            .map(|u| &self.uniform_buffers.get(u).unwrap().bind_group);
+        Vec::from_iter(bind_group_iter)
     }
 }

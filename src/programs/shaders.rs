@@ -115,6 +115,7 @@ impl ShaderStore {
         Self { shaders }
     }
 
+    // TODO: parallelize
     pub fn compile(&mut self, device: &wgpu::Device) {
         let mut compiler = shaderc::Compiler::new().unwrap();
         for (_, shader) in self.shaders.iter_mut() {

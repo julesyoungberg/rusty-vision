@@ -74,3 +74,14 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
         &[1.0, 0.0, 0.0],     // [color_mode, ?, ?]
     ],
 ];
+
+/**
+ * A list of uniform buffer lists for each program.
+ * Must correspond with PROGRAMS by index
+ */
+pub const PROGRAM_UNIFORMS: &'static [&'static str] = &[
+    "general",          // basic
+    "general,geometry", // mandelbox
+    "general,geometry", // mandelbulb
+    "general,geometry", // tetrahedron
+];
