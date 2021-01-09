@@ -6,14 +6,13 @@ use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::config;
+use crate::programs::uniforms::Bufferable;
 
 pub mod geometry_uniforms;
 mod program;
 mod shaders;
 mod uniform_buffer;
 pub mod uniforms;
-
-use crate::programs::uniforms::Bufferable;
 
 pub type Programs = HashMap<String, program::Program>;
 
