@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use rayon::prelude::*;
 use shaderc;
 use std::collections::HashMap;
 
@@ -41,11 +42,11 @@ impl Program {
         layout_desc: &wgpu::PipelineLayoutDescriptor,
         num_samples: u32,
     ) {
-        let mut compiler = shaderc::Compiler::new().unwrap();
         let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
 
         // compile shaders
-        shaders.iter_mut().for_each(|shader| {
+        shaders.par_iter_mut().for_each(|shader| {
+            let mut compiler = shaderc::Compiler::new().unwrap();
             shader.compile(device, &mut compiler);
         });
 
