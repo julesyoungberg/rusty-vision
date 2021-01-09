@@ -43,19 +43,19 @@ impl Program {
     ) {
         let mut compiler = shaderc::Compiler::new().unwrap();
 
-        // let shaders = &[self.vert_shader, self.frag_shader];
         // compile shaders
-        // TODO: parallelize
-        self.vert_shader.compile(device, &mut compiler);
-        if let Some(e) = &self.vert_shader.error {
-            self.errors
-                .insert(self.vert_shader.filename.to_string(), e.to_string());
-        }
-        self.frag_shader.compile(device, &mut compiler);
-        if let Some(e) = &self.frag_shader.error {
-            self.errors
-                .insert(self.frag_shader.filename.to_string(), e.to_string());
-        }
+        let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
+        shaders.iter_mut().for_each(|shader| {
+            shader.compile(device, &mut compiler);
+        });
+
+        // collect errors
+        self.errors = shaders.iter().fold(HashMap::new(), |mut errors, shader| {
+            if let Some(e) = &shader.error {
+                errors.insert(shader.filename.to_string(), e.to_string());
+            }
+            errors
+        });
 
         // exit early if any errors
         if self.errors.keys().len() > 0 {
