@@ -8,5 +8,6 @@ edition = "2018"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 nannou = "0.15"
 notify = "4.0.12"
+rayon = "1.4"
 regex = "1"
 shaderc = "0.6"

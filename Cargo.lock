@@ -2220,6 +2220,7 @@ dependencies = [
  "bytemuck",
  "nannou",
  "notify",
+ "rayon",
  "regex",
  "shaderc",
 ]

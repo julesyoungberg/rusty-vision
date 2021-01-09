@@ -42,9 +42,9 @@ impl Program {
         num_samples: u32,
     ) {
         let mut compiler = shaderc::Compiler::new().unwrap();
+        let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
 
         // compile shaders
-        let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
         shaders.iter_mut().for_each(|shader| {
             shader.compile(device, &mut compiler);
         });
@@ -57,18 +57,21 @@ impl Program {
             errors
         });
 
-        // exit early if any errors
+        // exit early if errors
         if self.errors.keys().len() > 0 {
             self.pipeline = None;
             return;
         }
 
-        let vert_shader = self.vert_shader.module.as_ref().unwrap();
-        let frag_shader = self.frag_shader.module.as_ref().unwrap();
+        // collect modules
+        let modules = shaders
+            .iter()
+            .map(|shader| shader.module.as_ref().unwrap())
+            .collect::<Vec<&wgpu::ShaderModule>>();
 
-        // both shaders are valid, create the render pipeline and clear the error
+        // create the render pipeline and clear errors
         let pipeline =
-            util::create_pipeline(device, layout_desc, vert_shader, frag_shader, num_samples);
+            util::create_pipeline(device, layout_desc, modules[0], modules[1], num_samples);
         self.pipeline = Some(pipeline);
         self.errors = HashMap::new();
     }
