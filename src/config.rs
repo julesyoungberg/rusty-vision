@@ -5,20 +5,8 @@ pub static SHADERS_PATH: &str = "./src/shaders/";
 pub const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
 
 /**
- * All shaders to compile
- */
-pub const SHADERS: &'static [&'static str] = &[
-    "basic.vert",
-    "basic.frag",
-    "mandelbox.frag",
-    "mandelbulb.frag",
-    "tetrahedron.frag",
-];
-
-/**
  * Shader pipeline descriptions
  * [internal_name, vertex_shader, frag_shader]
- * all shaders must be present in SHADERS
  */
 pub const PIPELINES: &'static [&'static [&'static str]] = &[
     &["basic", "basic.vert", "basic.frag"],

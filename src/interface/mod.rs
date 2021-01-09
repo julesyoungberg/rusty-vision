@@ -113,7 +113,7 @@ pub fn update(model: &mut app::Model) {
         &mut model.program_store.buffer_store.uniforms,
     );
 
-    let errors = model.program_store.shader_store.errors();
+    let errors = model.program_store.errors();
     if errors.keys().len() > 0 {
         compilation_errors::update(&model.widget_ids, ui, &errors);
     }

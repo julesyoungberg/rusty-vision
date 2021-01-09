@@ -8,7 +8,7 @@ use std::time;
 use crate::config;
 
 pub mod geometry_uniforms;
-mod program;
+pub mod program;
 mod shaders;
 mod uniform_buffers;
 pub mod uniforms;
@@ -26,7 +26,6 @@ pub struct ProgramStore {
     pub current_program: usize,
     pub programs: Programs,
     pub program_uniforms: ProgramUniforms,
-    pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
 }
 
@@ -76,45 +75,33 @@ impl ProgramStore {
             current_program: config::DEFAULT_PROGRAM,
             programs,
             program_uniforms,
-            shader_store: shaders::ShaderStore::new(),
             shader_watcher,
         }
     }
 
     /**
-     * Compile all shaders and [re]create pipelines.
+     * Compile current program with latest shader code.
      * Call once after initialization.
-     * TODO: Potential optimization: only compile the shaders needed for the current program,
-     * then only update the current program. Compilation could be moved into the program,
-     * and then errors will need to be pulled from the current program rather than the shader store.
      */
-    pub fn compile_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
-        self.shader_store.compile(device);
+    pub fn compile_current(&mut self, device: &wgpu::Device, num_samples: u32) {
+        // update the current GPU program to use the latest code
+        let name = config::PROGRAMS[self.current_program];
+        let program = self.programs.get_mut(name).unwrap();
+        let program_uniforms = &self.program_uniforms[self.current_program];
+        let uniform_buffers = &self.buffer_store.buffers;
 
-        // now update all the GPU program's to use the latest code
-        for (name, program) in self.programs.iter_mut() {
-            let program_index = config::PROGRAMS.iter().position(|p| p == name).unwrap();
-            let program_uniforms = &self.program_uniforms[program_index];
-            let uniform_buffers = &self.buffer_store.buffers;
+        // map the current program's uniform list to a list of bind group layouts
+        let bind_group_layout_iter = program_uniforms.iter().map(|u| {
+            &uniform_buffers
+                .get(&u.to_string())
+                .unwrap()
+                .bind_group_layout
+        });
 
-            // map the current program's uniform list to a list of bind group layouts
-            let bind_group_layout_iter = program_uniforms.iter().map(|u| {
-                &uniform_buffers
-                    .get(&u.to_string())
-                    .unwrap()
-                    .bind_group_layout
-            });
-
-            // update the program with the new shader code and appropriate layout description
-            let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
-            let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
-            program.update(
-                device,
-                &layout_desc,
-                num_samples,
-                &self.shader_store.shaders,
-            );
-        }
+        // update the program with the new shader code and appropriate layout description
+        let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
+        let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
+        program.compile(device, &layout_desc, num_samples);
     }
 
     /**
@@ -130,7 +117,7 @@ impl ProgramStore {
             if let DebouncedEvent::Write(path) = event {
                 let path_str = path.into_os_string().into_string().unwrap();
                 println!("changes written to: {}", path_str);
-                self.compile_shaders(device, num_samples);
+                self.compile_current(device, num_samples);
             }
         }
     }
@@ -146,13 +133,17 @@ impl ProgramStore {
     /**
      * Fetch current GPU program.
      */
-    pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
+    pub fn current_program(&self) -> &program::Program {
         self.programs
             .get(config::PROGRAMS[self.current_program])
-            .as_ref()
             .unwrap()
-            .pipeline
-            .as_ref()
+    }
+
+    /**
+     * Fetch current GPU program.
+     */
+    pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
+        self.current_program().pipeline.as_ref()
     }
 
     /**
@@ -190,5 +181,9 @@ impl ProgramStore {
             .iter()
             .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group);
         Vec::from_iter(bind_group_iter)
+    }
+
+    pub fn errors(&self) -> &program::ProgramErrors {
+        &self.current_program().errors
     }
 }

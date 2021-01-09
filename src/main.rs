@@ -28,7 +28,7 @@ fn model(app: &App) -> app::Model {
     let msaa_samples = window.msaa_samples();
 
     let mut program_store = programs::ProgramStore::new(device);
-    program_store.compile_shaders(device, msaa_samples);
+    program_store.compile_current(device, msaa_samples);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
     // create UI

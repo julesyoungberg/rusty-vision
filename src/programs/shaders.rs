@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 use regex::Regex;
 use shaderc;
-use std::collections::HashMap;
 use std::fs;
 
 use crate::config;
@@ -90,48 +89,5 @@ impl Shader {
                 self.module = None;
             }
         }
-    }
-}
-
-pub type Shaders = HashMap<String, Shader>;
-
-/**
- * Stores a collection of shaders
- */
-#[derive(Debug)]
-pub struct ShaderStore {
-    pub shaders: Shaders,
-}
-
-/**
- * Manages the compiling of a collection of shaders
- */
-impl ShaderStore {
-    pub fn new() -> Self {
-        let mut shaders = HashMap::new();
-
-        for name in config::SHADERS {
-            shaders.insert(name.to_string(), Shader::new(name.to_string()));
-        }
-
-        Self { shaders }
-    }
-
-    // TODO: parallelize
-    pub fn compile(&mut self, device: &wgpu::Device) {
-        let mut compiler = shaderc::Compiler::new().unwrap();
-        for (_, shader) in self.shaders.iter_mut() {
-            shader.compile(device, &mut compiler);
-        }
-    }
-
-    pub fn errors(&self) -> HashMap<&String, &shaderc::Error> {
-        let mut e = HashMap::new();
-        for (name, shader) in self.shaders.iter() {
-            if let Some(error) = &shader.error {
-                e.insert(name, error);
-            }
-        }
-        e
     }
 }
