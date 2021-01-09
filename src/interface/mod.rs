@@ -74,7 +74,11 @@ pub fn update(model: &mut app::Model) {
             model.program_store.select_program(selected);
         }
 
-        general_controls::update(&model.widget_ids, ui, &mut model.program_store.uniforms);
+        general_controls::update(
+            &model.widget_ids,
+            ui,
+            &mut model.program_store.buffer_store.uniforms,
+        );
         geometry_left = -60.0;
     }
 
@@ -96,14 +100,18 @@ pub fn update(model: &mut app::Model) {
         geometry_controls::update(
             &model.widget_ids,
             ui,
-            &mut model.program_store.geometry_uniforms,
+            &mut model.program_store.buffer_store.geometry_uniforms,
         );
     }
 
     //////////////////////////////////////////////////
     // Other UI
     //////////////////////////////////////////////////
-    info_box::update(&model.widget_ids, ui, &mut model.program_store.uniforms);
+    info_box::update(
+        &model.widget_ids,
+        ui,
+        &mut model.program_store.buffer_store.uniforms,
+    );
 
     let errors = model.program_store.shader_store.errors();
     if errors.keys().len() > 0 {

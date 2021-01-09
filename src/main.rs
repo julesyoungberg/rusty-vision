@@ -69,8 +69,8 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     let scale = 0.2;
     let theta = 0.002;
 
-    let camera_dir = model.program_store.uniforms.camera_dir();
-    let camera_up = model.program_store.uniforms.camera_up();
+    let camera_dir = model.program_store.buffer_store.uniforms.camera_dir();
+    let camera_up = model.program_store.buffer_store.uniforms.camera_up();
     let cross = camera_dir.cross(camera_up);
     let cross_dir = util::normalize_vector(cross);
 
@@ -78,34 +78,42 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
         Key::H => model.show_controls = !model.show_controls,
         Key::Up => model
             .program_store
+            .buffer_store
             .uniforms
             .translate_camera(camera_dir * scale),
         Key::Down => model
             .program_store
+            .buffer_store
             .uniforms
             .translate_camera(camera_dir * -scale),
         Key::Left => model
             .program_store
+            .buffer_store
             .uniforms
             .translate_camera(cross_dir * -scale),
         Key::Right => model
             .program_store
+            .buffer_store
             .uniforms
             .translate_camera(cross_dir * scale),
         Key::W => model
             .program_store
+            .buffer_store
             .uniforms
             .rotate_camera(util::rotate_around_axis(cross_dir, theta)),
         Key::S => model
             .program_store
+            .buffer_store
             .uniforms
             .rotate_camera(util::rotate_around_axis(cross_dir, -theta)),
         Key::A => model
             .program_store
+            .buffer_store
             .uniforms
             .rotate_camera(util::rotate_around_axis(camera_up, theta)),
         Key::D => model
             .program_store
+            .buffer_store
             .uniforms
             .rotate_camera(util::rotate_around_axis(camera_up, -theta)),
         _ => (),

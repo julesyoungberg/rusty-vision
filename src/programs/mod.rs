@@ -6,17 +6,14 @@ use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::config;
-use crate::programs::uniforms::Bufferable;
 
 pub mod geometry_uniforms;
 mod program;
 mod shaders;
-mod uniform_buffer;
+mod uniform_buffers;
 pub mod uniforms;
 
 pub type Programs = HashMap<String, program::Program>;
-
-pub type UniformBuffers = HashMap<String, uniform_buffer::UniformBuffer>;
 
 pub type ProgramUniforms = Vec<Vec<String>>;
 
@@ -24,15 +21,13 @@ pub type ProgramUniforms = Vec<Vec<String>>;
  * Stores GPU programs and related data
  */
 pub struct ProgramStore {
+    pub buffer_store: uniform_buffers::UniformBufferStore,
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
-    pub geometry_uniforms: geometry_uniforms::GeometryUniforms,
     pub programs: Programs,
     pub program_uniforms: ProgramUniforms,
     pub shader_store: shaders::ShaderStore,
     pub shader_watcher: notify::FsEventWatcher,
-    pub uniforms: uniforms::Uniforms,
-    pub uniform_buffers: UniformBuffers,
 }
 
 /**
@@ -46,20 +41,7 @@ pub struct ProgramStore {
  */
 impl ProgramStore {
     pub fn new(device: &wgpu::Device) -> Self {
-        // create uniform buffer
-        let mut uniforms =
-            uniforms::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
-        uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
-        let uniform_buffer =
-            uniform_buffer::UniformBuffer::new::<uniforms::Data>(device, uniforms.as_bytes());
-
-        // setup geometry uniform buffer
-        let mut geometry_uniforms = geometry_uniforms::GeometryUniforms::new();
-        geometry_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
-        let geometry_uniform_buffer = uniform_buffer::UniformBuffer::new::<geometry_uniforms::Data>(
-            device,
-            geometry_uniforms.as_bytes(),
-        );
+        let buffer_store = uniform_buffers::UniformBufferStore::new(device);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
@@ -78,12 +60,6 @@ impl ProgramStore {
             );
         }
 
-        // create uniform buffer map
-        // TODO: encapsulate this in a UniformBufferStore struct?
-        let mut uniform_buffers = HashMap::new();
-        uniform_buffers.insert(String::from("general"), uniform_buffer);
-        uniform_buffers.insert(String::from("geometry"), geometry_uniform_buffer);
-
         // parse the uniform configuration into a vector of vector of strings for easy lookup & iteration
         let program_uniforms = config::PROGRAM_UNIFORMS
             .iter()
@@ -95,15 +71,13 @@ impl ProgramStore {
             .collect::<Vec<Vec<String>>>();
 
         Self {
+            buffer_store,
             changes_channel,
             current_program: config::DEFAULT_PROGRAM,
-            geometry_uniforms,
             programs,
             program_uniforms,
             shader_store: shaders::ShaderStore::new(),
             shader_watcher,
-            uniforms,
-            uniform_buffers,
         }
     }
 
@@ -119,7 +93,7 @@ impl ProgramStore {
         // now update all the GPU program's to use the latest code
         for (i, p) in self.programs.iter_mut().enumerate() {
             let program_uniforms = &self.program_uniforms[i];
-            let uniform_buffers = &self.uniform_buffers;
+            let uniform_buffers = &self.buffer_store.buffers;
 
             // map the current program's uniform list to a list of bind group layouts
             let bind_group_layout_iter = program_uniforms.iter().map(|u| {
@@ -164,7 +138,7 @@ impl ProgramStore {
      * Call every timestep.
      */
     pub fn update_uniforms(&mut self) {
-        self.uniforms.update();
+        self.buffer_store.update();
     }
 
     /**
@@ -189,28 +163,19 @@ impl ProgramStore {
 
         println!("program selected: {}", config::PROGRAMS[selected]);
         self.current_program = selected;
-        self.uniforms.set_program_defaults(selected);
+        self.buffer_store.set_program_defaults(selected);
     }
 
     /**
-     * Update GPU uniform buffer data with current uniforms.
+     * Update GPU uniform buffers with current data.
      * Call in draw() before rendering.
-     * TODO: figure out a way to do this iteratively so that it can be left untouched when adding new buffers
      */
     pub fn update_uniform_buffers(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
-        self.uniform_buffers
-            .get("general")
-            .unwrap()
-            .update::<uniforms::Data>(device, encoder, self.uniforms.as_bytes());
-
-        self.uniform_buffers
-            .get("geometry")
-            .unwrap()
-            .update::<geometry_uniforms::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+        self.buffer_store.update_buffers(device, encoder);
     }
 
     /**
@@ -221,7 +186,7 @@ impl ProgramStore {
         let program_uniforms = &self.program_uniforms[self.current_program];
         let bind_group_iter = program_uniforms
             .iter()
-            .map(|u| &self.uniform_buffers.get(u).unwrap().bind_group);
+            .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group);
         Vec::from_iter(bind_group_iter)
     }
 }
