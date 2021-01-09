@@ -35,18 +35,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float shapeRotationZ;
 };
 
-layout(set = 1, binding = 0) uniform GeometryUniforms {
-    float rotation1X;
-    float rotation1Y;
-    float rotation1Z;
-    float rotation2X;
-    float rotation2Y;
-    float rotation2Z;
-    float offset1X;
-    float offset1Y;
-    float offset1Z;
-};
-
 void main() {
     frag_color = vec4(uv, abs(sin(time)), 1);
 }
