@@ -19,7 +19,10 @@ pub fn update(model: &mut app::Model) {
     // compute height
     let mut height = 130.0;
     height = height + general_controls::height(model);
-    height = height + geometry_controls::height(model);
+    if model.program_store.current_subscriptions.geometry {
+        height = height + geometry_controls::height(model);
+    }
+
     let border = 40.0;
     let scroll = height > config::SIZE[1] as f32 - border;
     if scroll {
@@ -85,37 +88,41 @@ pub fn update(model: &mut app::Model) {
     //////////////////////////////////////////////////
     // Geometry Controls
     //////////////////////////////////////////////////
-    for _click in components::button_big()
-        .parent(model.widget_ids.controls_wrapper)
-        .down(20.0)
-        .left(geometry_left as f64)
-        .label("Geometry")
-        .set(model.widget_ids.geometry_folder, ui)
-    {
-        println!("toggle geometry controls");
-        model.ui_show_geometry = !model.ui_show_geometry;
-    }
+    if model.program_store.current_subscriptions.geometry {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .left(geometry_left as f64)
+            .label("Geometry")
+            .set(model.widget_ids.geometry_folder, ui)
+        {
+            println!("toggle geometry controls");
+            model.ui_show_geometry = !model.ui_show_geometry;
+        }
 
-    if model.ui_show_geometry {
-        geometry_controls::update(
-            &model.widget_ids,
-            ui,
-            &mut model.program_store.buffer_store.geometry_uniforms,
-        );
+        if model.ui_show_geometry {
+            geometry_controls::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.geometry_uniforms,
+            );
+        }
     }
 
     //////////////////////////////////////////////////
     // Other UI
     //////////////////////////////////////////////////
-    info_box::update(
-        &model.widget_ids,
-        ui,
-        &mut model.program_store.buffer_store.camera_uniforms,
-    );
+    if model.program_store.current_subscriptions.camera {
+        info_box::update(
+            &model.widget_ids,
+            ui,
+            &mut model.program_store.buffer_store.camera_uniforms,
+        );
 
-    let errors = model.program_store.errors();
-    if errors.keys().len() > 0 {
-        compilation_errors::update(&model.widget_ids, ui, &errors);
+        let errors = model.program_store.errors();
+        if errors.keys().len() > 0 {
+            compilation_errors::update(&model.widget_ids, ui, &errors);
+        }
     }
 }
 

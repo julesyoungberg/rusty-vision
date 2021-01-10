@@ -66,6 +66,11 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
  * Handle key pressed event
  */
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
+    if !model.program_store.current_subscriptions.camera {
+        // currently no uniforms other than camera use keys
+        return;
+    }
+
     let scale = 0.2;
     let theta = 0.002;
 
