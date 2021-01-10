@@ -1,6 +1,6 @@
 # rusty vision
 
-A live GLSL creative coding environment built with Rust, Nannou, and WGPU.
+A live GLSL coding environment built with Rust, Nannou, and WGPU.
 
 ## setup
 
