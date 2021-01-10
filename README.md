@@ -16,6 +16,8 @@ The camera can be moved with the arrow keys and rotated with WASD.
 
 ## adding shaders
 
+This rust application listens to the shaders directory (`src/shaders`), recompiling whenever changes are made. This immediate feedback is extremely useful when working with graphics.
+
 Shaders can be added to `src/shaders` and referenced in `src/config.rs` to be included in the UI's menu. More specifically, to add a new shader program, you must modify the following constant configuration variables:
 
 - `PIPELINES`: Shader pipeline descriptions (`[name, vertex_shader, frag_shader]`) with paths relative to `./src/shaders/`
