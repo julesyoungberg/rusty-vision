@@ -6,7 +6,7 @@ Designed to be used as a creative coding environment and/or performance tool.
 
 ## setup
 
-Install Rust and Cargo, then
+Install Rust and Cargo, then run
 
 ```
 cargo run --release
