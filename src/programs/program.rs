@@ -33,6 +33,15 @@ impl Program {
         }
     }
 
+    pub fn is_new(&self) -> bool {
+        self.pipeline.is_none() && self.errors.keys().len() == 0
+    }
+
+    pub fn clear(&mut self) {
+        self.errors = HashMap::new();
+        self.pipeline = None;
+    }
+
     /**
      * Compile the program with the latest shader code.
      */

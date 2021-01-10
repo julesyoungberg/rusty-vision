@@ -133,6 +133,11 @@ impl ProgramStore {
                 self.compile_current(device, num_samples);
             }
         }
+
+        // check for a UI program change
+        if self.current_program().is_new() {
+            self.compile_current(device, num_samples);
+        }
     }
 
     /**
@@ -167,6 +172,14 @@ impl ProgramStore {
             return;
         }
 
+        // first, clear the current program
+        self.programs
+            .get_mut(config::PROGRAMS[self.current_program])
+            .unwrap()
+            .clear();
+
+        // next, update the current program and uniforms
+        // it will be compiled in the next update()
         println!("program selected: {}", config::PROGRAMS[selected]);
         self.current_program = selected;
         self.current_subscriptions = uniforms::get_subscriptions(&self.program_uniforms[selected]);
