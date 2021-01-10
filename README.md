@@ -12,7 +12,9 @@ cargo run --release
 
 ## controls
 
-The camera can be moved with the arrow keys and rotated with WASD.
+Controls vary depending on the current program.
+
+For 3D programs, the camera can be moved with the arrow keys and rotated with WASD.
 
 ## adding shaders
 
