@@ -47,7 +47,3 @@ Currently, most of the work to do is around developing different types of unifor
 Along with this work comes developing appropriate UI components to allow the creative coder to control the uniforms. Nannou has a very powerful UI system, and what is in `src/interface` only scratches the surface.
 
 Lastly, shader programs must be written to use this data and create interesting experiences!
-
-### todos
-
-- figure out why surfaces in the fractal raymarcher are made up of spheres and look bubbly. This is a regression and was not present in very early implementations of the shaders.
