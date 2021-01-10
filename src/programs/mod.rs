@@ -6,6 +6,7 @@ use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::config;
+use crate::util;
 
 pub mod program;
 mod shaders;
@@ -50,7 +51,10 @@ impl ProgramStore {
         let (send_channel, changes_channel) = channel();
         let mut shader_watcher = watcher(send_channel, time::Duration::from_secs(1)).unwrap();
         shader_watcher
-            .watch(config::SHADERS_PATH, RecursiveMode::Recursive)
+            .watch(
+                util::universal_path(config::SHADERS_PATH.to_string()).as_str(),
+                RecursiveMode::Recursive,
+            )
             .unwrap();
 
         // create the program map

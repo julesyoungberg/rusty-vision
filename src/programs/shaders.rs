@@ -4,6 +4,7 @@ use shaderc;
 use std::fs;
 
 use crate::config;
+use crate::util;
 
 /**
  * Stores data that represents a single shader file
@@ -49,7 +50,7 @@ impl Shader {
         path.push_str(filename);
 
         // read shader
-        let src_string = fs::read_to_string(path).expect(error.as_str());
+        let src_string = fs::read_to_string(util::universal_path(path)).expect(error.as_str());
         let src = src_string.as_str();
 
         // load shader dependencies
@@ -68,8 +69,8 @@ impl Shader {
                 import_error.push_str("'");
 
                 let mut import_src = "\n".to_owned();
-                let import_src_string =
-                    fs::read_to_string(import_path).expect(import_error.as_str());
+                let import_src_string = fs::read_to_string(util::universal_path(import_path))
+                    .expect(import_error.as_str());
                 import_src.push_str(import_src_string.as_str());
                 return import_src;
             })

@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 use nannou::math::cgmath::Matrix4;
 use nannou::prelude::*;
+use path_slash::PathBufExt;
+use std::path::PathBuf;
 
 // The vertex type that we will use to represent a point on our triangle.
 #[repr(C)]
@@ -99,4 +101,11 @@ fn test_normalize_vector() {
     assert_eq!(normalized.x, 0.26726124);
     assert_eq!(normalized.y, 0.5345225);
     assert_eq!(normalized.z, 0.8017837);
+}
+
+pub fn universal_path(input: String) -> String {
+    PathBuf::from_slash(input)
+        .into_os_string()
+        .into_string()
+        .unwrap()
 }
