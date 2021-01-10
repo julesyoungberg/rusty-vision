@@ -24,7 +24,12 @@ pub struct ProgramStore {
     pub current_program: usize,
     pub programs: Programs,
     pub program_uniforms: ProgramUniforms,
+    #[cfg(target_os = "macos")]
     pub shader_watcher: notify::FsEventWatcher,
+    #[cfg(target_os = "linux")]
+    pub shader_watcher: notify::INotifyWatcher,
+    #[cfg(target_os = "windows")]
+    pub shader_watcher: notify::ReadDirectoryChangesWatcher,
 }
 
 /**
