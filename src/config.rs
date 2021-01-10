@@ -65,11 +65,12 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
 
 /**
  * A list of uniform buffer lists for each program.
- * Must correspond with PROGRAMS by index
+ * Must correspond with PROGRAMS by index and the uniforms defined
+ * in the shader.
  */
 pub const PROGRAM_UNIFORMS: &'static [&'static str] = &[
-    "general",          // basic
-    "general,geometry", // mandelbox
-    "general,geometry", // mandelbulb
-    "general,geometry", // tetrahedron
+    "general",                 // basic
+    "general,camera,geometry", // mandelbox
+    "general,camera,geometry", // mandelbulb
+    "general,camera,geometry", // tetrahedron
 ];

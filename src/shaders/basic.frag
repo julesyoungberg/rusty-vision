@@ -21,15 +21,6 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float color3R;
     float color3G;
     float color3B;
-    float cameraPosX;
-    float cameraPosY;
-    float cameraPosZ;
-    float cameraTargetX;
-    float cameraTargetY;
-    float cameraTargetZ;
-    float cameraUpX;
-    float cameraUpY;
-    float cameraUpZ;
     float shapeRotationX;
     float shapeRotationY;
     float shapeRotationZ;

@@ -10,7 +10,7 @@ use crate::programs::uniforms;
 pub fn update(
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
-    uniforms: &mut uniforms::general::Uniforms,
+    uniforms: &mut uniforms::camera::Uniforms,
 ) {
     components::container([250.0, 80.0])
         .no_parent()

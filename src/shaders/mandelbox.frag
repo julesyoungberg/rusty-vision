@@ -19,6 +19,12 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float color3R;
     float color3G;
     float color3B;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
+};
+
+layout(set = 1, binding = 0) uniform CameraUniforms {
     float cameraPosX;
     float cameraPosY;
     float cameraPosZ;
@@ -28,12 +34,9 @@ layout(set = 0, binding = 0) uniform Uniforms {
     float cameraUpX;
     float cameraUpY;
     float cameraUpZ;
-    float shapeRotationX;
-    float shapeRotationY;
-    float shapeRotationZ;
 };
 
-layout(set = 1, binding = 0) uniform GeometryUniforms {
+layout(set = 2, binding = 0) uniform GeometryUniforms {
     float rotation1X;
     float rotation1Y;
     float rotation1Z;

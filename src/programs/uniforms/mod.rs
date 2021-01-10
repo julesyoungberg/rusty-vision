@@ -5,6 +5,7 @@ use crate::config;
 use crate::programs::uniforms::base::Bufferable;
 
 pub mod base;
+pub mod camera;
 pub mod general;
 pub mod geometry;
 
@@ -71,6 +72,7 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
 #[derive(Debug)]
 pub struct BufferStore {
     pub buffers: UniformBuffers,
+    pub camera_uniforms: camera::Uniforms,
     pub general_uniforms: general::Uniforms,
     pub geometry_uniforms: geometry::Uniforms,
 }
@@ -80,10 +82,15 @@ pub struct BufferStore {
  */
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
+        let mut camera_uniforms = camera::Uniforms::new();
+        camera_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let camera_uniform_buffer =
+            UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes());
+
         let mut general_uniforms =
             general::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
         general_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
-        let uniform_buffer =
+        let general_uniform_buffer =
             UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
 
         let mut geometry_uniforms = geometry::Uniforms::new();
@@ -92,23 +99,31 @@ impl BufferStore {
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
         let mut buffers = HashMap::new();
-        buffers.insert(String::from("general"), uniform_buffer);
+        buffers.insert(String::from("camera"), camera_uniform_buffer);
+        buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
 
         Self {
             buffers,
+            camera_uniforms,
             general_uniforms,
             geometry_uniforms,
         }
     }
 
+    /**
+     * Set default uniforms for current selected program
+     * TODO: only modify the uniforms used by the current program
+     */
     pub fn set_program_defaults(&mut self, selected: usize) {
+        self.camera_uniforms.set_program_defaults(selected);
         self.general_uniforms.set_program_defaults(selected);
     }
 
     /**
      * Update uniform data.
      * Call every timestep.
+     * TODO: only update uniforms by current program
      */
     pub fn update(&mut self) {
         self.general_uniforms.update();
@@ -117,12 +132,19 @@ impl BufferStore {
     /**
      * Update GPU uniform buffers with current data.
      * Call in draw() before rendering.
+     * TODO: only update buffers used by current program
      */
     pub fn update_buffers(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
+        self.buffers.get("camera").unwrap().update::<camera::Data>(
+            device,
+            encoder,
+            self.camera_uniforms.as_bytes(),
+        );
+
         self.buffers
             .get("general")
             .unwrap()

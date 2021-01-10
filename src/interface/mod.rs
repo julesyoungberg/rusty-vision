@@ -110,7 +110,7 @@ pub fn update(model: &mut app::Model) {
     info_box::update(
         &model.widget_ids,
         ui,
-        &mut model.program_store.buffer_store.general_uniforms,
+        &mut model.program_store.buffer_store.camera_uniforms,
     );
 
     let errors = model.program_store.errors();
