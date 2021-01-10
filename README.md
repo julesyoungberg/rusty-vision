@@ -34,9 +34,9 @@ An example of how the app handles errors in your shaders:
 
 ## architecture
 
-This app manages data flow from the CPU to GPU as a collection of uniform buffers. A program can subscribe to any set of these uniform buffers by specifying so in the fragment shader and the config. A uniform could be any sort of data (e.g. 3D camera config, audio, webcam, images) that you might use as input to a GLSL sketch. New uniforms can be added by creating a new file in `src/programs/uniforms` similar in structure to `camera.rs` and `general.rs` for example. Then the new uniform can be made available by putting it to use in `src/programs/uniforms/mod.rs`, similarly to how `general` is used.
+This app manages data flow from the CPU to GPU as a collection of uniform buffers. A program can subscribe to any set of these uniform buffers by specifying so in the fragment shader and the config (`PROGRAM_UNIFORMS`). A uniform could be any sort of data (e.g. 3D camera config, audio, webcam, images) that you might use as input to a GLSL sketch. New uniforms can be added by creating a new file in `src/programs/uniforms` similar in structure to `camera.rs` and `general.rs` for example. Then the new uniform can be made available by putting it to use in `src/programs/uniforms/mod.rs`, similarly to how `general` is used.
 
-## development
+## roadmap
 
 Currently, most of the work to do is around developing different types of uniform buffers for shaders to 'subscribe' to (in `PROGRAM_UNIFORMS`). A system for doing this in place, but it now must be put to use.
 
