@@ -1,6 +1,6 @@
 # rusty vision
 
-A GLSL creative coding environment built with Rust, Nannou, and WGPU.
+A live GLSL creative coding environment built with Rust, Nannou, and WGPU.
 
 ## setup
 
@@ -27,6 +27,8 @@ Shaders can be added to `src/shaders` and referenced in `src/config.rs` to be in
 - `PROGRAM_UNIFORMS`: An array of uniform buffer lists for each program. Each list is a single string with uniform types separated with a comma.
 
 ## screenshots
+
+An example of how the app handles errors in your shaders:
 
 ![](images/screenshot.png)
 
