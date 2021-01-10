@@ -131,7 +131,7 @@ float shapeDist(in vec3 pos, out vec3 orbitTrap) {
     vec3 shapeRotation = vec3(shapeRotationX, shapeRotationY, shapeRotationZ);
     mat4 rot = createRotationMatrix(shapeRotation);
     vec3 p = (rot * vec4(pos, 1.)).xyz;
-    return sdMandelbox(p, 6, orbitTrap);
+    return sdMandelbox(p, 8, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {

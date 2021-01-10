@@ -72,7 +72,7 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     }
 
     let scale = 0.2;
-    let theta = 0.002;
+    let theta = 0.01;
 
     let camera = &mut model.program_store.buffer_store.camera_uniforms;
     let camera_dir = camera.dir();
