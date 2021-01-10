@@ -29,3 +29,17 @@ Shaders can be added to `src/shaders` and referenced in `src/config.rs` to be in
 ## screenshots
 
 ![](images/screenshot.png)
+
+## architecture
+
+This app manages data flow from the CPU to GPU as a collection of uniform buffers. A program can subscribe to any set of these uniform buffers by specifying so in the fragment shader and the config. A uniform could be any sort of data (e.g. 3D camera config, audio, webcam, images) that you might use as input to a GLSL sketch. New uniforms can be added by creating a new file in `src/programs/uniforms` similar in structure to `camera.rs`, `general.rs`, and `geometry.rs`. Then the new uniform can be made available by adding it to `src/programs/mod.rs`.
+
+## development
+
+Currently, most of the work to do is around developing different types of uniform buffers for shaders to 'subscribe' to (in `PROGRAM_UNIFORMS`). A system for doing this in place, but it now must be put to use.
+
+Secondly, shader programs must be written to use this data.
+
+### todos
+
+- figure out why surfaces in the fractal raymarcher are made up of spheres and look bubbly. This is a regression and was not present in very early implementations of the shaders.
