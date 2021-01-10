@@ -42,7 +42,7 @@ The UI is heirarchy of functions starting with `interface::update()`. Different 
 
 ## roadmap
 
-Currently, most of the work to do is around developing different types of uniform buffers for shaders to 'subscribe' to (in `PROGRAM_UNIFORMS`). A system for doing this in place, but it now must be put to use.
+Currently, most of the work to do is around developing different types of uniform buffers for shaders to 'subscribe' to (in `PROGRAM_UNIFORMS`), as well as breaking down the general uniforms into more specific groups. A system for doing this in place, but it now must be put to use.
 
 Along with this work comes developing appropriate UI components to allow the creative coder to control the uniforms. Nannou has a very powerful UI system, and what is in `src/interface` only scratches the surface.
 
