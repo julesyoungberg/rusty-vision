@@ -18,7 +18,7 @@ The camera can be moved with the arrow keys and rotated with WASD.
 
 Shaders can be added to `src/shaders` and referenced in `src/config.rs` to be included in the UI's menu. More specifically, to add a new shader program, you must modify the following constant configuration variables:
 
-- `PIPELINES`: Shader pipeline descriptions (`[internal_name, vertex_shader, frag_shader]`)
+- `PIPELINES`: Shader pipeline descriptions (`[name, vertex_shader, frag_shader]`) with paths relative to `./src/shaders/`
 
 - `PROGRAMS`: Program names, corresponding to `PIPELINES`
 
