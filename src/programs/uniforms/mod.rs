@@ -67,6 +67,41 @@ impl UniformBuffer {
 pub type UniformBuffers = HashMap<String, UniformBuffer>;
 
 /**
+ * Defines a program's subscriptions to uniform data.
+ * This determines which data should be fetched / updated.
+ */
+pub struct UniformSubscriptions {
+    pub camera: bool,
+    pub general: bool,
+    pub geometry: bool,
+}
+
+/**
+ * Build a subscriptions struct from a list of uniform names
+ */
+pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
+    let mut subscriptions = UniformSubscriptions {
+        camera: false,
+        geometry: false,
+        general: false,
+    };
+
+    if names.iter().any(|n| n == "camera") {
+        subscriptions.camera = true;
+    }
+
+    if names.iter().any(|n| n == "general") {
+        subscriptions.general = true;
+    }
+
+    if names.iter().any(|n| n == "geometry") {
+        subscriptions.geometry = true;
+    }
+
+    subscriptions
+}
+
+/**
  * Stores all different uniforms
  */
 #[derive(Debug)]
@@ -82,6 +117,7 @@ pub struct BufferStore {
  */
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
+        // create uniforms and buffers
         let mut camera_uniforms = camera::Uniforms::new();
         camera_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let camera_uniform_buffer =
@@ -98,6 +134,7 @@ impl BufferStore {
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
+        // store buffers in map
         let mut buffers = HashMap::new();
         buffers.insert(String::from("camera"), camera_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
@@ -113,46 +150,57 @@ impl BufferStore {
 
     /**
      * Set default uniforms for current selected program
-     * TODO: only modify the uniforms used by the current program
      */
-    pub fn set_program_defaults(&mut self, selected: usize) {
-        self.camera_uniforms.set_program_defaults(selected);
-        self.general_uniforms.set_program_defaults(selected);
+    pub fn set_program_defaults(&mut self, selected: usize, subscriptions: &UniformSubscriptions) {
+        if subscriptions.camera {
+            self.camera_uniforms.set_program_defaults(selected);
+        }
+
+        if subscriptions.general {
+            self.general_uniforms.set_program_defaults(selected);
+        }
     }
 
     /**
      * Update uniform data.
      * Call every timestep.
-     * TODO: only update uniforms by current program
      */
-    pub fn update(&mut self) {
-        self.general_uniforms.update();
+    pub fn update(&mut self, subscriptions: &UniformSubscriptions) {
+        if subscriptions.general {
+            self.general_uniforms.update();
+        }
     }
 
     /**
      * Update GPU uniform buffers with current data.
      * Call in draw() before rendering.
-     * TODO: only update buffers used by current program
      */
     pub fn update_buffers(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
+        subscriptions: &UniformSubscriptions,
     ) {
-        self.buffers.get("camera").unwrap().update::<camera::Data>(
-            device,
-            encoder,
-            self.camera_uniforms.as_bytes(),
-        );
+        if subscriptions.camera {
+            self.buffers.get("camera").unwrap().update::<camera::Data>(
+                device,
+                encoder,
+                self.camera_uniforms.as_bytes(),
+            );
+        }
 
-        self.buffers
-            .get("general")
-            .unwrap()
-            .update::<general::Data>(device, encoder, self.general_uniforms.as_bytes());
+        if subscriptions.general {
+            self.buffers
+                .get("general")
+                .unwrap()
+                .update::<general::Data>(device, encoder, self.general_uniforms.as_bytes());
+        }
 
-        self.buffers
-            .get("geometry")
-            .unwrap()
-            .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+        if subscriptions.geometry {
+            self.buffers
+                .get("geometry")
+                .unwrap()
+                .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+        }
     }
 }

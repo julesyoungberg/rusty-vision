@@ -22,6 +22,7 @@ pub struct ProgramStore {
     pub buffer_store: uniforms::BufferStore,
     pub changes_channel: Receiver<DebouncedEvent>,
     pub current_program: usize,
+    pub current_subscriptions: uniforms::UniformSubscriptions,
     pub programs: Programs,
     pub program_uniforms: ProgramUniforms,
     #[cfg(target_os = "macos")]
@@ -72,10 +73,15 @@ impl ProgramStore {
             })
             .collect::<Vec<Vec<String>>>();
 
+        let current_program = config::DEFAULT_PROGRAM;
+
+        let current_subscriptions = uniforms::get_subscriptions(&program_uniforms[current_program]);
+
         Self {
             buffer_store,
             changes_channel,
-            current_program: config::DEFAULT_PROGRAM,
+            current_program,
+            current_subscriptions,
             programs,
             program_uniforms,
             shader_watcher,
@@ -130,7 +136,7 @@ impl ProgramStore {
      * Call every timestep.
      */
     pub fn update_uniforms(&mut self) {
-        self.buffer_store.update();
+        self.buffer_store.update(&self.current_subscriptions);
     }
 
     /**
@@ -159,7 +165,9 @@ impl ProgramStore {
 
         println!("program selected: {}", config::PROGRAMS[selected]);
         self.current_program = selected;
-        self.buffer_store.set_program_defaults(selected);
+        self.current_subscriptions = uniforms::get_subscriptions(&self.program_uniforms[selected]);
+        self.buffer_store
+            .set_program_defaults(selected, &self.current_subscriptions);
     }
 
     /**
@@ -171,7 +179,8 @@ impl ProgramStore {
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
-        self.buffer_store.update_buffers(device, encoder);
+        self.buffer_store
+            .update_buffers(device, encoder, &self.current_subscriptions);
     }
 
     /**
