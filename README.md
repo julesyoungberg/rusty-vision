@@ -4,7 +4,7 @@ A live GLSL coding environment built with Rust, Nannou, and WGPU.
 
 ## setup
 
-Install Rust and Cargo, then run
+Install Rust and Cargo, clone the repo, then run
 
 ```
 cargo run --release
