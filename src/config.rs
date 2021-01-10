@@ -6,7 +6,7 @@ pub const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
 
 /**
  * Shader pipeline descriptions
- * [internal_name, vertex_shader, frag_shader]
+ * [program_name, vertex_shader, frag_shader]
  */
 pub const PIPELINES: &'static [&'static [&'static str]] = &[
     &["basic", "basic.vert", "basic.frag"],
@@ -16,7 +16,7 @@ pub const PIPELINES: &'static [&'static [&'static str]] = &[
 ];
 
 /**
- * Program names, displayed to the user.
+ * Program names, corresponding to `PIPELINES`
  * Must correspond with PIPELINES by name
  */
 pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbulb", "tetrahedron"];

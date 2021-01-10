@@ -20,7 +20,7 @@ Shaders can be added to `src/shaders` and referenced in `src/config.rs` to be in
 
 - `PIPELINES`: Shader pipeline descriptions (`[internal_name, vertex_shader, frag_shader]`)
 
-- `PROGRAMS`: Program names, displayed to the user.
+- `PROGRAMS`: Program names, corresponding to `PIPELINES`
 
 - `PROGRAM_DEFAULTS`: Default uniform values for each program.
 
