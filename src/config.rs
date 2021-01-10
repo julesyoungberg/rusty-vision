@@ -24,7 +24,7 @@ pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbul
 pub const DEFAULT_PROGRAM: usize = 1;
 
 /**
- * Program defaults.
+ * Default uniform values for each program.
  * [cam_pos, cam_target, cam_up, shape_rotation, [color_mode, ?, ?]]
  * Must correspond with PROGRAMS by index
  */
