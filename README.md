@@ -50,4 +50,4 @@ Lastly, shader programs must be written to use this data and create interesting 
 
 ### todo
 
-- [mirlin server](https://github.com/julesyoungberg/mirlin_server) websocket client with https://docs.rs/servo-websocket/0.20.0/websocket/client/struct.Client.html
+- [mirlin server](https://github.com/julesyoungberg/mirlin-server) websocket client with https://docs.rs/servo-websocket/0.20.0/websocket/client/struct.Client.html
