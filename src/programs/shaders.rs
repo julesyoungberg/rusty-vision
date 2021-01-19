@@ -53,8 +53,8 @@ impl Shader {
         let src_string = fs::read_to_string(util::universal_path(path)).expect(error.as_str());
         let src = src_string.as_str();
 
-        // load shader dependencies
-        let re = Regex::new(r"\n//@import (.*)").unwrap();
+        // load shader dependencies ([^\r]*) deals with \r on windows
+        let re = Regex::new(r"\n//@import ([^\r]*)").unwrap();
         let complete_src = re
             .replace_all(src, |captures: &regex::Captures| {
                 let import = &captures[1];
