@@ -10,7 +10,7 @@ Install Rust and Cargo, clone the repo, then run
 cargo run --release
 ```
 
-For audio visualization, get the [mirlin server](https://github.com/julesyoungberg/mirlin-server) with git or Docker.
+For audio visualization, get the mirlin server from the [github repo](https://github.com/julesyoungberg/mirlin-server) or [dockerhub](https://hub.docker.com/repository/docker/julesyoungberg/mirlin-server)
 
 ## controls
 
