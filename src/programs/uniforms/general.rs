@@ -27,12 +27,12 @@ pub struct Data {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Uniforms {
+pub struct GeneralUniforms {
     pub clock: SystemTime,
     pub data: Data,
 }
 
-impl Bufferable for Uniforms {
+impl Bufferable for GeneralUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
@@ -44,7 +44,7 @@ impl Bufferable for Uniforms {
     }
 }
 
-impl Uniforms {
+impl GeneralUniforms {
     pub fn new(resolution: Vector2) -> Self {
         Self {
             clock: SystemTime::now(),

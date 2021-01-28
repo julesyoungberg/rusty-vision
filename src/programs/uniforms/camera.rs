@@ -20,11 +20,11 @@ pub struct Data {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Uniforms {
+pub struct CameraUniforms {
     pub data: Data,
 }
 
-impl Bufferable for Uniforms {
+impl Bufferable for CameraUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
@@ -44,7 +44,7 @@ impl Bufferable for Uniforms {
     }
 }
 
-impl Uniforms {
+impl CameraUniforms {
     pub fn new() -> Self {
         Self {
             data: Data {

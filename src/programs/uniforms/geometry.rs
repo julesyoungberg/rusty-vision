@@ -17,17 +17,17 @@ pub struct Data {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Uniforms {
+pub struct GeometryUniforms {
     pub data: Data,
 }
 
-impl Bufferable for Uniforms {
+impl Bufferable for GeometryUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 }
 
-impl Uniforms {
+impl GeometryUniforms {
     pub fn new() -> Self {
         Self {
             data: Data {

@@ -107,9 +107,9 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
 #[derive(Debug)]
 pub struct BufferStore {
     pub buffers: UniformBuffers,
-    pub camera_uniforms: camera::Uniforms,
-    pub general_uniforms: general::Uniforms,
-    pub geometry_uniforms: geometry::Uniforms,
+    pub camera_uniforms: camera::CameraUniforms,
+    pub general_uniforms: general::GeneralUniforms,
+    pub geometry_uniforms: geometry::GeometryUniforms,
 }
 
 /**
@@ -118,18 +118,18 @@ pub struct BufferStore {
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
-        let mut camera_uniforms = camera::Uniforms::new();
+        let mut camera_uniforms = camera::CameraUniforms::new();
         camera_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let camera_uniform_buffer =
             UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes());
 
         let mut general_uniforms =
-            general::Uniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
+            general::GeneralUniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
         general_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let general_uniform_buffer =
             UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
 
-        let mut geometry_uniforms = geometry::Uniforms::new();
+        let mut geometry_uniforms = geometry::GeometryUniforms::new();
         geometry_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());

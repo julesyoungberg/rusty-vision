@@ -24,7 +24,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 pub fn update(
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
-    uniforms: &mut uniforms::geometry::Uniforms,
+    uniforms: &mut uniforms::geometry::GeometryUniforms,
 ) {
     /////////////////////////
     // rotation1

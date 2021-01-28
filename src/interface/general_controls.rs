@@ -36,7 +36,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 pub fn update(
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
-    uniforms: &mut uniforms::general::Uniforms,
+    uniforms: &mut uniforms::general::GeneralUniforms,
 ) {
     /////////////////////////
     // draw floor toggle
