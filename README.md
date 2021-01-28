@@ -10,6 +10,8 @@ Install Rust and Cargo, clone the repo, then run
 cargo run --release
 ```
 
+For audio visualization, get the [mirlin server](https://github.com/julesyoungberg/mirlin-server) with git or Docker.
+
 ## controls
 
 Controls vary depending on the current program.
@@ -47,7 +49,3 @@ Currently, most of the work to do is around developing different types of unifor
 Along with this work comes developing appropriate UI components to allow the creative coder to control the uniforms. Nannou has a very powerful UI system, and what is in `src/interface` only scratches the surface.
 
 Lastly, shader programs must be written to use this data and create interesting experiences!
-
-### todo
-
-- [mirlin server](https://github.com/julesyoungberg/mirlin-server) websocket client with https://docs.rs/servo-websocket/0.20.0/websocket/client/struct.Client.html
