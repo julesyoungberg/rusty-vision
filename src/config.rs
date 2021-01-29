@@ -10,6 +10,7 @@ pub const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
  */
 pub const PIPELINES: &'static [&'static [&'static str]] = &[
     &["basic", "basic.vert", "basic.frag"],
+    &["basicAudio", "basic.vert", "basicAudio.frag"],
     &["mandelbox", "basic.vert", "mandelbox.frag"],
     &["mandelbulb", "basic.vert", "mandelbulb.frag"],
     &["tetrahedron", "basic.vert", "tetrahedron.frag"],
@@ -19,18 +20,34 @@ pub const PIPELINES: &'static [&'static [&'static str]] = &[
  * Program names, corresponding to `PIPELINES`
  * Must correspond with PIPELINES by name
  */
-pub const PROGRAMS: &'static [&'static str] = &["basic", "mandelbox", "mandelbulb", "tetrahedron"];
+pub const PROGRAMS: &'static [&'static str] = &[
+    "basic",
+    "basicAudio",
+    "mandelbox",
+    "mandelbulb",
+    "tetrahedron",
+];
 
-pub const DEFAULT_PROGRAM: usize = 0;
+pub const DEFAULT_PROGRAM: usize = 1;
 
 /**
  * Default uniform values for each program.
  * [cam_pos, cam_target, cam_up, shape_rotation, [color_mode, ?, ?]]
  * Must correspond with PROGRAMS by index
+ * TODO figure out a better way to define this so that we don't have to define camera defaults
+ * for a program that doesn't use the camera. maybe switch to JSON configuration?
  */
 pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
     &[
         // basic
+        &[25.0, 0.0, 15.0], // cam pos
+        &[0.0, 0.0, 0.0],   // cam target
+        &[0.0, 1.0, 0.0],   // cam up
+        &[0.0, 0.0, 0.0],   // shape rotation
+        &[0.0, 0.0, 0.0],   // [color_mode, ?, ?]
+    ],
+    &[
+        // basic audio
         &[25.0, 0.0, 15.0], // cam pos
         &[0.0, 0.0, 0.0],   // cam target
         &[0.0, 1.0, 0.0],   // cam up
@@ -70,6 +87,7 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
  */
 pub const PROGRAM_UNIFORMS: &'static [&'static str] = &[
     "general",                 // basic
+    "audio",                   // basicAudio
     "general,camera,geometry", // mandelbox
     "general,camera,geometry", // mandelbulb
     "general,camera,geometry", // tetrahedron

@@ -71,6 +71,7 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
  * Defines a program's subscriptions to uniform data.
  * This determines which data should be fetched / updated.
  */
+#[derive(Debug)]
 pub struct UniformSubscriptions {
     pub audio: bool,
     pub camera: bool,
@@ -125,24 +126,20 @@ pub struct BufferStore {
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
-        let mut camera_uniforms = camera::CameraUniforms::new();
-        camera_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let camera_uniforms = camera::CameraUniforms::new();
         let camera_uniform_buffer =
             UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes());
 
-        let mut general_uniforms =
+        let general_uniforms =
             general::GeneralUniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
-        general_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
         let general_uniform_buffer =
             UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
 
-        let mut geometry_uniforms = geometry::GeometryUniforms::new();
-        geometry_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let geometry_uniforms = geometry::GeometryUniforms::new();
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
-        let mut audio_uniforms = audio::AudioUniforms::new();
-        audio_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let audio_uniforms = audio::AudioUniforms::new();
         let audio_uniform_buffer =
             UniformBuffer::new::<audio::Data>(device, audio_uniforms.as_bytes());
 

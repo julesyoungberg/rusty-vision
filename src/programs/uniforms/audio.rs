@@ -18,14 +18,14 @@ const CONNECTION: &'static str = "ws://127.0.0.1:9002";
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub centroid: f32,
     pub dissonance: f32,
     pub energy: f32,
     pub loudness: f32,
     pub noisiness: f32,
-    pub onset: bool,
+    pub onset: f32,
     pub pitch: f32,
     pub rms: f32,
+    pub spectral_centroid: f32,
     pub spectral_complexity: f32,
     pub spectral_contrast: f32,
     pub tristimulus: [f32; 3],
@@ -58,14 +58,14 @@ impl AudioUniforms {
         Self {
             consumer: None,
             data: Data {
-                centroid: 0.0,
                 dissonance: 0.0,
                 energy: 0.0,
                 loudness: 0.0,
                 noisiness: 0.0,
-                onset: false,
+                onset: 0.0,
                 pitch: 0.0,
                 rms: 0.0,
+                spectral_centroid: 0.0,
                 spectral_complexity: 0.0,
                 spectral_contrast: 0.0,
                 tristimulus: [0.0, 0.0, 0.0],
@@ -174,7 +174,10 @@ impl AudioUniforms {
         match sender.send_message(&request_message) {
             Ok(()) => (),
             Err(e) => {
-                self.error = Some(format!("Error requesting audio subscription: {:?}", e));
+                self.error = Some(format!(
+                    "Error requesting audio subscription with mirlin: {:?}",
+                    e
+                ));
                 return false;
             }
         };
@@ -183,19 +186,18 @@ impl AudioUniforms {
         let confirmation_msg = match receiver.recv_message() {
             Ok(msg) => msg,
             Err(e) => {
-                self.error = Some(format!("Error configuring audio subscription: {:?}", e));
+                self.error = Some(format!(
+                    "Error configuring audio subscription with mirlin: {:?}",
+                    e
+                ));
                 return false;
             }
         };
 
+        println!("confirmation message: {:?}", confirmation_msg);
+
         match confirmation_msg {
-            OwnedMessage::Text(json_string) => match serde_json::from_str(&json_string) {
-                Ok(data) => data,
-                Err(e) => {
-                    self.error = Some(format!("Error parsing audio confirmation: {:?}", e));
-                    return false;
-                }
-            },
+            OwnedMessage::Text(_json_string) => (),
             _ => {
                 self.error = Some(format!(
                     "Received invalid confirmation from mirlin server: {:?}",
@@ -272,7 +274,14 @@ impl AudioUniforms {
                     }
                 };
                 let value: Value = match message {
-                    OwnedMessage::Text(json_string) => serde_json::from_str(&json_string).unwrap(),
+                    OwnedMessage::Text(json_string) => match serde_json::from_str(&json_string) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            tx_2.send(format!("Error parsing message from mirlin: {:?}", e))
+                                .unwrap();
+                            return;
+                        }
+                    },
                     _ => {
                         tx_2.send(format!(
                             "Received unexpected message from mirlin: {:?}",
@@ -343,8 +352,11 @@ impl AudioUniforms {
             return;
         }
 
-        let current = match self.consumer.take().unwrap().pop() {
-            Some(v) => v,
+        let current = match self.consumer.take() {
+            Some(mut c) => match c.pop() {
+                Some(v) => v,
+                None => return,
+            },
             None => return,
         };
 
@@ -358,12 +370,11 @@ impl AudioUniforms {
             None => return,
         };
 
-        if let Some(onset) = features.get("onset").unwrap().as_array() {
-            self.data.onset = onset[0].as_f64().unwrap() != 0.0;
-        }
+        println!("features: {:?}", features);
 
-        let centroid = self.unwrap_feature(features.get("centroid.mean"));
-        self.data.centroid = self.lerp(self.data.centroid, centroid);
+        if let Some(onset) = features.get("onset").unwrap().as_array() {
+            self.data.onset = onset[0].as_f64().unwrap() as f32;
+        }
 
         let dissonance = self.unwrap_feature(features.get("dissonance.mean"));
         self.data.dissonance = self.lerp(self.data.dissonance, dissonance);
@@ -382,6 +393,9 @@ impl AudioUniforms {
 
         let rms = self.unwrap_feature(features.get("rms.mean"));
         self.data.rms = self.lerp(self.data.rms, rms);
+
+        let centroid = self.unwrap_feature(features.get("centroid.mean"));
+        self.data.spectral_centroid = self.lerp(self.data.spectral_centroid, centroid);
 
         let spectral_complexity = self.unwrap_feature(features.get("spectral_complexity.mean"));
         self.data.spectral_complexity =

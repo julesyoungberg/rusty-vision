@@ -4,7 +4,7 @@ precision highp float;
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
-layout(set = 0, binding = 0) uniform Uniforms {
+layout(set = 0, binding = 0) uniform GeneralUniforms {
     int colorMode;
     int drawFloor;
     float fogDist;

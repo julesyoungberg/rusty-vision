@@ -45,7 +45,7 @@ pub struct ProgramStore {
  */
 impl ProgramStore {
     pub fn new(device: &wgpu::Device) -> Self {
-        let buffer_store = uniforms::BufferStore::new(device);
+        let mut buffer_store = uniforms::BufferStore::new(device);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
@@ -80,6 +80,7 @@ impl ProgramStore {
         let current_program = config::DEFAULT_PROGRAM;
 
         let current_subscriptions = uniforms::get_subscriptions(&program_uniforms[current_program]);
+        buffer_store.set_program_defaults(current_program, &current_subscriptions);
 
         Self {
             buffer_store,
