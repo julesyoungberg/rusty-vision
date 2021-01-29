@@ -14,9 +14,12 @@ layout(set = 0, binding = 0) uniform AudioUniforms {
     float spectralCentroid;
     float spectralComplexity;
     float spectralContrast;
-    vec3 tristimulus;
+    float tristimulus1;
+    float tristimulus2;
+    float tristimulus3;
 };
 
 void main() {
+    vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
     frag_color = vec4(tristimulus, 1);
 }

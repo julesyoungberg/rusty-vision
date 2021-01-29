@@ -28,7 +28,9 @@ pub struct Data {
     pub spectral_centroid: f32,
     pub spectral_complexity: f32,
     pub spectral_contrast: f32,
-    pub tristimulus: [f32; 3],
+    pub tristimulus1: f32,
+    pub tristimulus2: f32,
+    pub tristimulus3: f32,
 }
 
 pub struct AudioUniforms {
@@ -68,7 +70,9 @@ impl AudioUniforms {
                 spectral_centroid: 0.0,
                 spectral_complexity: 0.0,
                 spectral_contrast: 0.0,
-                tristimulus: [0.0, 0.0, 0.0],
+                tristimulus1: 0.0,
+                tristimulus2: 0.0,
+                tristimulus3: 0.0,
             },
             error: None,
             error_channel: None,
@@ -352,11 +356,18 @@ impl AudioUniforms {
             return;
         }
 
+        // this is kind of gross
+        // take the consumer out of the option to mutate it by popping
+        // then put it back in the option for next time
         let current = match self.consumer.take() {
-            Some(mut c) => match c.pop() {
-                Some(v) => v,
-                None => return,
-            },
+            Some(mut c) => {
+                let popped = c.pop();
+                self.consumer = Some(c);
+                match popped {
+                    Some(v) => v,
+                    None => return,
+                }
+            }
             None => return,
         };
 
@@ -369,8 +380,6 @@ impl AudioUniforms {
             Some(f) => f,
             None => return,
         };
-
-        println!("features: {:?}", features);
 
         if let Some(onset) = features.get("onset").unwrap().as_array() {
             self.data.onset = onset[0].as_f64().unwrap() as f32;
@@ -388,7 +397,7 @@ impl AudioUniforms {
         let noisiness = self.unwrap_feature(features.get("noisiness.mean"));
         self.data.noisiness = self.lerp(self.data.noisiness, noisiness);
 
-        let pitch = self.unwrap_feature(features.get("pitch.mean"));
+        let pitch = self.unwrap_feature(features.get("f0.mean"));
         self.data.pitch = self.lerp(self.data.pitch, pitch);
 
         let rms = self.unwrap_feature(features.get("rms.mean"));
@@ -409,11 +418,17 @@ impl AudioUniforms {
             .unwrap()
             .as_array()
             .unwrap();
-        for i in 0..3 {
-            self.data.tristimulus[i] = self.lerp(
-                self.data.tristimulus[i],
-                tristimulus[i].as_f64().unwrap() as f32,
-            );
-        }
+        self.data.tristimulus1 = self.lerp(
+            self.data.tristimulus1,
+            tristimulus[0].as_f64().unwrap() as f32,
+        );
+        self.data.tristimulus2 = self.lerp(
+            self.data.tristimulus2,
+            tristimulus[1].as_f64().unwrap() as f32,
+        );
+        self.data.tristimulus3 = self.lerp(
+            self.data.tristimulus3,
+            tristimulus[2].as_f64().unwrap() as f32,
+        );
     }
 }
