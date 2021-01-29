@@ -87,7 +87,7 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
  */
 pub const PROGRAM_UNIFORMS: &'static [&'static str] = &[
     "general",                 // basic
-    "audio",                   // basicAudio
+    "general,audio",           // basicAudio
     "general,camera,geometry", // mandelbox
     "general,camera,geometry", // mandelbulb
     "general,camera,geometry", // tetrahedron

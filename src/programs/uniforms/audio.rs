@@ -198,8 +198,6 @@ impl AudioUniforms {
             }
         };
 
-        println!("confirmation message: {:?}", confirmation_msg);
-
         match confirmation_msg {
             OwnedMessage::Text(_json_string) => (),
             _ => {

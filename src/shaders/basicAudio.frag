@@ -3,7 +3,27 @@
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 frag_color;
 
-layout(set = 0, binding = 0) uniform AudioUniforms {
+layout(set = 0, binding = 0) uniform GeneralUniforms {
+    int colorMode;
+    int drawFloor;
+    float fogDist;
+    float time;
+    vec2 resolution;
+    float color1R;
+    float color1G;
+    float color1B;
+    float color2R;
+    float color2G;
+    float color2B;
+    float color3R;
+    float color3G;
+    float color3B;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
+};
+
+layout(set = 1, binding = 0) uniform AudioUniforms {
     float dissonance;
     float energy;
     float loudness;
@@ -19,7 +39,17 @@ layout(set = 0, binding = 0) uniform AudioUniforms {
     float tristimulus3;
 };
 
+float circle(in vec2 st, in float radius){
+    vec2 dist = st - vec2(0.0);
+	return 1.0 - smoothstep(radius - (radius * 0.01), radius + (radius * 0.01), dot(dist, dist) * 4.0);
+}
+
 void main() {
+    vec2 st = uv;
+    st.x *= resolution.x / resolution.y;
+
     vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
-    frag_color = vec4(tristimulus, 1);
+    vec3 color = tristimulus + vec3(circle(st, loudness * 20.0));
+
+    frag_color = vec4(color, 1);
 }
