@@ -118,11 +118,11 @@ pub fn update(model: &mut app::Model) {
             ui,
             &mut model.program_store.buffer_store.camera_uniforms,
         );
+    }
 
-        let errors = model.program_store.errors();
-        if errors.keys().len() > 0 {
-            compilation_errors::update(&model.widget_ids, ui, &errors);
-        }
+    let errors = model.program_store.errors();
+    if errors.keys().len() > 0 {
+        compilation_errors::update(&model.widget_ids, ui, &errors);
     }
 }
 
