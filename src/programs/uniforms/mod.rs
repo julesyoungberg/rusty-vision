@@ -163,7 +163,8 @@ impl BufferStore {
     }
 
     /**
-     * Set default uniforms for current selected program
+     * Set default uniforms for current selected program.
+     * Also a place to do any initialization and/or cleanup.
      */
     pub fn set_program_defaults(&mut self, selected: usize, subscriptions: &UniformSubscriptions) {
         if subscriptions.camera {
@@ -177,7 +178,6 @@ impl BufferStore {
         if subscriptions.audio {
             self.audio_uniforms.set_program_defaults(selected);
         } else {
-            // self.audio_uniforms.end_session();
             self.audio_uniforms = audio::AudioUniforms::new();
         }
     }
