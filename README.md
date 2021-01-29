@@ -10,6 +10,8 @@ Install Rust and Cargo, clone the repo, then run
 cargo run --release
 ```
 
+For Windows, you need to install ASIO as described here: https://crates.io/crates/cpal
+
 For audio visualization, get the mirlin server from the [github repo](https://github.com/julesyoungberg/mirlin-server) or [dockerhub](https://hub.docker.com/repository/docker/julesyoungberg/mirlin-server)
 
 ## controls
