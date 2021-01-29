@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use crate::config;
 use crate::programs::uniforms::base::Bufferable;
 
+pub mod audio;
 pub mod base;
 pub mod camera;
 pub mod general;
@@ -71,6 +72,7 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
  * This determines which data should be fetched / updated.
  */
 pub struct UniformSubscriptions {
+    pub audio: bool,
     pub camera: bool,
     pub general: bool,
     pub geometry: bool,
@@ -81,6 +83,7 @@ pub struct UniformSubscriptions {
  */
 pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
+        audio: false,
         camera: false,
         geometry: false,
         general: false,
@@ -98,14 +101,18 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         subscriptions.geometry = true;
     }
 
+    if names.iter().any(|n| n == "audio") {
+        subscriptions.audio = true;
+    }
+
     subscriptions
 }
 
 /**
  * Stores all different uniforms
  */
-#[derive(Debug)]
 pub struct BufferStore {
+    pub audio_uniforms: audio::AudioUniforms,
     pub buffers: UniformBuffers,
     pub camera_uniforms: camera::CameraUniforms,
     pub general_uniforms: general::GeneralUniforms,
@@ -134,13 +141,20 @@ impl BufferStore {
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
+        let mut audio_uniforms = audio::AudioUniforms::new();
+        audio_uniforms.set_program_defaults(config::DEFAULT_PROGRAM);
+        let audio_uniform_buffer =
+            UniformBuffer::new::<audio::Data>(device, audio_uniforms.as_bytes());
+
         // store buffers in map
         let mut buffers = HashMap::new();
         buffers.insert(String::from("camera"), camera_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
+        buffers.insert(String::from("audio"), audio_uniform_buffer);
 
         Self {
+            audio_uniforms,
             buffers,
             camera_uniforms,
             general_uniforms,
@@ -159,6 +173,13 @@ impl BufferStore {
         if subscriptions.general {
             self.general_uniforms.set_program_defaults(selected);
         }
+
+        if subscriptions.audio {
+            self.audio_uniforms.set_program_defaults(selected);
+        } else {
+            // self.audio_uniforms.end_session();
+            self.audio_uniforms = audio::AudioUniforms::new();
+        }
     }
 
     /**
@@ -168,6 +189,10 @@ impl BufferStore {
     pub fn update(&mut self, subscriptions: &UniformSubscriptions) {
         if subscriptions.general {
             self.general_uniforms.update();
+        }
+
+        if subscriptions.audio {
+            self.audio_uniforms.update();
         }
     }
 
@@ -201,6 +226,14 @@ impl BufferStore {
                 .get("geometry")
                 .unwrap()
                 .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+        }
+
+        if subscriptions.audio {
+            self.buffers.get("audio").unwrap().update::<audio::Data>(
+                device,
+                encoder,
+                self.audio_uniforms.as_bytes(),
+            );
         }
     }
 }
