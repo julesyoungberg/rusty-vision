@@ -5,8 +5,8 @@ use nannou::ui::DrawToFrameError;
 use crate::app;
 use crate::config;
 
-mod compilation_errors;
 mod components;
+mod errors;
 mod general_controls;
 mod geometry_controls;
 mod info_box;
@@ -120,9 +120,14 @@ pub fn update(model: &mut app::Model) {
         );
     }
 
-    let errors = model.program_store.errors();
-    if errors.keys().len() > 0 {
-        compilation_errors::update(&model.widget_ids, ui, &errors);
+    //////////////////////////////////////////////////
+    // Error Display
+    //////////////////////////////////////////////////
+    let compile_errors = model.program_store.errors();
+    if compile_errors.keys().len() > 0 {
+        errors::compilation_errors(&model.widget_ids, ui, &compile_errors);
+    } else if let Some(audio_error) = &model.program_store.buffer_store.audio_uniforms.error {
+        errors::update(&model.widget_ids, ui, "Audio Error", audio_error.as_str());
     }
 }
 
