@@ -78,7 +78,7 @@ impl AudioUniforms {
             error_channel: None,
             recv_thread: None,
             running: false,
-            smoothing: 0.6,
+            smoothing: 0.5,
             stream: None,
         }
     }
