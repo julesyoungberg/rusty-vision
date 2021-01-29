@@ -54,7 +54,7 @@ impl Shader {
         let src = src_string.as_str();
 
         // load shader dependencies ([^\r]*) deals with \r on windows
-        let re = Regex::new(r"\n//@import ([^\r]*)").unwrap();
+        let re = Regex::new(r"//@import ([^\r\n]*)").unwrap();
         let complete_src = re
             .replace_all(src, |captures: &regex::Captures| {
                 let import = &captures[1];

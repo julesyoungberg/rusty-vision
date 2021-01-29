@@ -8,8 +8,6 @@ layout(location = 0) out vec4 frag_color;
  */
 layout(set = 0, binding = 0) uniform GeneralUniforms {
     int colorMode;
-    int drawFloor;
-    float fogDist;
     float time;
     vec2 resolution;
     float color1R;
@@ -21,9 +19,6 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float color3R;
     float color3G;
     float color3B;
-    float shapeRotationX;
-    float shapeRotationY;
-    float shapeRotationZ;
 };
 
 void main() {

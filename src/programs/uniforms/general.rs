@@ -8,8 +8,6 @@ use crate::programs::uniforms::base::Bufferable;
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
     pub color_mode: i32,
-    pub draw_floor: i32,
-    pub fog_dist: f32,
     pub time: f32,
     pub resolution: Vector2,
     pub color1_r: f32,
@@ -21,9 +19,6 @@ pub struct Data {
     pub color3_r: f32,
     pub color3_g: f32,
     pub color3_b: f32,
-    pub shape_rotation_x: f32,
-    pub shape_rotation_y: f32,
-    pub shape_rotation_z: f32,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -50,8 +45,6 @@ impl GeneralUniforms {
             clock: SystemTime::now(),
             data: Data {
                 color_mode: 0,
-                draw_floor: 1,
-                fog_dist: 150.0,
                 time: 0.0,
                 resolution,
                 color1_r: 1.0,
@@ -63,9 +56,6 @@ impl GeneralUniforms {
                 color3_r: 0.0,
                 color3_g: 0.0,
                 color3_b: 1.0,
-                shape_rotation_x: 0.0,
-                shape_rotation_y: 0.0,
-                shape_rotation_z: 0.0,
             },
         }
     }

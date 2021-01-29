@@ -28,7 +28,7 @@ pub const PROGRAMS: &'static [&'static str] = &[
     "tetrahedron",
 ];
 
-pub const DEFAULT_PROGRAM: usize = 1;
+pub const DEFAULT_PROGRAM: usize = 3;
 
 /**
  * Default uniform values for each program.

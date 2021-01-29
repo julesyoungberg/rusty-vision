@@ -12,7 +12,7 @@ pub fn height(model: &mut app::Model) -> f32 {
     let mut h = 0.0;
 
     if model.ui_show_geometry {
-        h = 150.0;
+        h = 260.0;
     }
 
     h
@@ -26,6 +26,37 @@ pub fn update(
     ui: &mut UiCell,
     uniforms: &mut uniforms::geometry::GeometryUniforms,
 ) {
+    /////////////////////////
+    // draw floor toggle
+    components::label("Draw Floor")
+        .parent(widget_ids.controls_wrapper)
+        .set(widget_ids.draw_floor_label, ui);
+    let draw_floor = uniforms.data.draw_floor == 1;
+    for _click in components::button_small(draw_floor)
+        .parent(widget_ids.controls_wrapper)
+        .right(110.0)
+        .set(widget_ids.draw_floor, ui)
+    {
+        if draw_floor {
+            uniforms.data.draw_floor = 0;
+        } else {
+            uniforms.data.draw_floor = 1;
+        }
+        println!("draw floor: {}", uniforms.data.draw_floor);
+    }
+
+    /////////////////////////
+    // fog control
+    for value in components::slider(uniforms.data.fog_dist, 15.0, 300.0)
+        .parent(widget_ids.controls_wrapper)
+        .left(-30.0)
+        .down(10.0)
+        .label("Fog Distance")
+        .set(widget_ids.fog_dist, ui)
+    {
+        uniforms.data.fog_dist = value;
+    }
+
     /////////////////////////
     // rotation1
     let twopi = 360.0;
@@ -101,5 +132,31 @@ pub fn update(
         .set(widget_ids.offset1_z, ui)
     {
         uniforms.data.offset1_z = value;
+    }
+
+    /////////////////////////
+    // shape rotation
+    let twopi = 360.0;
+    components::label("Shape Rotation")
+        .parent(widget_ids.controls_wrapper)
+        .left(55.0 as f64)
+        .set(widget_ids.shape_rotation_label, ui);
+    for value in components::x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
+        .parent(widget_ids.controls_wrapper)
+        .set(widget_ids.shape_rotation_x, ui)
+    {
+        uniforms.data.shape_rotation_x = value;
+    }
+    for value in components::y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
+        .parent(widget_ids.controls_wrapper)
+        .set(widget_ids.shape_rotation_y, ui)
+    {
+        uniforms.data.shape_rotation_y = value;
+    }
+    for value in components::z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
+        .parent(widget_ids.controls_wrapper)
+        .set(widget_ids.shape_rotation_z, ui)
+    {
+        uniforms.data.shape_rotation_z = value;
     }
 }

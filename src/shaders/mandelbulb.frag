@@ -6,8 +6,6 @@ layout(location = 0) out vec4 fragColor;
 
 layout(set = 0, binding = 0) uniform GeneralUniforms {
     int colorMode;
-    int drawFloor;
-    float fogDist;
     float time;
     vec2 resolution;
     float color1R;
@@ -19,9 +17,6 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float color3R;
     float color3G;
     float color3B;
-    float shapeRotationX;
-    float shapeRotationY;
-    float shapeRotationZ;
 };
 
 layout(set = 1, binding = 0) uniform CameraUniforms {
@@ -37,6 +32,8 @@ layout(set = 1, binding = 0) uniform CameraUniforms {
 };
 
 layout(set = 2, binding = 0) uniform GeometryUniforms {
+    int drawFloor;
+    float fogDist;
     float rotation1X;
     float rotation1Y;
     float rotation1Z;
@@ -46,6 +43,9 @@ layout(set = 2, binding = 0) uniform GeometryUniforms {
     float offset1X;
     float offset1Y;
     float offset1Z;
+    float shapeRotationX;
+    float shapeRotationY;
+    float shapeRotationZ;
 };
 
 // ray marching
