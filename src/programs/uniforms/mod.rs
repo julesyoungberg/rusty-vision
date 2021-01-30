@@ -193,8 +193,7 @@ impl BufferStore {
         if subscriptions.audio {
             self.audio_uniforms.set_program_defaults(selected);
         } else {
-            // self.audio_uniforms.end_session();
-            self.audio_uniforms = audio::AudioUniforms::new();
+            self.audio_uniforms.end_session();
         }
     }
 

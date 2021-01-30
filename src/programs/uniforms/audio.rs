@@ -5,9 +5,8 @@ use ringbuf::{Consumer, RingBuffer};
 use serde_json;
 use serde_json::{json, Value};
 use std::string::ToString;
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time;
 use websocket::client::ClientBuilder;
 use websocket::OwnedMessage;
 
@@ -37,10 +36,12 @@ pub struct AudioUniforms {
     pub data: Data,
     pub error: Option<String>,
 
+    close_channel_tx: Option<Sender<OwnedMessage>>,
     consumer: Option<Consumer<serde_json::Value>>,
-    error_channel: Option<Receiver<String>>,
+    error_channel_rx: Option<Receiver<String>>,
     recv_thread: Option<std::thread::JoinHandle<()>>,
     running: bool,
+    send_thread: Option<std::thread::JoinHandle<()>>,
     smoothing: f32,
     stream: Option<cpal::Stream>,
 }
@@ -58,6 +59,7 @@ impl Bufferable for AudioUniforms {
 impl AudioUniforms {
     pub fn new() -> Self {
         Self {
+            close_channel_tx: None,
             consumer: None,
             data: Data {
                 dissonance: 0.0,
@@ -75,9 +77,10 @@ impl AudioUniforms {
                 tristimulus3: 0.0,
             },
             error: None,
-            error_channel: None,
+            error_channel_rx: None,
             recv_thread: None,
             running: false,
+            send_thread: None,
             smoothing: 0.5,
             stream: None,
         }
@@ -200,31 +203,29 @@ impl AudioUniforms {
             }
         };
 
-        let (tx, rx) = channel();
-        self.error_channel = Some(rx);
-        let tx_1 = tx.clone();
-        let tx_2 = tx.clone();
+        let (error_channel_tx, error_channel_rx) = channel();
+        self.error_channel_rx = Some(error_channel_rx);
+        let error_channel_tx_1 = error_channel_tx.clone();
+
+        let (audio_channel_tx, audio_channel_rx) = channel();
+        let (close_channel_tx, close_channel_rx) = channel();
+        self.close_channel_tx = Some(close_channel_tx);
 
         // build audio stream
         let stream_builder = audio_device.build_input_stream(
             &audio_config.config(),
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                // build a message and forward it to the audio channel
                 let frame_message = json!({
                     "type": "audio_frame",
                     "payload": data,
                 });
-
-                // send frame to server
                 let message = OwnedMessage::Text(frame_message.to_string());
-                match sender.send_message(&message) {
-                    Ok(()) => (),
-                    Err(e) => {
-                        tx.send(format!("Error sending frame: {:?}", e)).unwrap();
-                    }
-                }
+                audio_channel_tx.send(message).unwrap();
             },
             move |err| {
-                tx_1.send(format!("Error reading frame from audio stream: {:?}", err))
+                error_channel_tx
+                    .send(format!("Error reading frame from audio stream: {:?}", err))
                     .unwrap();
             },
         );
@@ -249,6 +250,36 @@ impl AudioUniforms {
 
         self.stream = Some(stream);
 
+        // sender thread
+        // forward audio from the audio thread to mirlin
+        // check the close channel for messages to end the session
+        self.send_thread = Some(thread::spawn(move || {
+            'sender: loop {
+                // check the audio channel for data, forward if available
+                if let Ok(message) = audio_channel_rx.try_recv() {
+                    match sender.send_message(&message) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            println!("Error sending frame: {:?}", e);
+                            break 'sender;
+                        }
+                    }
+                }
+
+                // check the close channel, break if needed
+                match close_channel_rx.try_recv() {
+                    Ok(m) => match m {
+                        OwnedMessage::Close(_) => break 'sender,
+                        _ => (),
+                    },
+                    _ => (),
+                };
+            }
+
+            // close the connection and end the session
+            sender.shutdown_all().unwrap();
+        }));
+
         // create a ring buffer for server responses (features)
         let ring_buffer = RingBuffer::<serde_json::Value>::new(2);
         let (mut producer, consumer) = ring_buffer.split();
@@ -256,33 +287,35 @@ impl AudioUniforms {
         self.consumer = Some(consumer);
 
         // listen for messages from server, push to ring buffer
-        // TODO figure out how to also listen to channel to know when to exit
         self.recv_thread = Some(thread::spawn(move || {
             for raw in receiver.incoming_messages() {
                 let message = match raw {
                     Ok(m) => m,
                     Err(e) => {
-                        tx_2.send(format!("Error receiving message from mirlin: {:?}", e))
+                        error_channel_tx_1
+                            .send(format!("Error receiving message from mirlin: {:?}", e))
                             .unwrap();
-                        break;
+                        return;
                     }
                 };
                 let value: Value = match message {
                     OwnedMessage::Text(json_string) => match serde_json::from_str(&json_string) {
                         Ok(v) => v,
                         Err(e) => {
-                            tx_2.send(format!("Error parsing message from mirlin: {:?}", e))
+                            error_channel_tx_1
+                                .send(format!("Error parsing message from mirlin: {:?}", e))
                                 .unwrap();
-                            break;
+                            return;
                         }
                     },
                     _ => {
-                        tx_2.send(format!(
-                            "Received unexpected message from mirlin: {:?}",
-                            message
-                        ))
-                        .unwrap();
-                        break;
+                        error_channel_tx_1
+                            .send(format!(
+                                "Received unexpected message from mirlin: {:?}",
+                                message
+                            ))
+                            .unwrap();
+                        return;
                     }
                 };
                 producer.push(value).ok();
@@ -303,17 +336,25 @@ impl AudioUniforms {
             return;
         }
 
+        // stop the stream
         if let Some(stream) = self.stream.as_ref() {
-            println!("pausing stream");
             match stream.pause() {
                 _ => (),
             };
         }
 
-        // TODO: disconnect from mirlin server
+        // send a message to the close channel to stop the sender thread
+        if let Some(close_channel) = self.close_channel_tx.take() {
+            close_channel.send(OwnedMessage::Close(None)).unwrap();
+        }
 
+        // join the sender thread
+        if let Some(handle) = self.send_thread.take() {
+            handle.join().unwrap();
+        }
+
+        // join the receiver thread
         if let Some(handle) = self.recv_thread.take() {
-            println!("joining recv thread");
             handle.join().unwrap();
         }
 
@@ -336,8 +377,8 @@ impl AudioUniforms {
             return;
         }
 
-        // check the errro channel for errors
-        if let Ok(err) = self.error_channel.as_ref().unwrap().try_recv() {
+        // check the error channel for errors
+        if let Ok(err) = self.error_channel_rx.as_ref().unwrap().try_recv() {
             println!("Audio error: {:?}", err);
             self.end_session();
             return;
