@@ -67,7 +67,7 @@ pub struct Model {
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
     pub ui: Ui,
-    pub ui_show_general: bool,
+    pub ui_show_color: bool,
     pub ui_show_geometry: bool,
     pub vertex_buffer: wgpu::Buffer,
 }

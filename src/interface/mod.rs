@@ -17,7 +17,7 @@ mod info_box;
 pub fn update(model: &mut app::Model) {
     ////////////////////////
     // compute height
-    let mut height = 130.0;
+    let mut height = 200.0;
     height = height + color_controls::height(model);
     if model.program_store.current_subscriptions.geometry {
         height = height + geometry_controls::height(model);
@@ -48,35 +48,35 @@ pub fn update(model: &mut app::Model) {
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
 
+    /////////////////////////
+    // current program select
+    components::label("Shader")
+        .parent(model.widget_ids.controls_wrapper)
+        .set(model.widget_ids.current_program_label, ui);
+    for selected in components::drop_down(config::PROGRAMS, model.program_store.current_program)
+        .parent(model.widget_ids.controls_wrapper)
+        .down(5.0)
+        .set(model.widget_ids.current_program, ui)
+    {
+        model.program_store.select_program(selected);
+    }
+
     //////////////////////////////////////////////////
-    // General Controls
+    // Color Controls
     //////////////////////////////////////////////////
     for _click in components::button_big()
         .parent(model.widget_ids.controls_wrapper)
-        .down(10.0)
-        .label("General")
+        .down(20.0)
+        .label("Color")
         .set(model.widget_ids.general_folder, ui)
     {
         println!("toggle general controls");
-        model.ui_show_general = !model.ui_show_general;
+        model.ui_show_color = !model.ui_show_color;
     }
 
     let mut geometry_left = -200.0;
 
-    if model.ui_show_general {
-        /////////////////////////
-        // current program select
-        components::label("Shader")
-            .parent(model.widget_ids.controls_wrapper)
-            .set(model.widget_ids.current_program_label, ui);
-        for selected in components::drop_down(config::PROGRAMS, model.program_store.current_program)
-            .parent(model.widget_ids.controls_wrapper)
-            .down(5.0)
-            .set(model.widget_ids.current_program, ui)
-        {
-            model.program_store.select_program(selected);
-        }
-
+    if model.ui_show_color {
         color_controls::update(
             &model.widget_ids,
             ui,

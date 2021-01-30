@@ -12,8 +12,8 @@ use crate::programs::uniforms::color;
 pub fn height(model: &mut app::Model) -> f32 {
     let mut h = 0.0;
 
-    if model.ui_show_general {
-        h = 150.0;
+    if model.ui_show_color {
+        h = 100.0;
 
         if model
             .program_store

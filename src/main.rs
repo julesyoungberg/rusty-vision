@@ -41,7 +41,7 @@ fn model(app: &App) -> app::Model {
         program_store,
         show_controls: true,
         ui,
-        ui_show_general: false,
+        ui_show_color: false,
         ui_show_geometry: true,
         vertex_buffer,
     }
