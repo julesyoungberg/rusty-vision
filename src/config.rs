@@ -86,9 +86,9 @@ pub const PROGRAM_DEFAULTS: &'static [&'static [&'static [f32; 3]]] = &[
  * in the shader.
  */
 pub const PROGRAM_UNIFORMS: &'static [&'static str] = &[
-    "general",                 // basic
-    "general,audio",           // basicAudio
-    "general,camera,geometry", // mandelbox
-    "general,camera,geometry", // mandelbulb
-    "general,camera,geometry", // tetrahedron
+    "general",                       // basic
+    "general,audio",                 // basicAudio
+    "general,camera,color,geometry", // mandelbox
+    "general,camera,color,geometry", // mandelbulb
+    "general,camera,color,geometry", // tetrahedron
 ];

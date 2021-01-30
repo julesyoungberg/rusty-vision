@@ -7,6 +7,7 @@ use crate::programs::uniforms::base::Bufferable;
 pub mod audio;
 pub mod base;
 pub mod camera;
+pub mod color;
 pub mod general;
 pub mod geometry;
 
@@ -75,6 +76,7 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
 pub struct UniformSubscriptions {
     pub audio: bool,
     pub camera: bool,
+    pub color: bool,
     pub general: bool,
     pub geometry: bool,
 }
@@ -86,12 +88,21 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
         audio: false,
         camera: false,
+        color: false,
         geometry: false,
         general: false,
     };
 
+    if names.iter().any(|n| n == "audio") {
+        subscriptions.audio = true;
+    }
+
     if names.iter().any(|n| n == "camera") {
         subscriptions.camera = true;
+    }
+
+    if names.iter().any(|n| n == "color") {
+        subscriptions.color = true;
     }
 
     if names.iter().any(|n| n == "general") {
@@ -100,10 +111,6 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
 
     if names.iter().any(|n| n == "geometry") {
         subscriptions.geometry = true;
-    }
-
-    if names.iter().any(|n| n == "audio") {
-        subscriptions.audio = true;
     }
 
     subscriptions
@@ -116,6 +123,7 @@ pub struct BufferStore {
     pub audio_uniforms: audio::AudioUniforms,
     pub buffers: UniformBuffers,
     pub camera_uniforms: camera::CameraUniforms,
+    pub color_uniforms: color::ColorUniforms,
     pub general_uniforms: general::GeneralUniforms,
     pub geometry_uniforms: geometry::GeometryUniforms,
 }
@@ -126,9 +134,17 @@ pub struct BufferStore {
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
+        let audio_uniforms = audio::AudioUniforms::new();
+        let audio_uniform_buffer =
+            UniformBuffer::new::<audio::Data>(device, audio_uniforms.as_bytes());
+
         let camera_uniforms = camera::CameraUniforms::new();
         let camera_uniform_buffer =
             UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes());
+
+        let color_uniforms = color::ColorUniforms::new();
+        let color_uniform_buffer =
+            UniformBuffer::new::<color::Data>(device, color_uniforms.as_bytes());
 
         let general_uniforms =
             general::GeneralUniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
@@ -139,21 +155,19 @@ impl BufferStore {
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
 
-        let audio_uniforms = audio::AudioUniforms::new();
-        let audio_uniform_buffer =
-            UniformBuffer::new::<audio::Data>(device, audio_uniforms.as_bytes());
-
         // store buffers in map
         let mut buffers = HashMap::new();
+        buffers.insert(String::from("audio"), audio_uniform_buffer);
         buffers.insert(String::from("camera"), camera_uniform_buffer);
+        buffers.insert(String::from("color"), color_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
-        buffers.insert(String::from("audio"), audio_uniform_buffer);
 
         Self {
             audio_uniforms,
             buffers,
             camera_uniforms,
+            color_uniforms,
             general_uniforms,
             geometry_uniforms,
         }
@@ -166,6 +180,10 @@ impl BufferStore {
     pub fn set_program_defaults(&mut self, selected: usize, subscriptions: &UniformSubscriptions) {
         if subscriptions.camera {
             self.camera_uniforms.set_program_defaults(selected);
+        }
+
+        if subscriptions.color {
+            self.color_uniforms.set_program_defaults(selected);
         }
 
         if subscriptions.general {
@@ -208,6 +226,14 @@ impl BufferStore {
                 device,
                 encoder,
                 self.camera_uniforms.as_bytes(),
+            );
+        }
+
+        if subscriptions.color {
+            self.buffers.get("color").unwrap().update::<color::Data>(
+                device,
+                encoder,
+                self.color_uniforms.as_bytes(),
             );
         }
 

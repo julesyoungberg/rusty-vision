@@ -5,9 +5,9 @@ use nannou::ui::DrawToFrameError;
 use crate::app;
 use crate::config;
 
+mod color_controls;
 mod components;
 mod errors;
-mod general_controls;
 mod geometry_controls;
 mod info_box;
 
@@ -18,7 +18,7 @@ pub fn update(model: &mut app::Model) {
     ////////////////////////
     // compute height
     let mut height = 130.0;
-    height = height + general_controls::height(model);
+    height = height + color_controls::height(model);
     if model.program_store.current_subscriptions.geometry {
         height = height + geometry_controls::height(model);
     }
@@ -77,10 +77,10 @@ pub fn update(model: &mut app::Model) {
             model.program_store.select_program(selected);
         }
 
-        general_controls::update(
+        color_controls::update(
             &model.widget_ids,
             ui,
-            &mut model.program_store.buffer_store.general_uniforms,
+            &mut model.program_store.buffer_store.color_uniforms,
         );
         geometry_left = -60.0;
     }

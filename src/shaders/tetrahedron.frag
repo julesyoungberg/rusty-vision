@@ -8,18 +8,8 @@ layout(location = 0) out vec4 fragColor;
 // uniform vec3 rsRotation1;
 // uniform vec3 rsRotation2;
 layout(set = 0, binding = 0) uniform GeneralUniforms {
-    int colorMode;
-    float time;
     vec2 resolution;
-    float color1R;
-    float color1G;
-    float color1B;
-    float color2R;
-    float color2G;
-    float color2B;
-    float color3R;
-    float color3G;
-    float color3B;
+    float time;
 };
 
 layout(set = 1, binding = 0) uniform CameraUniforms {
@@ -34,7 +24,20 @@ layout(set = 1, binding = 0) uniform CameraUniforms {
     float cameraUpZ;
 };
 
-layout(set = 2, binding = 0) uniform GeometryUniforms {
+layout(set = 2, binding = 0) uniform ColorUniforms {
+    int colorMode;
+    float color1R;
+    float color1G;
+    float color1B;
+    float color2R;
+    float color2G;
+    float color2B;
+    float color3R;
+    float color3G;
+    float color3B;
+};
+
+layout(set = 3, binding = 0) uniform GeometryUniforms {
     int drawFloor;
     float fogDist;
     float rotation1X;

@@ -3,7 +3,7 @@ use nannou::ui::prelude::*;
 use crate::app;
 use crate::config;
 use crate::interface::components;
-use crate::programs::uniforms;
+use crate::programs::uniforms::color;
 
 /**
  * Section height, computes and returns the current height.
@@ -18,7 +18,7 @@ pub fn height(model: &mut app::Model) -> f32 {
         if model
             .program_store
             .buffer_store
-            .general_uniforms
+            .color_uniforms
             .data
             .color_mode
             == 0
@@ -33,11 +33,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 /**
  * Section update, defines layout and update logic of the section
  */
-pub fn update(
-    widget_ids: &app::WidgetIds,
-    ui: &mut UiCell,
-    uniforms: &mut uniforms::general::GeneralUniforms,
-) {
+pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut color::ColorUniforms) {
     /////////////////////////
     // color mode select
     components::label("Color Mode")
