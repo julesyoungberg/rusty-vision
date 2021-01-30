@@ -3108,6 +3108,7 @@ dependencies = [
  "rayon",
  "regex",
  "ringbuf",
+ "serde",
  "serde_json",
  "shaderc",
  "websocket",

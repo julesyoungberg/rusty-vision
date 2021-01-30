@@ -5,16 +5,15 @@ use std::iter::FromIterator;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
-use crate::config;
+use crate::app_config;
 use crate::util;
 
+mod config;
 pub mod program;
 mod shaders;
 pub mod uniforms;
 
 pub type Programs = HashMap<String, program::Program>;
-
-pub type ProgramUniforms = Vec<Vec<String>>;
 
 /**
  * Stores GPU programs and related data
@@ -25,7 +24,9 @@ pub struct ProgramStore {
     pub current_program: usize,
     pub current_subscriptions: uniforms::UniformSubscriptions,
     pub programs: Programs,
-    pub program_uniforms: ProgramUniforms,
+    pub program_names: Vec<String>,
+    pub program_defaults: HashMap<String, Option<config::ProgramDefaults>>,
+    pub program_uniforms: HashMap<String, Vec<String>>,
     #[cfg(target_os = "macos")]
     pub shader_watcher: notify::FsEventWatcher,
     #[cfg(target_os = "linux")]
@@ -45,6 +46,8 @@ pub struct ProgramStore {
  */
 impl ProgramStore {
     pub fn new(device: &wgpu::Device) -> Self {
+        let config_store = config::ConfigStore::new();
+
         let mut buffer_store = uniforms::BufferStore::new(device);
 
         // setup shader watcher
@@ -52,35 +55,46 @@ impl ProgramStore {
         let mut shader_watcher = watcher(send_channel, time::Duration::from_secs(1)).unwrap();
         shader_watcher
             .watch(
-                util::universal_path(config::SHADERS_PATH.to_string()).as_str(),
+                util::universal_path(app_config::SHADERS_PATH.to_string()).as_str(),
                 RecursiveMode::Recursive,
             )
             .unwrap();
 
-        // create the program map
+        // get program configuration
+        let mut program_names = vec![];
         let mut programs = HashMap::new();
-        for pipeline_desc in config::PIPELINES {
-            let name = String::from(pipeline_desc[0]);
+        let mut program_uniforms = HashMap::new();
+        let mut program_defaults = HashMap::new();
+        for (program_name, program_config) in config_store.config.programs {
+            program_names.push(program_name.clone());
+
             programs.insert(
-                name,
-                program::Program::new(pipeline_desc[1], pipeline_desc[2]),
+                program_name.clone(),
+                program::Program::new(program_config.pipeline.vert, program_config.pipeline.frag),
             );
+
+            program_uniforms.insert(program_name.clone(), program_config.uniforms);
+
+            program_defaults.insert(program_name.clone(), program_config.defaults);
         }
 
-        // parse the uniform configuration into a vector of vector of strings for easy lookup & iteration
-        let program_uniforms = config::PROGRAM_UNIFORMS
-            .iter()
-            .map(|u| {
-                u.split(",")
-                    .map(|s| String::from(s))
-                    .collect::<Vec<String>>()
-            })
-            .collect::<Vec<Vec<String>>>();
+        program_names.sort();
 
-        let current_program = config::DEFAULT_PROGRAM;
+        let mut current_program = 0;
+        for (index, program_name) in program_names.iter().enumerate() {
+            if *program_name == config_store.config.default {
+                current_program = index;
+            }
+        }
 
-        let current_subscriptions = uniforms::get_subscriptions(&program_uniforms[current_program]);
-        buffer_store.set_program_defaults(current_program, &current_subscriptions);
+        let program_name = &program_names[current_program];
+
+        let current_subscriptions =
+            uniforms::get_subscriptions(&program_uniforms.get(program_name).unwrap());
+        buffer_store.set_program_defaults(
+            &current_subscriptions,
+            &program_defaults.get(program_name).unwrap(),
+        );
 
         Self {
             buffer_store,
@@ -88,6 +102,8 @@ impl ProgramStore {
             current_program,
             current_subscriptions,
             programs,
+            program_names,
+            program_defaults,
             program_uniforms,
             shader_watcher,
         }
@@ -99,9 +115,9 @@ impl ProgramStore {
      */
     pub fn compile_current(&mut self, device: &wgpu::Device, num_samples: u32) {
         // update the current GPU program to use the latest code
-        let name = config::PROGRAMS[self.current_program];
+        let name = &self.program_names[self.current_program];
         let program = self.programs.get_mut(name).unwrap();
-        let program_uniforms = &self.program_uniforms[self.current_program];
+        let program_uniforms = &self.program_uniforms.get(name).unwrap();
         let uniform_buffers = &self.buffer_store.buffers;
 
         // map the current program's uniform list to a list of bind group layouts
@@ -151,7 +167,7 @@ impl ProgramStore {
      */
     pub fn current_program(&self) -> &program::Program {
         self.programs
-            .get(config::PROGRAMS[self.current_program])
+            .get(&self.program_names[self.current_program])
             .unwrap()
     }
 
@@ -170,19 +186,21 @@ impl ProgramStore {
             return;
         }
 
+        let name = &self.program_names[selected];
+
         // first, clear the current program
-        self.programs
-            .get_mut(config::PROGRAMS[self.current_program])
-            .unwrap()
-            .clear();
+        self.programs.get_mut(name).unwrap().clear();
 
         // next, update the current program and uniforms
         // it will be compiled in the next update()
-        println!("program selected: {}", config::PROGRAMS[selected]);
+        println!("program selected: {}", name);
         self.current_program = selected;
-        self.current_subscriptions = uniforms::get_subscriptions(&self.program_uniforms[selected]);
-        self.buffer_store
-            .set_program_defaults(selected, &self.current_subscriptions);
+        self.current_subscriptions =
+            uniforms::get_subscriptions(&self.program_uniforms.get(name).unwrap());
+        self.buffer_store.set_program_defaults(
+            &self.current_subscriptions,
+            &self.program_defaults.get(name).unwrap(),
+        );
     }
 
     /**
@@ -203,7 +221,10 @@ impl ProgramStore {
      * Call in draw() right before rendering.
      */
     pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
-        let program_uniforms = &self.program_uniforms[self.current_program];
+        let program_uniforms = &self
+            .program_uniforms
+            .get(&self.program_names[self.current_program])
+            .unwrap();
         let bind_group_iter = program_uniforms
             .iter()
             .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group);

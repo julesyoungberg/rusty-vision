@@ -1,6 +1,6 @@
 use nannou::prelude::*;
 
-use crate::config;
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 #[repr(C)]
@@ -28,10 +28,16 @@ impl Bufferable for ColorUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn set_program_defaults(&mut self, selected: usize) {
-        let defaults = config::PROGRAM_DEFAULTS[selected];
+    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        let mut color_mode = 0;
 
-        self.data.color_mode = defaults[4][0] as i32;
+        if let Some(cnfg) = defaults {
+            if let Some(mode) = cnfg.color_mode {
+                color_mode = mode;
+            }
+        }
+
+        self.data.color_mode = color_mode as i32;
     }
 }
 

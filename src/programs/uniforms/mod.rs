@@ -1,7 +1,8 @@
 use nannou::prelude::*;
 use std::collections::HashMap;
 
-use crate::config;
+use crate::app_config;
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 pub mod audio;
@@ -146,8 +147,10 @@ impl BufferStore {
         let color_uniform_buffer =
             UniformBuffer::new::<color::Data>(device, color_uniforms.as_bytes());
 
-        let general_uniforms =
-            general::GeneralUniforms::new(pt2(config::SIZE[0] as f32, config::SIZE[1] as f32));
+        let general_uniforms = general::GeneralUniforms::new(pt2(
+            app_config::SIZE[0] as f32,
+            app_config::SIZE[1] as f32,
+        ));
         let general_uniform_buffer =
             UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
 
@@ -177,21 +180,25 @@ impl BufferStore {
      * Set default uniforms for current selected program.
      * Also a place to do any initialization and/or cleanup.
      */
-    pub fn set_program_defaults(&mut self, selected: usize, subscriptions: &UniformSubscriptions) {
+    pub fn set_program_defaults(
+        &mut self,
+        subscriptions: &UniformSubscriptions,
+        defaults: &Option<config::ProgramDefaults>,
+    ) {
         if subscriptions.camera {
-            self.camera_uniforms.set_program_defaults(selected);
+            self.camera_uniforms.set_program_defaults(defaults);
         }
 
         if subscriptions.color {
-            self.color_uniforms.set_program_defaults(selected);
+            self.color_uniforms.set_program_defaults(defaults);
         }
 
         if subscriptions.general {
-            self.general_uniforms.set_program_defaults(selected);
+            self.general_uniforms.set_program_defaults(defaults);
         }
 
         if subscriptions.audio {
-            self.audio_uniforms.set_program_defaults(selected);
+            self.audio_uniforms.set_program_defaults(defaults);
         } else {
             self.audio_uniforms.end_session();
         }

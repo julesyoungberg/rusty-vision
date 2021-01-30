@@ -1,7 +1,7 @@
 use nannou::math::cgmath::Matrix4;
 use nannou::prelude::*;
 
-use crate::config;
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
@@ -29,18 +29,34 @@ impl Bufferable for CameraUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn set_program_defaults(&mut self, selected: usize) {
-        let defaults = config::PROGRAM_DEFAULTS[selected];
+    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        let mut camera_pos = pt3(0.0, 0.0, 5.0);
+        let mut camera_target = pt3(0.0, 0.0, 0.0);
+        let mut camera_up = pt3(0.0, 1.0, 0.0);
 
-        self.data.camera_pos_x = defaults[0][0];
-        self.data.camera_pos_y = defaults[0][1];
-        self.data.camera_pos_z = defaults[0][2];
+        if let Some(cnfg) = defaults {
+            if let Some(cam_pos) = cnfg.camera_position {
+                camera_pos = cam_pos;
+            }
 
-        self.data.camera_target_x = defaults[1][0];
-        self.data.camera_target_y = defaults[1][1];
-        self.data.camera_target_z = defaults[1][2];
+            if let Some(cam_target) = cnfg.camera_target {
+                camera_target = cam_target;
+            }
 
-        self.set_up(pt3(defaults[2][0], defaults[2][1], defaults[2][2]));
+            if let Some(cam_up) = cnfg.camera_up {
+                camera_up = cam_up;
+            }
+        }
+
+        self.data.camera_pos_x = camera_pos[0];
+        self.data.camera_pos_y = camera_pos[1];
+        self.data.camera_pos_z = camera_pos[2];
+
+        self.data.camera_target_x = camera_target[0];
+        self.data.camera_target_y = camera_target[1];
+        self.data.camera_target_z = camera_target[2];
+
+        self.set_up(camera_up);
     }
 }
 

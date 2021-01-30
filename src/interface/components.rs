@@ -43,10 +43,7 @@ pub fn button_big() -> widget::Button<'static, widget::button::Flat> {
         .border(0.0)
 }
 
-pub fn drop_down(
-    items: &'static [&str],
-    selected: usize,
-) -> widget::DropDownList<'static, &'static str> {
+pub fn drop_down<'a>(items: &'a [&str], selected: usize) -> widget::DropDownList<'a, &'a str> {
     widget::DropDownList::new(items, Option::from(selected))
         .w_h(200.0, 27.0)
         .label_font_size(12)

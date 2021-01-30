@@ -24,12 +24,12 @@ pub struct Program {
  * creation of the program as a GPU Render Pipeline
  */
 impl Program {
-    pub fn new(vert_name: &str, frag_name: &str) -> Self {
+    pub fn new(vert_name: String, frag_name: String) -> Self {
         Self {
             errors: HashMap::new(),
-            frag_shader: shaders::Shader::new(frag_name.to_string()),
+            frag_shader: shaders::Shader::new(frag_name),
             pipeline: None,
-            vert_shader: shaders::Shader::new(vert_name.to_string()),
+            vert_shader: shaders::Shader::new(vert_name),
         }
     }
 

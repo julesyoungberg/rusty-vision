@@ -3,7 +3,7 @@ use regex::Regex;
 use shaderc;
 use std::fs;
 
-use crate::config;
+use crate::app_config;
 use crate::util;
 
 /**
@@ -46,7 +46,7 @@ impl Shader {
         error.push_str(filename);
 
         // build path
-        let mut path = config::SHADERS_PATH.to_owned();
+        let mut path = app_config::SHADERS_PATH.to_owned();
         path.push_str(filename);
 
         // read shader
@@ -58,7 +58,7 @@ impl Shader {
         let complete_src = re
             .replace_all(src, |captures: &regex::Captures| {
                 let import = &captures[1];
-                let mut import_path = config::SHADERS_PATH.to_owned();
+                let mut import_path = app_config::SHADERS_PATH.to_owned();
                 import_path.push_str(import);
                 import_path.push_str(".glsl");
 

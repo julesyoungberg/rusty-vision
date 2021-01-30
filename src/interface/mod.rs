@@ -3,7 +3,7 @@ use nannou::ui::prelude::*;
 use nannou::ui::DrawToFrameError;
 
 use crate::app;
-use crate::config;
+use crate::app_config;
 
 mod color_controls;
 mod components;
@@ -38,9 +38,9 @@ pub fn update(model: &mut app::Model) {
     }
 
     let border = 40.0;
-    let scroll = height > config::SIZE[1] as f32 - border;
+    let scroll = height > app_config::SIZE[1] as f32 - border;
     if scroll {
-        height = config::SIZE[1] as f32 - border;
+        height = app_config::SIZE[1] as f32 - border;
     }
 
     // Calling `set_widgets` allows us to instantiate some widgets.
@@ -67,7 +67,13 @@ pub fn update(model: &mut app::Model) {
     components::label("Shader")
         .parent(model.widget_ids.controls_wrapper)
         .set(model.widget_ids.current_program_label, ui);
-    for selected in components::drop_down(config::PROGRAMS, model.program_store.current_program)
+    let program_names = model
+        .program_store
+        .program_names
+        .iter()
+        .map(|s| s.as_str())
+        .collect::<Vec<&str>>();
+    for selected in components::drop_down(&program_names[..], model.program_store.current_program)
         .parent(model.widget_ids.controls_wrapper)
         .down(5.0)
         .set(model.widget_ids.current_program, ui)

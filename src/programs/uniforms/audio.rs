@@ -10,6 +10,7 @@ use std::thread;
 use websocket::client::ClientBuilder;
 use websocket::OwnedMessage;
 
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 const CONNECTION: &'static str = "ws://127.0.0.1:9002";
@@ -51,7 +52,7 @@ impl Bufferable for AudioUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn set_program_defaults(&mut self, _selected: usize) {
+    fn set_program_defaults(&mut self, _defaults: &Option<config::ProgramDefaults>) {
         self.start_session();
     }
 }

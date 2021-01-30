@@ -1,7 +1,7 @@
 use nannou::prelude::*;
 
 mod app;
-mod config;
+mod app_config;
 mod interface;
 mod programs;
 mod quad_2d;
@@ -18,7 +18,7 @@ fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
         .new_window()
-        .size(config::SIZE[0], config::SIZE[1])
+        .size(app_config::SIZE[0], app_config::SIZE[1])
         .key_pressed(key_pressed)
         .view(view)
         .build()
