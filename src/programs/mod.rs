@@ -124,10 +124,7 @@ impl ProgramStore {
      */
     pub fn update_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         // check for changes
-        if let Ok(event) = self
-            .changes_channel
-            .recv_timeout(time::Duration::from_millis(1))
-        {
+        if let Ok(event) = self.changes_channel.try_recv() {
             if let DebouncedEvent::Write(path) = event {
                 let path_str = path.into_os_string().into_string().unwrap();
                 println!("changes written to: {}", path_str);

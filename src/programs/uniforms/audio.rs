@@ -137,16 +137,7 @@ impl AudioUniforms {
             }
         };
 
-        let (mut receiver, mut sender) = match client.split() {
-            Ok(t) => t,
-            Err(e) => {
-                self.error = Some(format!(
-                    "Error splitting audio client into sender & receiver: {:?}",
-                    e
-                ));
-                return false;
-            }
-        };
+        let (mut receiver, mut sender) = client.split().unwrap();
 
         // build subscription request
         let session_request = json!({
@@ -265,6 +256,7 @@ impl AudioUniforms {
         self.consumer = Some(consumer);
 
         // listen for messages from server, push to ring buffer
+        // TODO figure out how to also listen to channel to know when to exit
         self.recv_thread = Some(thread::spawn(move || {
             for raw in receiver.incoming_messages() {
                 let message = match raw {
@@ -272,7 +264,7 @@ impl AudioUniforms {
                     Err(e) => {
                         tx_2.send(format!("Error receiving message from mirlin: {:?}", e))
                             .unwrap();
-                        return;
+                        break;
                     }
                 };
                 let value: Value = match message {
@@ -281,7 +273,7 @@ impl AudioUniforms {
                         Err(e) => {
                             tx_2.send(format!("Error parsing message from mirlin: {:?}", e))
                                 .unwrap();
-                            return;
+                            break;
                         }
                     },
                     _ => {
@@ -290,7 +282,7 @@ impl AudioUniforms {
                             message
                         ))
                         .unwrap();
-                        return;
+                        break;
                     }
                 };
                 producer.push(value).ok();
@@ -312,6 +304,7 @@ impl AudioUniforms {
         }
 
         if let Some(stream) = self.stream.as_ref() {
+            println!("pausing stream");
             match stream.pause() {
                 _ => (),
             };
@@ -320,6 +313,7 @@ impl AudioUniforms {
         // TODO: disconnect from mirlin server
 
         if let Some(handle) = self.recv_thread.take() {
+            println!("joining recv thread");
             handle.join().unwrap();
         }
 
@@ -343,12 +337,7 @@ impl AudioUniforms {
         }
 
         // check the errro channel for errors
-        if let Ok(err) = self
-            .error_channel
-            .as_ref()
-            .unwrap()
-            .recv_timeout(time::Duration::from_millis(0))
-        {
+        if let Ok(err) = self.error_channel.as_ref().unwrap().try_recv() {
             println!("Audio error: {:?}", err);
             self.end_session();
             return;
