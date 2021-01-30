@@ -11,13 +11,27 @@ mod errors;
 mod geometry_controls;
 mod info_box;
 
+fn base_height(model: &app::Model) -> f32 {
+    let mut height = 90.0;
+
+    if model.program_store.current_subscriptions.color {
+        height += 60.0;
+    }
+
+    if model.program_store.current_subscriptions.geometry {
+        height += 60.0;
+    }
+
+    height
+}
+
 /**
  * Main UI logic / layout
  */
 pub fn update(model: &mut app::Model) {
     ////////////////////////
     // compute height
-    let mut height = 200.0;
+    let mut height = base_height(model);
     height = height + color_controls::height(model);
     if model.program_store.current_subscriptions.geometry {
         height = height + geometry_controls::height(model);
@@ -61,28 +75,30 @@ pub fn update(model: &mut app::Model) {
         model.program_store.select_program(selected);
     }
 
+    let mut geometry_left = -200.0;
+
     //////////////////////////////////////////////////
     // Color Controls
     //////////////////////////////////////////////////
-    for _click in components::button_big()
-        .parent(model.widget_ids.controls_wrapper)
-        .down(20.0)
-        .label("Color")
-        .set(model.widget_ids.general_folder, ui)
-    {
-        println!("toggle general controls");
-        model.ui_show_color = !model.ui_show_color;
-    }
+    if model.program_store.current_subscriptions.color {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .label("Color")
+            .set(model.widget_ids.general_folder, ui)
+        {
+            println!("toggle general controls");
+            model.ui_show_color = !model.ui_show_color;
+        }
 
-    let mut geometry_left = -200.0;
-
-    if model.ui_show_color {
-        color_controls::update(
-            &model.widget_ids,
-            ui,
-            &mut model.program_store.buffer_store.color_uniforms,
-        );
-        geometry_left = -60.0;
+        if model.ui_show_color {
+            color_controls::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.color_uniforms,
+            );
+            geometry_left = -60.0;
+        }
     }
 
     //////////////////////////////////////////////////
