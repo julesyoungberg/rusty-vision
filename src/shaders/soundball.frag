@@ -36,9 +36,9 @@ layout(set = 2, binding = 0) uniform CameraUniforms {
     float cameraUpZ;
 };
 
-#define NUM_STEPS 100
-#define MIN_HIT_DISTANCE 0.001
-#define MAX_TRACE_DISTANCE 100.0
+#define NUM_STEPS 50
+#define MIN_HIT_DISTANCE 0.01
+#define MAX_TRACE_DISTANCE 20.0
 #define FRAME_OF_VIEW 1.0
 
 //@import primitives/sdSphere
