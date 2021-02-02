@@ -36,12 +36,12 @@ pub struct Data {
 pub struct AudioUniforms {
     pub data: Data,
     pub error: Option<String>,
+    pub running: bool,
 
     close_channel_tx: Option<Sender<OwnedMessage>>,
     consumer: Option<Consumer<serde_json::Value>>,
     error_channel_rx: Option<Receiver<String>>,
     recv_thread: Option<std::thread::JoinHandle<()>>,
-    running: bool,
     send_thread: Option<std::thread::JoinHandle<()>>,
     smoothing: f32,
     stream: Option<cpal::Stream>,
@@ -93,6 +93,10 @@ impl AudioUniforms {
      * - establish subscription with the server
      */
     pub fn start_session(&mut self) -> bool {
+        if self.running {
+            return true;
+        }
+
         // get default audio input device
         let audio_device = match cpal::default_host().default_input_device() {
             Some(device) => device,

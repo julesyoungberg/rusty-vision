@@ -43,6 +43,18 @@
         "color_mode": 0
       }
     },
+    "soundball": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "soundball.frag"
+      },
+      "uniforms": ["general", "audio", "camera"],
+      "defaults": {
+        "camera_position": [0.0, 0.0, 2.0],
+        "camera_target": [0.0, 0.0, 0.0],
+        "camera_up": [0.0, 1.0, 0.0]
+      }
+    },
     "tetrahedron": {
       "pipeline": {
         "vert": "basic.vert",
