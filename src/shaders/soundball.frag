@@ -40,6 +40,7 @@ layout(set = 2, binding = 0) uniform CameraUniforms {
 #define MIN_HIT_DISTANCE 0.01
 #define MAX_TRACE_DISTANCE 20.0
 #define FRAME_OF_VIEW 1.0
+#define PI 3.1416
 
 //@import primitives/sdSphere
 //@import util/calculateNormal
@@ -53,8 +54,12 @@ float floorDist(in vec3 p) { return p.y + 1.8; }
 float sdSphere(in vec3 point, in vec3 center, float radius);
 
 float distFromNearest(in vec3 p) {
-    float t = sin(time * 0.5) * 2.0;
-    float displacement = sin(6.0 * p.x) * sin(8.0 * p.y) * sin(5.0 * p.z * t + time * 0.5) * 0.25;
+    float t1 = sin(time + PI) * noisiness;
+    float t2 = sin(time * 0.5) * spectralComplexity / 20.0;
+    float t3 = sin(time) * 0.25; // * dissonance / 10.0;
+    float displacement = sin(6.0 * p.x * t1 + time * 0.2) * 
+        sin(8.0 * p.y * t1 + time * 0.1) * 
+        sin(5.0 * p.z * t2 + time * 0.5) * spectralCentroid / 20000;
     float sphere1 = sdSphere(p, vec3(0), 1.0) + displacement;
 
     return min(sphere1, floorDist(p));
