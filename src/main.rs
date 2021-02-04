@@ -42,7 +42,8 @@ fn model(app: &App) -> app::Model {
         show_controls: true,
         ui,
         ui_show_color: false,
-        ui_show_geometry: true,
+        ui_show_geometry: false,
+        ui_show_audio: false,
         vertex_buffer,
     }
 }

@@ -37,13 +37,13 @@ pub struct AudioUniforms {
     pub data: Data,
     pub error: Option<String>,
     pub running: bool,
+    pub smoothing: f32,
 
     close_channel_tx: Option<Sender<OwnedMessage>>,
     consumer: Option<Consumer<serde_json::Value>>,
     error_channel_rx: Option<Receiver<String>>,
     recv_thread: Option<std::thread::JoinHandle<()>>,
     send_thread: Option<std::thread::JoinHandle<()>>,
-    smoothing: f32,
     stream: Option<cpal::Stream>,
 }
 
@@ -52,7 +52,15 @@ impl Bufferable for AudioUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn set_program_defaults(&mut self, _defaults: &Option<config::ProgramDefaults>) {
+    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        self.smoothing = 0.5;
+
+        if let Some(cnfg) = defaults {
+            if let Some(smoothing) = cnfg.audio_feature_smoothing {
+                self.smoothing = smoothing;
+            }
+        }
+
         self.start_session();
     }
 }

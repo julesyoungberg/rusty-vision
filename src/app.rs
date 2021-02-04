@@ -17,6 +17,7 @@ widget_ids! {
         fog_dist,
         general_folder,
         geometry_folder,
+        audio_folder,
         color1_r,
         color1_g,
         color1_b,
@@ -54,6 +55,7 @@ widget_ids! {
         errors_wrapper,
         errors_title,
         errors_message,
+        audio_feature_smoothing,
     }
 }
 
@@ -69,5 +71,6 @@ pub struct Model {
     pub ui: Ui,
     pub ui_show_color: bool,
     pub ui_show_geometry: bool,
+    pub ui_show_audio: bool,
     pub vertex_buffer: wgpu::Buffer,
 }

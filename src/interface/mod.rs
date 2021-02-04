@@ -5,6 +5,7 @@ use nannou::ui::DrawToFrameError;
 use crate::app;
 use crate::app_config;
 
+mod audio_controls;
 mod color_controls;
 mod components;
 mod errors;
@@ -14,13 +15,19 @@ mod info_box;
 fn base_height(model: &app::Model) -> f32 {
     let mut height = 90.0;
 
-    if model.program_store.current_subscriptions.color {
-        height += 60.0;
-    }
+    let subscriptions = &model.program_store.current_subscriptions;
 
-    if model.program_store.current_subscriptions.geometry {
-        height += 60.0;
-    }
+    [
+        subscriptions.color,
+        subscriptions.geometry,
+        subscriptions.audio,
+    ]
+    .iter()
+    .for_each(|s| {
+        if *s {
+            height += 60.0;
+        }
+    });
 
     height
 }
@@ -32,10 +39,10 @@ pub fn update(model: &mut app::Model) {
     ////////////////////////
     // compute height
     let mut height = base_height(model);
-    height = height + color_controls::height(model);
-    if model.program_store.current_subscriptions.geometry {
-        height = height + geometry_controls::height(model);
-    }
+    height = height
+        + color_controls::height(model)
+        + geometry_controls::height(model)
+        + audio_controls::height(model);
 
     let border = 40.0;
     let scroll = height > app_config::SIZE[1] as f32 - border;
@@ -81,7 +88,7 @@ pub fn update(model: &mut app::Model) {
         model.program_store.select_program(selected);
     }
 
-    let mut geometry_left = -200.0;
+    let mut left = -200.0;
 
     //////////////////////////////////////////////////
     // Color Controls
@@ -103,7 +110,7 @@ pub fn update(model: &mut app::Model) {
                 ui,
                 &mut model.program_store.buffer_store.color_uniforms,
             );
-            geometry_left = -60.0;
+            left = -60.0;
         }
     }
 
@@ -114,7 +121,7 @@ pub fn update(model: &mut app::Model) {
         for _click in components::button_big()
             .parent(model.widget_ids.controls_wrapper)
             .down(20.0)
-            .left(geometry_left as f64)
+            .left(left as f64)
             .label("Geometry")
             .set(model.widget_ids.geometry_folder, ui)
         {
@@ -122,11 +129,37 @@ pub fn update(model: &mut app::Model) {
             model.ui_show_geometry = !model.ui_show_geometry;
         }
 
+        left = 0.0;
+
         if model.ui_show_geometry {
             geometry_controls::update(
                 &model.widget_ids,
                 ui,
                 &mut model.program_store.buffer_store.geometry_uniforms,
+            );
+        }
+    }
+
+    //////////////////////////////////////////////////
+    // Audio Controls
+    //////////////////////////////////////////////////
+    if model.program_store.current_subscriptions.audio {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .left(left as f64)
+            .label("Audio")
+            .set(model.widget_ids.audio_folder, ui)
+        {
+            println!("toggle audio controls");
+            model.ui_show_audio = !model.ui_show_audio;
+        }
+
+        if model.ui_show_audio {
+            audio_controls::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.audio_uniforms,
             );
         }
     }

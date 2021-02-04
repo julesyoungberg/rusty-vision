@@ -13,7 +13,10 @@
         "vert": "basic.vert",
         "frag": "basicAudio.frag"
       },
-      "uniforms": ["general", "audio"]
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.4
+      }
     },
     "mandelbox": {
       "pipeline": {
@@ -52,7 +55,8 @@
       "defaults": {
         "camera_position": [0.0, 0.0, 2.0],
         "camera_target": [0.0, 0.0, 0.0],
-        "camera_up": [0.0, 1.0, 0.0]
+        "camera_up": [0.0, 1.0, 0.0],
+        "audio_feature_smoothing": 0.5
       }
     },
     "soundFBM": {
@@ -60,7 +64,10 @@
         "vert": "basic.vert",
         "frag": "soundFBM.frag"
       },
-      "uniforms": ["general", "audio"]
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.8
+      }
     },
     "tetrahedron": {
       "pipeline": {

@@ -16,6 +16,7 @@ pub struct ProgramDefaults {
     pub camera_up: Option<Vector3<f32>>,
     pub shape_rotation: Option<Vector3<f32>>,
     pub color_mode: Option<u32>,
+    pub audio_feature_smoothing: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
