@@ -25,10 +25,9 @@ layout(set = 1, binding = 0) uniform AudioUniforms {
 };
 
 #define NOISE_MODE 0
-#define OCTAVES 4
 #define INVERT false
 #define SHARPEN true
-#define SCALE_BY_PREV false
+#define SCALE_BY_PREV true
 
 // Some useful functions
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -110,14 +109,15 @@ float getNoiseVal(vec2 p) {
 }
 
 float fbm(vec2 p) {
-    const float lacunarity = 2.0;
-    const float gain = 0.5;
+    const float lacunarity = spectralComplexity;
+    const float gain = noisiness * 1.0;
+    const int octaves = 4;
     float sum = 0.0;
     float freq = 1.0;
     float amp = 0.5;
     float prev = 1.0;
 
-    for (int i = 0; i < OCTAVES; i++) {
+    for (int i = 0; i < octaves; i++) {
         float n = getNoiseVal(p * freq);
 
         if (INVERT) {
@@ -150,7 +150,7 @@ float pattern(in vec2 p, out vec2 q, out vec2 r) {
     const vec2 offsetB = vec2(0.0);
     const vec2 offsetC = vec2(0.0);
     const vec2 offsetD = vec2(0.0);
-    const vec2 timeScale = vec2(0.4, 0.3);  
+    const vec2 timeScale = vec2(0.0); //noisiness * 0.01); //.4, 0.3);  
 
     p *= scale1;
     p += offset;

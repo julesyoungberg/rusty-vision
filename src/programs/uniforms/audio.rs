@@ -82,7 +82,7 @@ impl AudioUniforms {
             recv_thread: None,
             running: false,
             send_thread: None,
-            smoothing: 0.8,
+            smoothing: 0.9,
             stream: None,
         }
     }
