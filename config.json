@@ -1,5 +1,5 @@
 {
-  "default": "basic",
+  "default": "soundFBM",
   "programs": {
     "basic": {
       "pipeline": {
