@@ -177,7 +177,7 @@ void main() {
     const vec3 color1 = hsv2rgb(vec3(tristimulus1, 1, 1));
     const vec3 color2 = hsv2rgb(vec3(tristimulus2, 1, 1));
     const vec3 color3 = hsv2rgb(vec3(tristimulus3, 1, 1));
-    const vec3 color4 = vec3(spectralCentroid * 0.00005, energy, spectralComplexity * 0.1);
+    const vec3 color4 = vec3(spectralCentroid * 0.00001, spectralContrast, spectralComplexity * 0.1);
 
     vec2 q;
     vec2 r;
