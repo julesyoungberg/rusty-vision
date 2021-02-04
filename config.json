@@ -55,6 +55,13 @@
         "camera_up": [0.0, 1.0, 0.0]
       }
     },
+    "soundFBM": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "soundFBM.frag"
+      },
+      "uniforms": ["general", "audio"]
+    },
     "tetrahedron": {
       "pipeline": {
         "vert": "basic.vert",
