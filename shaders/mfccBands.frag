@@ -50,5 +50,9 @@ void main() {
     float bandLoudness = texture(sampler2D(mfccs, mfccsSampler), vec2(tilePos.x / MFCC_BANDS, 0)).x;
     vec3 color = tristimulus + vec3(circle(st, bandLoudness * 4.0));
 
+    // rectangle bands
+    // float scaling = 15.0 * tilePos.x;
+    // vec3 color = mix(vec3(0), tristimulus, step(bandLoudness * scaling, st.y));
+
     frag_color = vec4(color, 1);
 }

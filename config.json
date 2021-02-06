@@ -53,7 +53,7 @@
       },
       "uniforms": ["general", "audio"],
       "defaults": {
-        "audio_feature_smoothing": 0.4
+        "audio_feature_smoothing": 0.7
       }
     },
     "soundball": {
