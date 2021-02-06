@@ -18,6 +18,7 @@ widget_ids! {
         general_folder,
         geometry_folder,
         audio_folder,
+        noise_folder,
         color1_r,
         color1_g,
         color1_b,
@@ -56,6 +57,18 @@ widget_ids! {
         errors_title,
         errors_message,
         audio_feature_smoothing,
+        noise_lacunarity,
+        noise_gain,
+        noise_invert,
+        noise_invert_label,
+        noise_mirror,
+        noise_mirror_label,
+        noise_octaves,
+        noise_scale_by_prev,
+        noise_scale_by_prev_label,
+        noise_sharpen,
+        noise_sharpen_label,
+        noise_speed,
     }
 }
 
@@ -72,5 +85,6 @@ pub struct Model {
     pub ui_show_color: bool,
     pub ui_show_geometry: bool,
     pub ui_show_audio: bool,
+    pub ui_show_noise: bool,
     pub vertex_buffer: wgpu::Buffer,
 }

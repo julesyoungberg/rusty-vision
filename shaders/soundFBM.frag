@@ -133,7 +133,7 @@ float fbm(vec2 p) {
     float freq = 1.0;
     float amp = 0.5;
     float prev = 1.0;
-    vec3 v = vec3(p, time * 0.1);
+    vec3 v = vec3(p, time * speed);
 
     #pragma unroll 1
     for (int i = 0; i < octaves; i++) {

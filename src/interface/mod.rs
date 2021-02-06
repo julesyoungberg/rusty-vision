@@ -11,6 +11,7 @@ mod components;
 mod errors;
 mod geometry_controls;
 mod info_box;
+mod noise_controls;
 
 fn base_height(model: &app::Model) -> f32 {
     let mut height = 90.0;
@@ -21,6 +22,7 @@ fn base_height(model: &app::Model) -> f32 {
         subscriptions.color,
         subscriptions.geometry,
         subscriptions.audio,
+        subscriptions.noise,
     ]
     .iter()
     .for_each(|s| {
@@ -42,7 +44,8 @@ pub fn update(model: &mut app::Model) {
     height = height
         + color_controls::height(model)
         + geometry_controls::height(model)
-        + audio_controls::height(model);
+        + audio_controls::height(model)
+        + noise_controls::height(model);
 
     let border = 40.0;
     let scroll = height > app_config::SIZE[1] as f32 - border;
@@ -160,6 +163,29 @@ pub fn update(model: &mut app::Model) {
                 &model.widget_ids,
                 ui,
                 &mut model.program_store.buffer_store.audio_uniforms,
+            );
+        }
+    }
+
+    //////////////////////////////////////////////////
+    // Noise Controls
+    //////////////////////////////////////////////////
+    if model.program_store.current_subscriptions.noise {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .label("Noise")
+            .set(model.widget_ids.noise_folder, ui)
+        {
+            println!("toggle noise controls");
+            model.ui_show_noise = !model.ui_show_noise;
+        }
+
+        if model.ui_show_noise {
+            noise_controls::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.noise_uniforms,
             );
         }
     }

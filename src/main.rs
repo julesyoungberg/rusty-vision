@@ -44,6 +44,7 @@ fn model(app: &App) -> app::Model {
         ui_show_color: false,
         ui_show_geometry: false,
         ui_show_audio: false,
+        ui_show_noise: false,
         vertex_buffer,
     }
 }
