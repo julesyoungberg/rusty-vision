@@ -1,5 +1,5 @@
 {
-  "default": "basicAudio",
+  "default": "soundCells",
   "programs": {
     "basic": {
       "pipeline": {
@@ -67,6 +67,16 @@
         "camera_target": [0.0, 0.0, 0.0],
         "camera_up": [0.0, 1.0, 0.0],
         "audio_feature_smoothing": 0.5
+      }
+    },
+    "soundCells": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "soundCells.frag"
+      },
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.7
       }
     },
     "soundFBM": {
