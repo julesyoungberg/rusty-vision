@@ -11,6 +11,7 @@ pub mod camera;
 pub mod color;
 pub mod general;
 pub mod geometry;
+pub mod noise;
 
 /**
  * Stores a uniform buffer along with the relevant bind groups.
@@ -103,6 +104,7 @@ pub struct UniformSubscriptions {
     pub color: bool,
     pub general: bool,
     pub geometry: bool,
+    pub noise: bool,
 }
 
 /**
@@ -115,27 +117,18 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         color: false,
         geometry: false,
         general: false,
+        noise: false,
     };
 
-    if names.iter().any(|n| n == "audio") {
-        subscriptions.audio = true;
-    }
-
-    if names.iter().any(|n| n == "camera") {
-        subscriptions.camera = true;
-    }
-
-    if names.iter().any(|n| n == "color") {
-        subscriptions.color = true;
-    }
-
-    if names.iter().any(|n| n == "general") {
-        subscriptions.general = true;
-    }
-
-    if names.iter().any(|n| n == "geometry") {
-        subscriptions.geometry = true;
-    }
+    names.iter().for_each(|n| match n.as_str() {
+        "audio" => subscriptions.audio = true,
+        "camera" => subscriptions.camera = true,
+        "color" => subscriptions.color = true,
+        "general" => subscriptions.general = true,
+        "geometry" => subscriptions.geometry = true,
+        "noise" => subscriptions.noise = true,
+        _ => (),
+    });
 
     subscriptions
 }
@@ -150,6 +143,7 @@ pub struct BufferStore {
     pub color_uniforms: color::ColorUniforms,
     pub general_uniforms: general::GeneralUniforms,
     pub geometry_uniforms: geometry::GeometryUniforms,
+    pub noise_uniforms: noise::NoiseUniforms,
 }
 
 /**
@@ -184,6 +178,10 @@ impl BufferStore {
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes(), None);
 
+        let noise_uniforms = noise::NoiseUniforms::new();
+        let noise_uniform_buffer =
+            UniformBuffer::new::<noise::Data>(device, noise_uniforms.as_bytes(), None);
+
         // store buffers in map
         let mut buffers = HashMap::new();
         buffers.insert(String::from("audio"), audio_uniform_buffer);
@@ -191,6 +189,7 @@ impl BufferStore {
         buffers.insert(String::from("color"), color_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
+        buffers.insert(String::from("noise"), noise_uniform_buffer);
 
         Self {
             audio_uniforms,
@@ -199,6 +198,7 @@ impl BufferStore {
             color_uniforms,
             general_uniforms,
             geometry_uniforms,
+            noise_uniforms,
         }
     }
 
@@ -228,6 +228,10 @@ impl BufferStore {
         } else {
             self.audio_uniforms.end_session();
         }
+
+        if subscriptions.noise {
+            self.noise_uniforms.set_program_defaults(defaults);
+        }
     }
 
     /**
@@ -254,6 +258,15 @@ impl BufferStore {
         encoder: &mut nannou::wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
     ) {
+        if subscriptions.audio {
+            self.audio_uniforms.update_texture(device, encoder);
+            self.buffers.get("audio").unwrap().update::<audio::Data>(
+                device,
+                encoder,
+                self.audio_uniforms.as_bytes(),
+            );
+        }
+
         if subscriptions.camera {
             self.buffers.get("camera").unwrap().update::<camera::Data>(
                 device,
@@ -284,12 +297,11 @@ impl BufferStore {
                 .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
         }
 
-        if subscriptions.audio {
-            self.audio_uniforms.update_texture(device, encoder);
-            self.buffers.get("audio").unwrap().update::<audio::Data>(
+        if subscriptions.noise {
+            self.buffers.get("noise").unwrap().update::<noise::Data>(
                 device,
                 encoder,
-                self.audio_uniforms.as_bytes(),
+                self.noise_uniforms.as_bytes(),
             );
         }
     }

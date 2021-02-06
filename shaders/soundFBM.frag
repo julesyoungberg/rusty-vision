@@ -26,10 +26,16 @@ layout(set = 1, binding = 2) uniform AudioUniforms {
     float tristimulus3;
 };
 
-#define NOISE_MODE 0
-#define INVERT false
-#define SHARPEN true
-#define SCALE_BY_PREV true
+layout(set = 2, binding = 0) uniform NoiseUniforms {
+    float lacunarity;
+    float gain;
+    int invert;
+    int mirror;
+    int octaves;
+    int scaleByPrev;
+    int sharpen;
+    float speed;
+};
 
 //@import util/hsv2rgb
 
@@ -115,7 +121,7 @@ float snoise(vec3 v){
 float getNoiseVal(vec3 p) {
     float raw = snoise(p);
 
-    if (NOISE_MODE == 1) {
+    if (mirror == 1) {
         return abs(raw);
     }
 
@@ -123,9 +129,6 @@ float getNoiseVal(vec3 p) {
 }
 
 float fbm(vec2 p) {
-    const float lacunarity = 2.0; // clamp(spectralComplexity * 0.5, 1.0, 4.0);
-    const float gain = 0.5; // noisiness * 1.0;
-    const int octaves = 4;
     float sum = 0.0;
     float freq = 1.0;
     float amp = 0.5;
@@ -136,17 +139,17 @@ float fbm(vec2 p) {
     for (int i = 0; i < octaves; i++) {
         float n = getNoiseVal(v * freq);
 
-        if (INVERT) {
+        if (invert == 1) {
             n = 1.0 - n;
         }
 
-        if (SHARPEN) {
+        if (sharpen == 1) {
             n = n * n;
         }
 
         sum += n * amp;
 
-        if (SCALE_BY_PREV) {
+        if (scaleByPrev == 1) {
             sum += n * amp * prev;
         }
 

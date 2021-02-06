@@ -1,5 +1,5 @@
 {
-  "default": "mfccBands",
+  "default": "soundFBM",
   "programs": {
     "basic": {
       "pipeline": {
@@ -74,7 +74,7 @@
         "vert": "basic.vert",
         "frag": "soundFBM.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio", "noise"],
       "defaults": {
         "audio_feature_smoothing": 0.8
       }
