@@ -29,18 +29,41 @@ pub struct UniformBuffer {
  * layout all into one object with generic functionality.
  */
 impl UniformBuffer {
-    pub fn new<T>(device: &wgpu::Device, data: &[u8]) -> Self
+    pub fn new<T>(device: &wgpu::Device, data: &[u8], texture: Option<&wgpu::Texture>) -> Self
     where
         T: Copy,
     {
         let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let buffer = device.create_buffer_with_data(data, usage);
 
-        let bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
+        let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
+        let mut texture_view_opt: Option<wgpu::TextureView> = None;
+
+        if let Some(tex) = &texture {
+            let texture_view = tex.view().build();
+            layout_builder = layout_builder
+                .sampled_texture(
+                    wgpu::ShaderStage::FRAGMENT,
+                    false,
+                    wgpu::TextureViewDimension::D1,
+                    texture_view.component_type(),
+                )
+                .sampler(wgpu::ShaderStage::FRAGMENT);
+            texture_view_opt = Some(texture_view);
+        }
+
+        let bind_group_layout = layout_builder
             .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
             .build(device);
 
-        let bind_group = wgpu::BindGroupBuilder::new()
+        let mut group_builder = wgpu::BindGroupBuilder::new();
+        let sampler = wgpu::SamplerBuilder::new().build(device);
+
+        if let Some(texture_view) = &texture_view_opt {
+            group_builder = group_builder.texture_view(texture_view).sampler(&sampler);
+        }
+
+        let bind_group = group_builder
             .buffer::<T>(&buffer, 0..1)
             .build(device, &bind_group_layout);
 
@@ -135,28 +158,31 @@ pub struct BufferStore {
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
-        let audio_uniforms = audio::AudioUniforms::new();
-        let audio_uniform_buffer =
-            UniformBuffer::new::<audio::Data>(device, audio_uniforms.as_bytes());
+        let audio_uniforms = audio::AudioUniforms::new(device);
+        let audio_uniform_buffer = UniformBuffer::new::<audio::Data>(
+            device,
+            audio_uniforms.as_bytes(),
+            Some(&audio_uniforms.mfcc_texture),
+        );
 
         let camera_uniforms = camera::CameraUniforms::new();
         let camera_uniform_buffer =
-            UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes());
+            UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes(), None);
 
         let color_uniforms = color::ColorUniforms::new();
         let color_uniform_buffer =
-            UniformBuffer::new::<color::Data>(device, color_uniforms.as_bytes());
+            UniformBuffer::new::<color::Data>(device, color_uniforms.as_bytes(), None);
 
         let general_uniforms = general::GeneralUniforms::new(pt2(
             app_config::SIZE[0] as f32,
             app_config::SIZE[1] as f32,
         ));
         let general_uniform_buffer =
-            UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes());
+            UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes(), None);
 
         let geometry_uniforms = geometry::GeometryUniforms::new();
         let geometry_uniform_buffer =
-            UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes());
+            UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes(), None);
 
         // store buffers in map
         let mut buffers = HashMap::new();
@@ -259,6 +285,7 @@ impl BufferStore {
         }
 
         if subscriptions.audio {
+            self.audio_uniforms.update_texture(device, encoder);
             self.buffers.get("audio").unwrap().update::<audio::Data>(
                 device,
                 encoder,

@@ -1,3 +1,4 @@
+use bytemuck;
 use cpal;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use nannou::prelude::*;
@@ -14,6 +15,8 @@ use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 const CONNECTION: &'static str = "ws://127.0.0.1:9002";
+
+const NUM_MFCCS: usize = 13;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -36,12 +39,14 @@ pub struct Data {
 pub struct AudioUniforms {
     pub data: Data,
     pub error: Option<String>,
+    pub mfcc_texture: wgpu::Texture,
     pub running: bool,
     pub smoothing: f32,
 
     close_channel_tx: Option<Sender<OwnedMessage>>,
     consumer: Option<Consumer<serde_json::Value>>,
     error_channel_rx: Option<Receiver<String>>,
+    mfccs: [f32; NUM_MFCCS],
     recv_thread: Option<std::thread::JoinHandle<()>>,
     send_thread: Option<std::thread::JoinHandle<()>>,
     stream: Option<cpal::Stream>,
@@ -66,7 +71,13 @@ impl Bufferable for AudioUniforms {
 }
 
 impl AudioUniforms {
-    pub fn new() -> Self {
+    pub fn new(device: &wgpu::Device) -> Self {
+        let mfcc_texture = wgpu::TextureBuilder::new()
+            .size([13, 1])
+            .format(wgpu::TextureFormat::R32Float)
+            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
+            .build(device);
+
         Self {
             close_channel_tx: None,
             consumer: None,
@@ -87,6 +98,10 @@ impl AudioUniforms {
             },
             error: None,
             error_channel_rx: None,
+            mfccs: [
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            ],
+            mfcc_texture,
             recv_thread: None,
             running: false,
             send_thread: None,
@@ -165,13 +180,14 @@ impl AudioUniforms {
                     "energy",
                     // "key",
                     "loudness",
-                    // "mfcc",
+                    "mfcc",
                     "noisiness",
                     "onset",
                     "pitch",
                     "rms",
                     "spectral_complexity",
                     "spectral_contrast",
+                    // "spectrum",
                     "tristimulus",
                 ],
                 "sample_rate": sample_rate,
@@ -471,5 +487,19 @@ impl AudioUniforms {
             self.data.tristimulus3,
             tristimulus[2].as_f64().unwrap() as f32,
         );
+
+        let mfccs = features.get("mfcc.mean").unwrap().as_array().unwrap();
+        for i in 0..NUM_MFCCS {
+            self.mfccs[i] = self.lerp(self.mfccs[i], mfccs[i].as_f64().unwrap() as f32);
+        }
+    }
+
+    pub fn update_texture(
+        &self,
+        device: &wgpu::Device,
+        encoder: &mut nannou::wgpu::CommandEncoder,
+    ) {
+        self.mfcc_texture
+            .upload_data(device, encoder, bytemuck::bytes_of(&self.mfccs));
     }
 }
