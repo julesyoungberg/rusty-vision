@@ -16,7 +16,7 @@ use crate::programs::uniforms::base::Bufferable;
 
 const CONNECTION: &'static str = "ws://127.0.0.1:9002";
 
-const NUM_MFCCS: usize = 13;
+const NUM_MFCCS: usize = 12;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -73,7 +73,7 @@ impl Bufferable for AudioUniforms {
 impl AudioUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
         let mfcc_texture = wgpu::TextureBuilder::new()
-            .size([13, 1])
+            .size([NUM_MFCCS as u32, 1])
             .format(wgpu::TextureFormat::R32Float)
             .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
             .build(device);
@@ -98,9 +98,7 @@ impl AudioUniforms {
             },
             error: None,
             error_channel_rx: None,
-            mfccs: [
-                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            ],
+            mfccs: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             mfcc_texture,
             recv_thread: None,
             running: false,
@@ -490,7 +488,10 @@ impl AudioUniforms {
 
         let mfccs = features.get("mfcc.mean").unwrap().as_array().unwrap();
         for i in 0..NUM_MFCCS {
-            self.mfccs[i] = self.lerp(self.mfccs[i], mfccs[i].as_f64().unwrap() as f32);
+            self.mfccs[i] = self.lerp(
+                self.mfccs[i],
+                mfccs[i + 1].as_f64().unwrap().max(0.0) as f32,
+            );
         }
     }
 

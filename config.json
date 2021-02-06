@@ -1,5 +1,5 @@
 {
-  "default": "soundFBM",
+  "default": "mfccBands",
   "programs": {
     "basic": {
       "pipeline": {
@@ -44,6 +44,16 @@
         "camera_up": [0.0, 1.0, 0.0],
         "shape_rotation": [0.0, 0.0, 0.0],
         "color_mode": 0
+      }
+    },
+    "mfccBands": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "mfccBands.frag"
+      },
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.4
       }
     },
     "soundball": {
