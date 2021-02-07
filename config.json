@@ -1,5 +1,5 @@
 {
-  "default": "deformed",
+  "default": "deformedImage",
   "programs": {
     "basic": {
       "pipeline": {
@@ -24,6 +24,13 @@
         "frag": "deformed.frag"
       },
       "uniforms": ["general"]
+    },
+    "deformedImage": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "deformedImage.frag"
+      },
+      "uniforms": ["general", "image"]
     },
     "mandelbox": {
       "pipeline": {

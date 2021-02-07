@@ -11,6 +11,7 @@ pub mod camera;
 pub mod color;
 pub mod general;
 pub mod geometry;
+pub mod image;
 pub mod noise;
 
 /**
@@ -111,6 +112,7 @@ pub struct UniformSubscriptions {
     pub color: bool,
     pub general: bool,
     pub geometry: bool,
+    pub image: bool,
     pub noise: bool,
 }
 
@@ -124,6 +126,7 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         color: false,
         geometry: false,
         general: false,
+        image: false,
         noise: false,
     };
 
@@ -133,6 +136,7 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         "color" => subscriptions.color = true,
         "general" => subscriptions.general = true,
         "geometry" => subscriptions.geometry = true,
+        "image" => subscriptions.image = true,
         "noise" => subscriptions.noise = true,
         _ => (),
     });
@@ -150,6 +154,7 @@ pub struct BufferStore {
     pub color_uniforms: color::ColorUniforms,
     pub general_uniforms: general::GeneralUniforms,
     pub geometry_uniforms: geometry::GeometryUniforms,
+    pub image_uniforms: image::ImageUniforms,
     pub noise_uniforms: noise::NoiseUniforms,
 }
 
@@ -157,7 +162,7 @@ pub struct BufferStore {
  * Mantains the uniform data and the corresponding GPU buffers
  */
 impl BufferStore {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(app: &App, device: &wgpu::Device) -> Self {
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
         let audio_uniform_buffer = UniformBuffer::new::<audio::Data>(
@@ -188,6 +193,13 @@ impl BufferStore {
         let geometry_uniform_buffer =
             UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes(), None);
 
+        let image_uniforms = image::ImageUniforms::new(app);
+        let image_uniform_buffer = UniformBuffer::new::<image::Data>(
+            device,
+            image_uniforms.as_bytes(),
+            Some(vec![&image_uniforms.image1_texture]),
+        );
+
         let noise_uniforms = noise::NoiseUniforms::new();
         let noise_uniform_buffer =
             UniformBuffer::new::<noise::Data>(device, noise_uniforms.as_bytes(), None);
@@ -199,6 +211,7 @@ impl BufferStore {
         buffers.insert(String::from("color"), color_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
+        buffers.insert(String::from("image"), image_uniform_buffer);
         buffers.insert(String::from("noise"), noise_uniform_buffer);
 
         Self {
@@ -208,6 +221,7 @@ impl BufferStore {
             color_uniforms,
             general_uniforms,
             geometry_uniforms,
+            image_uniforms,
             noise_uniforms,
         }
     }

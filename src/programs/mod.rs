@@ -45,10 +45,10 @@ pub struct ProgramStore {
  * - manages uniform buffers
  */
 impl ProgramStore {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(app: &App, device: &wgpu::Device) -> Self {
         let config_store = config::ConfigStore::new();
 
-        let mut buffer_store = uniforms::BufferStore::new(device);
+        let mut buffer_store = uniforms::BufferStore::new(app, device);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
