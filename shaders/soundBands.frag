@@ -50,6 +50,7 @@ void main() {
     vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
     float bandLoudness = texture(sampler2D(spectrum, audioSampler), vec2(tilePos.x / BANDS, 0)).x;
     vec3 color = tristimulus + vec3(circle(st, bandLoudness * 0.05));
+    // vec3 color = tristimulus + vec3(circle(st, clamp(log(bandLoudness + 1.0), 0.0, 0.25)));
 
     // rectangle bands
     // float scaling = 15.0 * tilePos.x;
