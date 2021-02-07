@@ -1,5 +1,5 @@
 {
-  "default": "basic",
+  "default": "soundLights",
   "programs": {
     "basic": {
       "pipeline": {
@@ -87,6 +87,16 @@
       "uniforms": ["general", "audio", "noise"],
       "defaults": {
         "audio_feature_smoothing": 0.8
+      }
+    },
+    "soundLights": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "soundLights.frag"
+      },
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.9
       }
     },
     "tetrahedron": {

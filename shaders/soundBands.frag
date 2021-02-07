@@ -8,7 +8,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform sampler audioSampler;
+layout(set = 1, binding = 0) uniform sampler audio_sampler;
 layout(set = 1, binding = 1) uniform texture2D mfccs;
 layout(set = 1, binding = 2) uniform texture2D spectrum;
 layout(set = 1, binding = 3) uniform AudioUniforms {
@@ -19,9 +19,9 @@ layout(set = 1, binding = 3) uniform AudioUniforms {
     float onset;
     float pitch;
     float rms;
-    float spectralCentroid;
-    float spectralComplexity;
-    float spectralContrast;
+    float spectral_centroid;
+    float spectral_complexity;
+    float spectral_contrast;
     float tristimulus1;
     float tristimulus2;
     float tristimulus3;
@@ -48,7 +48,7 @@ void main() {
     st = fract(st);
 
     vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
-    float bandLoudness = texture(sampler2D(spectrum, audioSampler), vec2(tilePos.x / BANDS, 0)).x;
+    float bandLoudness = texture(sampler2D(spectrum, audio_sampler), vec2(tilePos.x / BANDS, 0)).x;
     vec3 color = tristimulus + vec3(circle(st, bandLoudness * 0.05));
     // vec3 color = tristimulus + vec3(circle(st, clamp(log(bandLoudness + 1.0), 0.0, 0.25)));
 
