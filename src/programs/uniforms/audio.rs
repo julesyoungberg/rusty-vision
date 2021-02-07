@@ -48,12 +48,13 @@ pub struct AudioUniforms {
     pub smoothing: f32,
     pub spectrum_texture: wgpu::Texture,
 
-    close_channel_tx: Option<Sender<OwnedMessage>>,
     error_channel_rx: Option<Receiver<String>>,
     feature_consumer: Option<Consumer<serde_json::Value>>,
+    fft_close_channel_tx: Option<Sender<OwnedMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
     mfccs: [f32; NUM_MFCCS],
     recv_thread: Option<std::thread::JoinHandle<()>>,
+    send_close_channel_tx: Option<Sender<OwnedMessage>>,
     send_thread: Option<std::thread::JoinHandle<()>>,
     spectrum: Vec<f32>,
     spectrum_consumer: Option<Consumer<Vec<f32>>>,
@@ -93,7 +94,6 @@ impl AudioUniforms {
             .build(device);
 
         Self {
-            close_channel_tx: None,
             data: Data {
                 dissonance: 0.0,
                 energy: 0.0,
@@ -112,11 +112,13 @@ impl AudioUniforms {
             error: None,
             error_channel_rx: None,
             feature_consumer: None,
+            fft_close_channel_tx: None,
             fft_thread: None,
             mfccs: [0.0; NUM_MFCCS],
             mfcc_texture,
             recv_thread: None,
             running: false,
+            send_close_channel_tx: None,
             send_thread: None,
             smoothing: 0.9,
             spectrum: vec![0.0; SPECTRUM_SIZE],
@@ -252,8 +254,8 @@ impl AudioUniforms {
         let error_channel_tx_1 = error_channel_tx.clone();
 
         let (audio_channel_tx, audio_channel_rx) = channel();
-        let (close_channel_tx, close_channel_rx) = channel();
-        self.close_channel_tx = Some(close_channel_tx);
+        let (send_close_channel_tx, send_close_channel_rx) = channel();
+        self.send_close_channel_tx = Some(send_close_channel_tx);
 
         let (fft_input_channel_tx, fft_input_channel_rx) = channel();
 
@@ -313,13 +315,11 @@ impl AudioUniforms {
                 }
 
                 // check the close channel, break if needed
-                match close_channel_rx.try_recv() {
-                    Ok(m) => match m {
-                        OwnedMessage::Close(_) => break 'sender,
-                        _ => (),
-                    },
-                    _ => (),
-                };
+                if let Ok(m) = send_close_channel_rx.try_recv() {
+                    if let OwnedMessage::Close(_) = m {
+                        break 'sender;
+                    }
+                }
             }
 
             // close the connection and end the session
@@ -380,47 +380,59 @@ impl AudioUniforms {
         self.spectrum_consumer = Some(spectrum_consumer);
         let spec_group_size = (WINDOW_SIZE / 2) / SPECTRUM_SIZE;
 
+        let (fft_close_channel_tx, fft_close_channel_rx) = channel();
+        self.fft_close_channel_tx = Some(fft_close_channel_tx);
+
         // create the fft thread
         self.fft_thread = Some(thread::spawn(move || {
             let mut frames = vec![];
             frames.push(vec![0.0; HOP_SIZE]);
             frames.push(vec![0.0; HOP_SIZE]);
 
-            for frame in fft_input_channel_rx.iter() {
-                // add new frame to memory and build the window
-                frames.remove(0);
-                frames.push(frame);
-                let mut window = frames
-                    .clone()
-                    .into_iter()
-                    .flatten()
-                    .enumerate()
-                    .take(WINDOW_SIZE)
-                    .map(|(i, s)| Complex {
-                        re: s * hanning_window[i] as f32,
-                        im: 0.0,
-                    })
-                    .collect::<Vec<Complex<f32>>>();
+            loop {
+                if let Ok(frame) = fft_input_channel_rx.try_recv() {
+                    // add new frame to memory and build the window
+                    frames.remove(0);
+                    frames.push(frame);
+                    let mut window = frames
+                        .clone()
+                        .into_iter()
+                        .flatten()
+                        .enumerate()
+                        .take(WINDOW_SIZE)
+                        .map(|(i, s)| Complex {
+                            re: s * hanning_window[i] as f32,
+                            im: 0.0,
+                        })
+                        .collect::<Vec<Complex<f32>>>();
 
-                // perform the fft to get the spectrum
-                fft.process(&mut window[..]);
-                let spectrum = window
-                    .iter()
-                    .take(WINDOW_SIZE / 2)
-                    .map(|s| s.norm())
-                    .collect::<Vec<f32>>();
+                    // perform the fft to get the spectrum
+                    fft.process(&mut window[..]);
+                    let spectrum = window
+                        .iter()
+                        .take(WINDOW_SIZE / 2)
+                        .map(|s| s.norm())
+                        .collect::<Vec<f32>>();
 
-                // downsample the spectrum
-                let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
-                for i in 0..SPECTRUM_SIZE {
-                    let mut sum = 0.0;
-                    for j in 0..spec_group_size {
-                        sum += spectrum[(i * spec_group_size) + j];
+                    // downsample the spectrum
+                    let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
+                    for i in 0..SPECTRUM_SIZE {
+                        let mut sum = 0.0;
+                        for j in 0..spec_group_size {
+                            sum += spectrum[(i * spec_group_size) + j];
+                        }
+                        reduced_spectrum[i] = sum / spec_group_size as f32;
                     }
-                    reduced_spectrum[i] = sum / spec_group_size as f32;
+
+                    spectrum_producer.push(reduced_spectrum).ok();
                 }
 
-                spectrum_producer.push(reduced_spectrum).ok();
+                // check the close channel, break if needed
+                if let Ok(m) = fft_close_channel_rx.try_recv() {
+                    if let OwnedMessage::Close(_) = m {
+                        break;
+                    }
+                }
             }
         }));
 
@@ -446,7 +458,12 @@ impl AudioUniforms {
         }
 
         // send a message to the close channel to stop the sender thread
-        if let Some(close_channel) = self.close_channel_tx.take() {
+        if let Some(close_channel) = self.send_close_channel_tx.take() {
+            close_channel.send(OwnedMessage::Close(None)).unwrap();
+        }
+
+        // send a message to the close channel to stop the fft thread
+        if let Some(close_channel) = self.fft_close_channel_tx.take() {
             close_channel.send(OwnedMessage::Close(None)).unwrap();
         }
 
