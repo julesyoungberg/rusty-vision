@@ -46,20 +46,10 @@
         "color_mode": 0
       }
     },
-    "mfccBands": {
+    "soundBall": {
       "pipeline": {
         "vert": "basic.vert",
-        "frag": "mfccBands.frag"
-      },
-      "uniforms": ["general", "audio"],
-      "defaults": {
-        "audio_feature_smoothing": 0.7
-      }
-    },
-    "soundball": {
-      "pipeline": {
-        "vert": "basic.vert",
-        "frag": "soundball.frag"
+        "frag": "soundBall.frag"
       },
       "uniforms": ["general", "audio", "camera"],
       "defaults": {
@@ -69,6 +59,16 @@
         "audio_feature_smoothing": 0.5
       }
     },
+    "soundBands": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "soundBands.frag"
+      },
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.7
+      }
+    },
     "soundCells": {
       "pipeline": {
         "vert": "basic.vert",
@@ -76,7 +76,7 @@
       },
       "uniforms": ["general", "audio"],
       "defaults": {
-        "audio_feature_smoothing": 0.7
+        "audio_feature_smoothing": 0.97
       }
     },
     "soundFBM": {

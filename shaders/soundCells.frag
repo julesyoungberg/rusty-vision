@@ -76,9 +76,9 @@ void main() {
 
     // map point to 1d value between 0 and 1
     float point_val = dot(m_point, m_point) * 0.5;
-    float intensity = texture(sampler2D(mfccs, audioSampler), vec2(point_val, 0)).x;
+    float intensity = texture(sampler2D(spectrum, audioSampler), vec2(point_val, 0)).x;
 
-    vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 200.0);
+    vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
 
     frag_color = vec4(color, 1.0);
 }

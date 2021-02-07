@@ -27,7 +27,7 @@ layout(set = 1, binding = 3) uniform AudioUniforms {
     float tristimulus3;
 };
 
-#define MFCC_BANDS 12
+#define BANDS 16
 
 float circle(in vec2 st, in float radius) { 
     vec2 dist = st - vec2(0.5);
@@ -42,14 +42,14 @@ void main() {
     vec2 st = uv;
     st.y *= resolution.y / resolution.x;
     st = st * 0.5 + 0.5;
-    st.x *= MFCC_BANDS;
+    st.x *= BANDS;
 
     vec2 tilePos = floor(st);
     st = fract(st);
 
     vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
-    float bandLoudness = texture(sampler2D(mfccs, audioSampler), vec2(tilePos.x / MFCC_BANDS, 0)).x;
-    vec3 color = tristimulus + vec3(circle(st, bandLoudness * 4.0));
+    float bandLoudness = texture(sampler2D(spectrum, audioSampler), vec2(tilePos.x / BANDS, 0)).x;
+    vec3 color = tristimulus + vec3(circle(st, bandLoudness * 0.05));
 
     // rectangle bands
     // float scaling = 15.0 * tilePos.x;
