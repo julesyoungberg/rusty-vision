@@ -499,7 +499,11 @@ impl AudioUniforms {
                 let popped = c.pop();
                 self.spectrum_consumer = Some(c);
                 match popped {
-                    Some(s) => self.spectrum = s,
+                    Some(s) => {
+                        for i in 0..SPECTRUM_SIZE {
+                            self.spectrum[i] = self.lerp(self.spectrum[i], s[i]);
+                        }
+                    }
                     None => (),
                 };
             }
