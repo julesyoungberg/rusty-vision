@@ -30,7 +30,7 @@ pub struct UniformBuffer {
  * layout all into one object with generic functionality.
  */
 impl UniformBuffer {
-    pub fn new<T>(device: &wgpu::Device, data: &[u8], texture: Option<&wgpu::Texture>) -> Self
+    pub fn new<T>(device: &wgpu::Device, data: &[u8], textures: Option<Vec<&wgpu::Texture>>) -> Self
     where
         T: Copy,
     {
@@ -38,19 +38,23 @@ impl UniformBuffer {
         let buffer = device.create_buffer_with_data(data, usage);
 
         let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
-        let mut texture_view_opt: Option<wgpu::TextureView> = None;
+        let mut texture_views = vec![];
 
-        if let Some(tex) = &texture {
-            let texture_view = tex.view().build();
-            layout_builder = layout_builder
-                .sampled_texture(
-                    wgpu::ShaderStage::FRAGMENT,
-                    false,
-                    wgpu::TextureViewDimension::D1,
-                    texture_view.component_type(),
-                )
-                .sampler(wgpu::ShaderStage::FRAGMENT);
-            texture_view_opt = Some(texture_view);
+        if let Some(texs) = &textures {
+            if texs.len() > 0 {
+                layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
+
+                for tex in texs.iter() {
+                    let texture_view = tex.view().build();
+                    layout_builder = layout_builder.sampled_texture(
+                        wgpu::ShaderStage::FRAGMENT,
+                        false,
+                        wgpu::TextureViewDimension::D1, // support other dimension
+                        texture_view.component_type(),
+                    );
+                    texture_views.push(texture_view);
+                }
+            }
         }
 
         let bind_group_layout = layout_builder
@@ -60,8 +64,11 @@ impl UniformBuffer {
         let mut group_builder = wgpu::BindGroupBuilder::new();
         let sampler = wgpu::SamplerBuilder::new().build(device);
 
-        if let Some(texture_view) = &texture_view_opt {
-            group_builder = group_builder.texture_view(texture_view).sampler(&sampler);
+        if texture_views.len() > 0 {
+            group_builder = group_builder.sampler(&sampler);
+            for texture_view in texture_views.iter() {
+                group_builder = group_builder.texture_view(texture_view);
+            }
         }
 
         let bind_group = group_builder
@@ -156,7 +163,10 @@ impl BufferStore {
         let audio_uniform_buffer = UniformBuffer::new::<audio::Data>(
             device,
             audio_uniforms.as_bytes(),
-            Some(&audio_uniforms.mfcc_texture),
+            Some(vec![
+                &audio_uniforms.mfcc_texture,
+                &audio_uniforms.spectrum_texture,
+            ]),
         );
 
         let camera_uniforms = camera::CameraUniforms::new();

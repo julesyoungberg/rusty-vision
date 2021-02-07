@@ -8,9 +8,10 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform texture2D mfccs;
-layout(set = 1, binding = 1) uniform sampler mfccsSampler;
-layout(set = 1, binding = 2) uniform AudioUniforms {
+layout(set = 1, binding = 0) uniform sampler audioSampler;
+layout(set = 1, binding = 1) uniform texture2D mfccs;
+layout(set = 1, binding = 2) uniform texture2D spectrum;
+layout(set = 1, binding = 3) uniform AudioUniforms {
     float dissonance;
     float energy;
     float loudness;

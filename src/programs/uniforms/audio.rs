@@ -3,6 +3,7 @@ use cpal;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
+use rustfft::{num_complex::Complex, FftPlanner};
 use serde_json;
 use serde_json::{json, Value};
 use std::string::ToString;
@@ -17,6 +18,9 @@ use crate::programs::uniforms::base::Bufferable;
 const CONNECTION: &'static str = "ws://127.0.0.1:9002";
 
 const NUM_MFCCS: usize = 12;
+const HOP_SIZE: usize = 512;
+const WINDOW_SIZE: usize = 1024;
+const SPECTRUM_SIZE: usize = 32;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -42,13 +46,17 @@ pub struct AudioUniforms {
     pub mfcc_texture: wgpu::Texture,
     pub running: bool,
     pub smoothing: f32,
+    pub spectrum_texture: wgpu::Texture,
 
     close_channel_tx: Option<Sender<OwnedMessage>>,
-    consumer: Option<Consumer<serde_json::Value>>,
     error_channel_rx: Option<Receiver<String>>,
+    feature_consumer: Option<Consumer<serde_json::Value>>,
+    fft_thread: Option<std::thread::JoinHandle<()>>,
     mfccs: [f32; NUM_MFCCS],
     recv_thread: Option<std::thread::JoinHandle<()>>,
     send_thread: Option<std::thread::JoinHandle<()>>,
+    spectrum: Vec<f32>,
+    spectrum_consumer: Option<Consumer<Vec<f32>>>,
     stream: Option<cpal::Stream>,
 }
 
@@ -78,9 +86,14 @@ impl AudioUniforms {
             .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
             .build(device);
 
+        let spectrum_texture = wgpu::TextureBuilder::new()
+            .size([SPECTRUM_SIZE as u32, 1])
+            .format(wgpu::TextureFormat::R32Float)
+            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
+            .build(device);
+
         Self {
             close_channel_tx: None,
-            consumer: None,
             data: Data {
                 dissonance: 0.0,
                 energy: 0.0,
@@ -98,12 +111,17 @@ impl AudioUniforms {
             },
             error: None,
             error_channel_rx: None,
-            mfccs: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            feature_consumer: None,
+            fft_thread: None,
+            mfccs: [0.0; NUM_MFCCS],
             mfcc_texture,
             recv_thread: None,
             running: false,
             send_thread: None,
             smoothing: 0.9,
+            spectrum: vec![0.0; SPECTRUM_SIZE],
+            spectrum_consumer: None,
+            spectrum_texture,
             stream: None,
         }
     }
@@ -185,7 +203,6 @@ impl AudioUniforms {
                     "rms",
                     "spectral_complexity",
                     "spectral_contrast",
-                    // "spectrum",
                     "tristimulus",
                 ],
                 "sample_rate": sample_rate,
@@ -238,17 +255,14 @@ impl AudioUniforms {
         let (close_channel_tx, close_channel_rx) = channel();
         self.close_channel_tx = Some(close_channel_tx);
 
+        let (fft_input_channel_tx, fft_input_channel_rx) = channel();
+
         // build audio stream
         let stream_builder = audio_device.build_input_stream(
             &audio_config.config(),
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                // build a message and forward it to the audio channel
-                let frame_message = json!({
-                    "type": "audio_frame",
-                    "payload": data,
-                });
-                let message = OwnedMessage::Text(frame_message.to_string());
-                audio_channel_tx.send(message).unwrap();
+                audio_channel_tx.send(data.to_vec()).unwrap();
+                fft_input_channel_tx.send(data.to_vec()).unwrap();
             },
             move |err| {
                 error_channel_tx
@@ -282,8 +296,13 @@ impl AudioUniforms {
         // check the close channel for messages to end the session
         self.send_thread = Some(thread::spawn(move || {
             'sender: loop {
-                // check the audio channel for data, forward if available
-                if let Ok(message) = audio_channel_rx.try_recv() {
+                // check the audio channel for data, forward to mirlin if available
+                if let Ok(data) = audio_channel_rx.try_recv() {
+                    let frame_message = json!({
+                        "type": "audio_frame",
+                        "payload": &data[..],
+                    });
+                    let message = OwnedMessage::Text(frame_message.to_string());
                     match sender.send_message(&message) {
                         Ok(()) => (),
                         Err(e) => {
@@ -308,10 +327,10 @@ impl AudioUniforms {
         }));
 
         // create a ring buffer for server responses (features)
-        let ring_buffer = RingBuffer::<serde_json::Value>::new(2);
-        let (mut producer, consumer) = ring_buffer.split();
-        producer.push(json!(null)).unwrap();
-        self.consumer = Some(consumer);
+        let feature_ring_buffer = RingBuffer::<serde_json::Value>::new(2);
+        let (mut feature_producer, feature_consumer) = feature_ring_buffer.split();
+        feature_producer.push(json!(null)).unwrap();
+        self.feature_consumer = Some(feature_consumer);
 
         // listen for messages from server, push to ring buffer
         self.recv_thread = Some(thread::spawn(move || {
@@ -345,7 +364,63 @@ impl AudioUniforms {
                         return;
                     }
                 };
-                producer.push(value).ok();
+                feature_producer.push(value).ok();
+            }
+        }));
+
+        // setup the FFT
+        let mut planner = FftPlanner::<f32>::new();
+        let fft = planner.plan_fft_forward(WINDOW_SIZE);
+        let hanning_window = apodize::hanning_iter(WINDOW_SIZE).collect::<Vec<f64>>();
+
+        // create a ring buffer for spectrum results
+        let spectrum_ring_buffer = RingBuffer::<Vec<f32>>::new(2);
+        let (mut spectrum_producer, spectrum_consumer) = spectrum_ring_buffer.split();
+        spectrum_producer.push(vec![0.0; SPECTRUM_SIZE]).unwrap();
+        self.spectrum_consumer = Some(spectrum_consumer);
+        let spec_group_size = (WINDOW_SIZE / 2) / SPECTRUM_SIZE;
+
+        // create the fft thread
+        self.fft_thread = Some(thread::spawn(move || {
+            let mut frames = vec![];
+            frames.push(vec![0.0; HOP_SIZE]);
+            frames.push(vec![0.0; HOP_SIZE]);
+
+            for frame in fft_input_channel_rx.iter() {
+                // add new frame to memory and build the window
+                frames.remove(0);
+                frames.push(frame);
+                let mut window = frames
+                    .clone()
+                    .into_iter()
+                    .flatten()
+                    .enumerate()
+                    .take(WINDOW_SIZE)
+                    .map(|(i, s)| Complex {
+                        re: s * hanning_window[i] as f32,
+                        im: 0.0,
+                    })
+                    .collect::<Vec<Complex<f32>>>();
+
+                // perform the fft to get the spectrum
+                fft.process(&mut window[..]);
+                let spectrum = window
+                    .iter()
+                    .take(WINDOW_SIZE / 2)
+                    .map(|s| s.norm())
+                    .collect::<Vec<f32>>();
+
+                // downsample the spectrum
+                let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
+                for i in 0..SPECTRUM_SIZE {
+                    let mut sum = 0.0;
+                    for j in 0..spec_group_size {
+                        sum += spectrum[(i * spec_group_size) + j];
+                    }
+                    reduced_spectrum[i] = sum / spec_group_size as f32;
+                }
+
+                spectrum_producer.push(reduced_spectrum).ok();
             }
         }));
 
@@ -385,6 +460,11 @@ impl AudioUniforms {
             handle.join().unwrap();
         }
 
+        // join the fft thread
+        if let Some(handle) = self.fft_thread.take() {
+            handle.join().unwrap();
+        }
+
         self.running = false;
     }
 
@@ -414,10 +494,23 @@ impl AudioUniforms {
         // this is kind of gross
         // take the consumer out of the option to mutate it by popping
         // then put it back in the option for next time
-        let current = match self.consumer.take() {
+        match self.spectrum_consumer.take() {
             Some(mut c) => {
                 let popped = c.pop();
-                self.consumer = Some(c);
+                self.spectrum_consumer = Some(c);
+                match popped {
+                    Some(s) => self.spectrum = s,
+                    None => (),
+                };
+            }
+            None => (),
+        };
+
+        // and again for the features
+        let current = match self.feature_consumer.take() {
+            Some(mut c) => {
+                let popped = c.pop();
+                self.feature_consumer = Some(c);
                 match popped {
                     Some(v) => v,
                     None => return,
@@ -502,5 +595,12 @@ impl AudioUniforms {
     ) {
         self.mfcc_texture
             .upload_data(device, encoder, bytemuck::bytes_of(&self.mfccs));
+
+        let mut spectrum = [0.0; SPECTRUM_SIZE];
+        for i in 0..SPECTRUM_SIZE {
+            spectrum[i] = self.spectrum[i];
+        }
+        self.spectrum_texture
+            .upload_data(device, encoder, bytemuck::bytes_of(&spectrum));
     }
 }
