@@ -53,19 +53,14 @@ void main() {
     for (int i = 0; i < LIGHTS; i++) {
         float f = float(i) / float(LIGHTS);
         float intensity = texture(sampler2D(spectrum, audio_sampler), vec2(f, 0.0)).x;
-        if (i == 0) {
-            intensity *= 0.05;
-        }
 
-        float brightness = log(intensity * exp(i) * 0.01 + 1.0);
+        float brightness = log(intensity * exp(i) * 0.001 + 1.0);
 
         vec2 light_pos = lights[i];
-        // if (i != 0) {
         light_pos.x += cos(time * (float(i + 1) / float(LIGHTS)) * 0.5 + f * 3.14) * 0.1;
         light_pos.y += sin(time * (float(i + 1) / float(LIGHTS)) * 0.5 + f * 3.14) * 0.1;
-        // }
 
-        vec3 light_color = hsv2rgb(vec3(float(i + time) / float(LIGHTS), 1, 1));
+        vec3 light_color = hsv2rgb(vec3(f + time * 0.1, 1, 1));
 
         color += brightness / distance(st, light_pos) * light_color;
     }

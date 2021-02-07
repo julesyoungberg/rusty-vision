@@ -1,5 +1,5 @@
 {
-  "default": "soundLights",
+  "default": "deformed",
   "programs": {
     "basic": {
       "pipeline": {
@@ -17,6 +17,13 @@
       "defaults": {
         "audio_feature_smoothing": 0.4
       }
+    },
+    "deformed": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "deformed.frag"
+      },
+      "uniforms": ["general"]
     },
     "mandelbox": {
       "pipeline": {
