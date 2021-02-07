@@ -20,7 +20,7 @@ const CONNECTION: &'static str = "ws://127.0.0.1:9002";
 const NUM_MFCCS: usize = 12;
 const HOP_SIZE: usize = 512;
 const WINDOW_SIZE: usize = 1024;
-const SPECTRUM_SIZE: usize = 32;
+const SPECTRUM_SIZE: usize = 16;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

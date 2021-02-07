@@ -49,7 +49,7 @@ impl UniformBuffer {
                     layout_builder = layout_builder.sampled_texture(
                         wgpu::ShaderStage::FRAGMENT,
                         false,
-                        wgpu::TextureViewDimension::D1, // support other dimension
+                        wgpu::TextureViewDimension::D2,
                         texture_view.component_type(),
                     );
                     texture_views.push(texture_view);
