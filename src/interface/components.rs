@@ -18,7 +18,7 @@ pub fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
     widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(10)
 }
 
-pub fn label(txt: &'static str) -> widget::Text<'static> {
+pub fn label<'a>(txt: &'a str) -> widget::Text<'a> {
     text(txt).down(10.0)
 }
 
@@ -31,6 +31,15 @@ pub fn button_small(active: bool) -> widget::Button<'static, widget::button::Fla
     widget::Button::new()
         .w_h(30.0, 20.0)
         .rgb(btn_color, btn_color, btn_color)
+        .border(0.0)
+}
+
+pub fn button() -> widget::Button<'static, widget::button::Flat> {
+    widget::Button::new()
+        .w_h(200.0, 27.0)
+        .rgb(0.1, 0.1, 0.1)
+        .label_rgb(1.0, 1.0, 1.0)
+        .label_font_size(12)
         .border(0.0)
 }
 

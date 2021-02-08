@@ -10,10 +10,11 @@ mod color_controls;
 mod components;
 mod errors;
 mod geometry_controls;
+mod image_controls;
 mod info_box;
 mod noise_controls;
 
-fn base_height(model: &app::Model) -> f32 {
+fn controls_height(model: &mut app::Model) -> f32 {
     let mut height = 90.0;
 
     let subscriptions = &model.program_store.current_subscriptions;
@@ -22,6 +23,7 @@ fn base_height(model: &app::Model) -> f32 {
         subscriptions.color,
         subscriptions.geometry,
         subscriptions.audio,
+        subscriptions.image,
         subscriptions.noise,
     ]
     .iter()
@@ -31,22 +33,21 @@ fn base_height(model: &app::Model) -> f32 {
         }
     });
 
+    height = height
+        + audio_controls::height(model)
+        + color_controls::height(model)
+        + geometry_controls::height(model)
+        + image_controls::height(model)
+        + noise_controls::height(model);
+
     height
 }
 
 /**
  * Main UI logic / layout
  */
-pub fn update(model: &mut app::Model) {
-    ////////////////////////
-    // compute height
-    let mut height = base_height(model);
-    height = height
-        + color_controls::height(model)
-        + geometry_controls::height(model)
-        + audio_controls::height(model)
-        + noise_controls::height(model);
-
+pub fn update(app: &App, model: &mut app::Model) {
+    let mut height = controls_height(model);
     let border = 40.0;
     let scroll = height > app_config::SIZE[1] as f32 - border;
     if scroll {
@@ -186,6 +187,30 @@ pub fn update(model: &mut app::Model) {
                 &model.widget_ids,
                 ui,
                 &mut model.program_store.buffer_store.noise_uniforms,
+            );
+        }
+    }
+
+    //////////////////////////////////////////////////
+    // Image Controls
+    //////////////////////////////////////////////////
+    if model.program_store.current_subscriptions.image {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .label("Image")
+            .set(model.widget_ids.image_folder, ui)
+        {
+            println!("toggle image controls");
+            model.ui_show_image = !model.ui_show_image;
+        }
+
+        if model.ui_show_image {
+            image_controls::update(
+                app,
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.image_uniforms,
             );
         }
     }

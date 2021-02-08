@@ -15,9 +15,10 @@ widget_ids! {
         draw_floor,
         draw_floor_label,
         fog_dist,
+        audio_folder,
         general_folder,
         geometry_folder,
-        audio_folder,
+        image_folder,
         noise_folder,
         color1_r,
         color1_g,
@@ -69,6 +70,8 @@ widget_ids! {
         noise_sharpen,
         noise_sharpen_label,
         noise_speed,
+        image1_label,
+        image1_load_button,
     }
 }
 
@@ -82,9 +85,10 @@ pub struct Model {
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
     pub ui: Ui,
+    pub ui_show_audio: bool,
     pub ui_show_color: bool,
     pub ui_show_geometry: bool,
-    pub ui_show_audio: bool,
+    pub ui_show_image: bool,
     pub ui_show_noise: bool,
     pub vertex_buffer: wgpu::Buffer,
 }

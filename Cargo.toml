@@ -9,6 +9,7 @@ apodize = "1.0.0"
 cpal = "0.13.1"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 nannou = "0.15"
+nfd = "0.0.4"
 notify = "4.0.12"
 path-slash = "0.1.3"
 rayon = "1.4"

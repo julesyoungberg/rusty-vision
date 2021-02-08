@@ -41,9 +41,10 @@ fn model(app: &App) -> app::Model {
         program_store,
         show_controls: true,
         ui,
+        ui_show_audio: false,
         ui_show_color: false,
         ui_show_geometry: false,
-        ui_show_audio: false,
+        ui_show_image: false,
         ui_show_noise: false,
         vertex_buffer,
     }
@@ -55,13 +56,13 @@ fn model(app: &App) -> app::Model {
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
+    interface::update(app, model);
+
     model
         .program_store
         .update_shaders(device, window.msaa_samples());
 
     model.program_store.update_uniforms();
-
-    interface::update(model);
 }
 
 /**
