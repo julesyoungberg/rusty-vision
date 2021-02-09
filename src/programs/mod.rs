@@ -152,6 +152,12 @@ impl ProgramStore {
         if self.current_program().is_new() {
             self.compile_current(device, num_samples);
         }
+
+        // check for an image change
+        if self.buffer_store.image_uniforms.updated {
+            self.compile_current(device, num_samples);
+            self.buffer_store.image_uniforms.updated = false;
+        }
     }
 
     /**
@@ -222,14 +228,12 @@ impl ProgramStore {
      * Call in draw() right before rendering.
      */
     pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
-        let program_uniforms = &self
-            .program_uniforms
+        self.program_uniforms
             .get(&self.program_names[self.current_program])
-            .unwrap();
-        let bind_group_iter = program_uniforms
+            .unwrap()
             .iter()
-            .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group);
-        Vec::from_iter(bind_group_iter)
+            .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group)
+            .collect::<Vec<&wgpu::BindGroup>>()
     }
 
     pub fn errors(&self) -> &program::ProgramErrors {

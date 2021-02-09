@@ -51,18 +51,22 @@ fn model(app: &App) -> app::Model {
 }
 
 /**
- * Update app state
+ * Update app state.
+ * WARNING: order is very important here.
+ * The image uniforms use an update flag so other parts of the app know to update.
+ * This flag is set by the interface and unset by the profram store.
+ * Update order should be: interface, uniforms, shaders
  */
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
     interface::update(app, model);
 
+    model.program_store.update_uniforms(device);
+
     model
         .program_store
         .update_shaders(device, window.msaa_samples());
-
-    model.program_store.update_uniforms(device);
 }
 
 /**

@@ -286,10 +286,6 @@ impl BufferStore {
 
             self.buffers
                 .insert(String::from("image"), image_uniform_buffer);
-
-            // reset the flag
-            self.image_uniforms.updated = false;
-            println!("updated image uniforms");
         }
     }
 
