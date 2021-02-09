@@ -164,7 +164,7 @@ pub struct BufferStore {
  * Mantains the uniform data and the corresponding GPU buffers
  */
 impl BufferStore {
-    pub fn new(app: &App, device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
         let audio_uniform_buffer = UniformBuffer::new(device, &audio_uniforms);
@@ -184,7 +184,7 @@ impl BufferStore {
         let geometry_uniforms = geometry::GeometryUniforms::new();
         let geometry_uniform_buffer = UniformBuffer::new(device, &geometry_uniforms);
 
-        let image_uniforms = image::ImageUniforms::new(app);
+        let image_uniforms = image::ImageUniforms::new(device);
         let image_uniform_buffer = UniformBuffer::new(device, &image_uniforms);
 
         let noise_uniforms = noise::NoiseUniforms::new();

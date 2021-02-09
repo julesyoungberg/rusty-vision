@@ -5,7 +5,6 @@ use tinyfiledialogs;
 
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
-use crate::util;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -34,27 +33,30 @@ impl Bufferable<Data> for ImageUniforms {
     }
 }
 
+// TODO show error in interface in non obtrusive way (bottom right)
 impl ImageUniforms {
-    pub fn new(app: &App) -> Self {
-        let img1 =
-            image::open(util::universal_path(String::from("./images/fractal1.png"))).unwrap();
-        let (width1, height1) = img1.dimensions();
-        let image1_texture = wgpu::Texture::from_image(app, &img1);
+    pub fn new(device: &wgpu::Device) -> Self {
+        let image1_texture = wgpu::TextureBuilder::new()
+            .size([1, 1])
+            .usage(wgpu::TextureUsage::OUTPUT_ATTACHMENT | wgpu::TextureUsage::SAMPLED)
+            .format(wgpu::TextureFormat::Rgba16Float)
+            .build(device);
 
-        let img2 =
-            image::open(util::universal_path(String::from("./images/fractal2.png"))).unwrap();
-        let (width2, height2) = img2.dimensions();
-        let image2_texture = wgpu::Texture::from_image(app, &img2);
+        let image2_texture = wgpu::TextureBuilder::new()
+            .size([1, 1])
+            .usage(wgpu::TextureUsage::OUTPUT_ATTACHMENT | wgpu::TextureUsage::SAMPLED)
+            .format(wgpu::TextureFormat::Rgba16Float)
+            .build(device);
 
         Self {
             data: Data {
-                image1_size: pt2(width1 as f32, height1 as f32),
-                image2_size: pt2(width2 as f32, height2 as f32),
+                image1_size: pt2(0.0, 0.0),
+                image2_size: pt2(0.0, 0.0),
             },
             error: None,
-            image1_path: Some(String::from("fractal1.png")),
+            image1_path: None,
             image1_texture,
-            image2_path: Some(String::from("fractal2.png")),
+            image2_path: None,
             image2_texture,
             updated: false,
         }

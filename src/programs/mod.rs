@@ -48,7 +48,7 @@ impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device) -> Self {
         let program_config = config::get_config();
 
-        let mut buffer_store = uniforms::BufferStore::new(app, device);
+        let mut buffer_store = uniforms::BufferStore::new(device);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();

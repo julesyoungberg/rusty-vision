@@ -30,14 +30,21 @@
         "vert": "basic.vert",
         "frag": "deformedImage.frag"
       },
-      "uniforms": ["general", "image"]
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "fractal1.png"
+      }
     },
     "imageFade": {
       "pipeline": {
         "vert": "basic.vert",
         "frag": "imageFade.frag"
       },
-      "uniforms": ["general", "image"]
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "fractal1.png",
+        "image2": "fractal2.png"
+      }
     },
     "mandelbox": {
       "pipeline": {
