@@ -47,18 +47,18 @@ impl ImageUniforms {
     }
 
     pub fn load_image(&mut self, app: &App, image_id: i32) {
-        let filename = match tinyfiledialogs::open_file_dialog(
+        let filepath = match tinyfiledialogs::open_file_dialog(
             "Load Image",
             "~",
             Some((&["*.jpg", "*.png"], "")),
         ) {
-            Some(filename) => filename,
+            Some(filepath) => filepath,
             None => return,
         };
 
-        println!("selected image: {:?}", filename);
+        println!("selected image: {:?}", filepath);
 
-        let img = match image::open(&filename) {
+        let img = match image::open(&filepath) {
             Ok(img) => img,
             Err(e) => {
                 self.error = Some(e);
@@ -68,6 +68,8 @@ impl ImageUniforms {
 
         let (width, height) = img.dimensions();
         let texture = wgpu::Texture::from_image(app, &img);
+
+        let filename = filepath.split("/").last().unwrap().to_string();
 
         match image_id {
             1 => {
