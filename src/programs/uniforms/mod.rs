@@ -253,6 +253,10 @@ impl BufferStore {
             self.audio_uniforms.end_session();
         }
 
+        if subscriptions.image {
+            self.image_uniforms.set_program_defaults(defaults);
+        }
+
         if subscriptions.noise {
             self.noise_uniforms.set_program_defaults(defaults);
         }
@@ -262,13 +266,30 @@ impl BufferStore {
      * Update uniform data.
      * Call every timestep.
      */
-    pub fn update(&mut self, subscriptions: &UniformSubscriptions) {
+    pub fn update(&mut self, device: &wgpu::Device, subscriptions: &UniformSubscriptions) {
+        if subscriptions.audio {
+            self.audio_uniforms.update();
+        }
+
         if subscriptions.general {
             self.general_uniforms.update();
         }
 
-        if subscriptions.audio {
-            self.audio_uniforms.update();
+        if subscriptions.image && self.image_uniforms.updated {
+            // recreate the uniform buffer object
+            println!("rebuilding image bind group");
+            let image_uniform_buffer = UniformBuffer::new::<image::Data>(
+                device,
+                self.image_uniforms.as_bytes(),
+                Some(vec![&self.image_uniforms.image1_texture]),
+            );
+
+            self.buffers
+                .insert(String::from("image"), image_uniform_buffer);
+
+            // reset the flag
+            self.image_uniforms.updated = false;
+            println!("updated image uniforms");
         }
     }
 
@@ -283,7 +304,7 @@ impl BufferStore {
         subscriptions: &UniformSubscriptions,
     ) {
         if subscriptions.audio {
-            self.audio_uniforms.update_texture(device, encoder);
+            self.audio_uniforms.update_textures(device, encoder);
             self.buffers.get("audio").unwrap().update::<audio::Data>(
                 device,
                 encoder,

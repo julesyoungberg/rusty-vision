@@ -609,7 +609,7 @@ impl AudioUniforms {
         }
     }
 
-    pub fn update_texture(
+    pub fn update_textures(
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,

@@ -158,8 +158,9 @@ impl ProgramStore {
      * Update uniform data.
      * Call every timestep.
      */
-    pub fn update_uniforms(&mut self) {
-        self.buffer_store.update(&self.current_subscriptions);
+    pub fn update_uniforms(&mut self, device: &wgpu::Device) {
+        self.buffer_store
+            .update(device, &self.current_subscriptions);
     }
 
     /**

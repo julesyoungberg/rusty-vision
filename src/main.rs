@@ -62,7 +62,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         .program_store
         .update_shaders(device, window.msaa_samples());
 
-    model.program_store.update_uniforms();
+    model.program_store.update_uniforms(device);
 }
 
 /**
@@ -138,7 +138,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
  * Render app
  */
 fn view(app: &App, model: &app::Model, frame: Frame) {
-    if model.program_store.programs.keys().len() == 0 || !draw(model, &frame) {
+    if !draw(model, &frame) {
         let draw = app.draw();
         draw.background().color(DARKGRAY);
         draw.to_frame(app, &frame).unwrap();

@@ -44,6 +44,6 @@ pub fn update(
         .label("Load")
         .set(widget_ids.image1_load_button, ui)
     {
-        uniforms.load_image();
+        uniforms.load_image(app, 1);
     }
 }

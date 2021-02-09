@@ -14,6 +14,7 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
     vec2 image1_size;
 };
 
+// https://www.iquilezles.org/www/articles/deform/deform.htm
 // some things to try
 // u = x*cos(2*r) - y*sin(2*r)
 // v = y*cos(2*r) + x*sin(2*r)
