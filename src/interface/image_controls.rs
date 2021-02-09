@@ -13,7 +13,7 @@ pub fn height(model: &mut app::Model) -> f32 {
     let mut h = 0.0;
 
     if model.ui_show_image {
-        h = 50.0;
+        h = 110.0;
     }
 
     h
@@ -45,5 +45,24 @@ pub fn update(
         .set(widget_ids.image1_load_button, ui)
     {
         uniforms.load_image(app, 1);
+    }
+
+    let mut label = "Image 2".to_owned();
+    if let Some(image2_path) = &uniforms.image2_path {
+        label.push_str(": ");
+        label.push_str(image2_path.as_str());
+    }
+
+    components::label(label.as_str())
+        .parent(widget_ids.controls_wrapper)
+        .set(widget_ids.image2_label, ui);
+
+    for _click in components::button()
+        .parent(widget_ids.controls_wrapper)
+        .down(10.0)
+        .label("Load")
+        .set(widget_ids.image2_load_button, ui)
+    {
+        uniforms.load_image(app, 2);
     }
 }

@@ -10,8 +10,10 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 
 layout(set = 1, binding = 0) uniform sampler image_sampler;
 layout(set = 1, binding = 1) uniform texture2D image1;
+layout(set = 1, binding = 2) uniform texture2D image2;
 layout(set = 1, binding = 2) uniform ImageUniforms {
     vec2 image1_size;
+    vec2 image2_size;
 };
 
 // https://www.iquilezles.org/www/articles/deform/deform.htm

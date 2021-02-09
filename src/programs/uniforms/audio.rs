@@ -66,6 +66,10 @@ impl Bufferable for AudioUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
+    fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
+        Some(vec![&self.mfcc_texture, &self.spectrum_texture])
+    }
+
     fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
         self.smoothing = 0.5;
 

@@ -72,6 +72,8 @@ widget_ids! {
         noise_speed,
         image1_label,
         image1_load_button,
+        image2_label,
+        image2_load_button,
     }
 }
 

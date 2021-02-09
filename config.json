@@ -32,6 +32,13 @@
       },
       "uniforms": ["general", "image"]
     },
+    "imageFade": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "imageFade.frag"
+      },
+      "uniforms": ["general", "image"]
+    },
     "mandelbox": {
       "pipeline": {
         "vert": "basic.vert",

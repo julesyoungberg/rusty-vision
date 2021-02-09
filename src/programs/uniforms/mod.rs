@@ -168,36 +168,45 @@ impl BufferStore {
         let audio_uniform_buffer = UniformBuffer::new::<audio::Data>(
             device,
             audio_uniforms.as_bytes(),
-            Some(vec![
-                &audio_uniforms.mfcc_texture,
-                &audio_uniforms.spectrum_texture,
-            ]),
+            audio_uniforms.textures(),
         );
 
         let camera_uniforms = camera::CameraUniforms::new();
-        let camera_uniform_buffer =
-            UniformBuffer::new::<camera::Data>(device, camera_uniforms.as_bytes(), None);
+        let camera_uniform_buffer = UniformBuffer::new::<camera::Data>(
+            device,
+            camera_uniforms.as_bytes(),
+            camera_uniforms.textures(),
+        );
 
         let color_uniforms = color::ColorUniforms::new();
-        let color_uniform_buffer =
-            UniformBuffer::new::<color::Data>(device, color_uniforms.as_bytes(), None);
+        let color_uniform_buffer = UniformBuffer::new::<color::Data>(
+            device,
+            color_uniforms.as_bytes(),
+            color_uniforms.textures(),
+        );
 
         let general_uniforms = general::GeneralUniforms::new(pt2(
             app_config::SIZE[0] as f32,
             app_config::SIZE[1] as f32,
         ));
-        let general_uniform_buffer =
-            UniformBuffer::new::<general::Data>(device, general_uniforms.as_bytes(), None);
+        let general_uniform_buffer = UniformBuffer::new::<general::Data>(
+            device,
+            general_uniforms.as_bytes(),
+            general_uniforms.textures(),
+        );
 
         let geometry_uniforms = geometry::GeometryUniforms::new();
-        let geometry_uniform_buffer =
-            UniformBuffer::new::<geometry::Data>(device, geometry_uniforms.as_bytes(), None);
+        let geometry_uniform_buffer = UniformBuffer::new::<geometry::Data>(
+            device,
+            geometry_uniforms.as_bytes(),
+            geometry_uniforms.textures(),
+        );
 
         let image_uniforms = image::ImageUniforms::new(app);
         let image_uniform_buffer = UniformBuffer::new::<image::Data>(
             device,
             image_uniforms.as_bytes(),
-            Some(vec![&image_uniforms.image1_texture]),
+            image_uniforms.textures(),
         );
 
         let noise_uniforms = noise::NoiseUniforms::new();
@@ -281,7 +290,7 @@ impl BufferStore {
             let image_uniform_buffer = UniformBuffer::new::<image::Data>(
                 device,
                 self.image_uniforms.as_bytes(),
-                Some(vec![&self.image_uniforms.image1_texture]),
+                self.image_uniforms.textures(),
             );
 
             self.buffers
