@@ -1,5 +1,5 @@
 {
-  "default": "deformedImage",
+  "default": "soundCells",
   "programs": {
     "basic": {
       "pipeline": {
