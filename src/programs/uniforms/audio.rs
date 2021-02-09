@@ -69,18 +69,6 @@ impl Bufferable<Data> for AudioUniforms {
     fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
         Some(vec![&self.mfcc_texture, &self.spectrum_texture])
     }
-
-    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
-        self.smoothing = 0.5;
-
-        if let Some(cnfg) = defaults {
-            if let Some(smoothing) = cnfg.audio_feature_smoothing {
-                self.smoothing = smoothing;
-            }
-        }
-
-        self.start_session();
-    }
 }
 
 impl AudioUniforms {
@@ -130,6 +118,18 @@ impl AudioUniforms {
             spectrum_texture,
             stream: None,
         }
+    }
+
+    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        self.smoothing = 0.5;
+
+        if let Some(cnfg) = defaults {
+            if let Some(smoothing) = cnfg.audio_feature_smoothing {
+                self.smoothing = smoothing;
+            }
+        }
+
+        self.start_session();
     }
 
     /**

@@ -11,6 +11,4 @@ pub trait Bufferable<T>: Sized {
     fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
         None
     }
-
-    fn set_program_defaults(&mut self, _defaults: &Option<config::ProgramDefaults>) {}
 }

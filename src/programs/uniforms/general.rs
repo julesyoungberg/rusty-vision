@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 use std::time::SystemTime;
 
-use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 #[repr(C)]
@@ -21,8 +20,6 @@ impl Bufferable<Data> for GeneralUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
-
-    fn set_program_defaults(&mut self, _defaults: &Option<config::ProgramDefaults>) {}
 }
 
 impl GeneralUniforms {

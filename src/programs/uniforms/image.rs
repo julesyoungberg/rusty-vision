@@ -32,8 +32,6 @@ impl Bufferable<Data> for ImageUniforms {
     fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
         Some(vec![&self.image1_texture, &self.image2_texture])
     }
-
-    fn set_program_defaults(&mut self, _defaults: &Option<config::ProgramDefaults>) {}
 }
 
 impl ImageUniforms {

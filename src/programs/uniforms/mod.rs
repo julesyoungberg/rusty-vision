@@ -221,30 +221,18 @@ impl BufferStore {
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
     ) {
-        if subscriptions.camera {
-            self.camera_uniforms.set_program_defaults(defaults);
-        }
-
-        if subscriptions.color {
-            self.color_uniforms.set_program_defaults(defaults);
-        }
-
-        if subscriptions.general {
-            self.general_uniforms.set_program_defaults(defaults);
-        }
-
         if subscriptions.audio {
-            self.audio_uniforms.set_program_defaults(defaults);
+            self.audio_uniforms.set_defaults(defaults);
         } else {
             self.audio_uniforms.end_session();
         }
 
-        if subscriptions.image {
-            self.image_uniforms.set_program_defaults(defaults);
+        if subscriptions.camera {
+            self.camera_uniforms.set_defaults(defaults);
         }
 
-        if subscriptions.noise {
-            self.noise_uniforms.set_program_defaults(defaults);
+        if subscriptions.color {
+            self.color_uniforms.set_defaults(defaults);
         }
     }
 

@@ -28,8 +28,26 @@ impl Bufferable<Data> for CameraUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
+}
 
-    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+impl CameraUniforms {
+    pub fn new() -> Self {
+        Self {
+            data: Data {
+                camera_pos_x: 25.0,
+                camera_pos_y: 0.0,
+                camera_pos_z: 15.0,
+                camera_target_x: 0.0,
+                camera_target_y: 0.0,
+                camera_target_z: 0.0,
+                camera_up_x: 0.0,
+                camera_up_y: 1.0,
+                camera_up_z: 0.0,
+            },
+        }
+    }
+
+    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
         let mut camera_pos = pt3(0.0, 0.0, 5.0);
         let mut camera_target = pt3(0.0, 0.0, 0.0);
         let mut camera_up = pt3(0.0, 1.0, 0.0);
@@ -57,24 +75,6 @@ impl Bufferable<Data> for CameraUniforms {
         self.data.camera_target_z = camera_target[2];
 
         self.set_up(camera_up);
-    }
-}
-
-impl CameraUniforms {
-    pub fn new() -> Self {
-        Self {
-            data: Data {
-                camera_pos_x: 25.0,
-                camera_pos_y: 0.0,
-                camera_pos_z: 15.0,
-                camera_target_x: 0.0,
-                camera_target_y: 0.0,
-                camera_target_z: 0.0,
-                camera_up_x: 0.0,
-                camera_up_y: 1.0,
-                camera_up_z: 0.0,
-            },
-        }
     }
 
     pub fn forward(&self) -> Vector3 {

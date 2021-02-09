@@ -27,18 +27,6 @@ impl Bufferable<Data> for ColorUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
-
-    fn set_program_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
-        let mut color_mode = 0;
-
-        if let Some(cnfg) = defaults {
-            if let Some(mode) = cnfg.color_mode {
-                color_mode = mode;
-            }
-        }
-
-        self.data.color_mode = color_mode as i32;
-    }
 }
 
 impl ColorUniforms {
@@ -57,5 +45,17 @@ impl ColorUniforms {
                 color3_b: 1.0,
             },
         }
+    }
+
+    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        let mut color_mode = 0;
+
+        if let Some(cnfg) = defaults {
+            if let Some(mode) = cnfg.color_mode {
+                color_mode = mode;
+            }
+        }
+
+        self.data.color_mode = color_mode as i32;
     }
 }
