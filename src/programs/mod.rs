@@ -46,7 +46,7 @@ pub struct ProgramStore {
  */
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device) -> Self {
-        let config_store = config::ConfigStore::new();
+        let program_config = config::get_config();
 
         let mut buffer_store = uniforms::BufferStore::new(app, device);
 
@@ -65,7 +65,7 @@ impl ProgramStore {
         let mut programs = HashMap::new();
         let mut program_uniforms = HashMap::new();
         let mut program_defaults = HashMap::new();
-        for (program_name, program_config) in config_store.config.programs {
+        for (program_name, program_config) in program_config.programs {
             program_names.push(program_name.clone());
 
             programs.insert(
@@ -82,7 +82,7 @@ impl ProgramStore {
 
         let mut current_program = 0;
         for (index, program_name) in program_names.iter().enumerate() {
-            if *program_name == config_store.config.default {
+            if *program_name == program_config.default {
                 current_program = index;
             }
         }
@@ -92,6 +92,7 @@ impl ProgramStore {
         let current_subscriptions =
             uniforms::get_subscriptions(&program_uniforms.get(program_name).unwrap());
         buffer_store.set_program_defaults(
+            app,
             &current_subscriptions,
             &program_defaults.get(program_name).unwrap(),
         );
@@ -188,7 +189,7 @@ impl ProgramStore {
     /**
      * Selects the current program performs any housekeeping / initialization
      */
-    pub fn select_program(&mut self, selected: usize) {
+    pub fn select_program(&mut self, app: &App, selected: usize) {
         if selected == self.current_program {
             return;
         }
@@ -205,6 +206,7 @@ impl ProgramStore {
         self.current_subscriptions =
             uniforms::get_subscriptions(&self.program_uniforms.get(name).unwrap());
         self.buffer_store.set_program_defaults(
+            app,
             &self.current_subscriptions,
             &self.program_defaults.get(name).unwrap(),
         );

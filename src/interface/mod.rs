@@ -89,7 +89,7 @@ pub fn update(app: &App, model: &mut app::Model) {
         .down(5.0)
         .set(model.widget_ids.current_program, ui)
     {
-        model.program_store.select_program(selected);
+        model.program_store.select_program(app, selected);
     }
 
     let mut left = -200.0;

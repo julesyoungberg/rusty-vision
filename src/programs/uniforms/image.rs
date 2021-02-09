@@ -3,6 +3,7 @@ use nannou::image::GenericImageView;
 use nannou::prelude::*;
 use tinyfiledialogs;
 
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
@@ -59,18 +60,7 @@ impl ImageUniforms {
         }
     }
 
-    pub fn load_image(&mut self, app: &App, image_id: i32) {
-        let filepath = match tinyfiledialogs::open_file_dialog(
-            "Load Image",
-            "~",
-            Some((&["*.jpg", "*.png"], "")),
-        ) {
-            Some(filepath) => filepath,
-            None => return,
-        };
-
-        println!("selected image: {:?}", filepath);
-
+    pub fn load_image(&mut self, app: &App, image_id: i32, filepath: String) {
         let img = match image::open(&filepath) {
             Ok(img) => img,
             Err(e) => {
@@ -101,5 +91,52 @@ impl ImageUniforms {
 
         println!("updated image texture");
         self.updated = true;
+    }
+
+    pub fn set_defaults(&mut self, app: &App, defaults: &Option<config::ProgramDefaults>) {
+        if let Some(cnfg) = defaults {
+            let project_path = app.project_path().unwrap();
+
+            if let Some(img1) = &cnfg.image1 {
+                self.load_image(
+                    app,
+                    1,
+                    project_path
+                        .join("images")
+                        .join(img1)
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                );
+            }
+
+            if let Some(img2) = &cnfg.image2 {
+                self.load_image(
+                    app,
+                    2,
+                    project_path
+                        .join("images")
+                        .join(img2)
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                );
+            }
+        }
+    }
+
+    pub fn select_image(&mut self, app: &App, image_id: i32) {
+        let filepath = match tinyfiledialogs::open_file_dialog(
+            "Load Image",
+            "~",
+            Some((&["*.jpg", "*.png"], "")),
+        ) {
+            Some(filepath) => filepath,
+            None => return,
+        };
+
+        println!("selected image: {:?}", filepath);
+
+        self.load_image(app, image_id, filepath);
     }
 }

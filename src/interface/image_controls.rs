@@ -44,7 +44,7 @@ pub fn update(
         .label("Load")
         .set(widget_ids.image1_load_button, ui)
     {
-        uniforms.load_image(app, 1);
+        uniforms.select_image(app, 1);
     }
 
     let mut label = "Image 2".to_owned();
@@ -63,6 +63,6 @@ pub fn update(
         .label("Load")
         .set(widget_ids.image2_load_button, ui)
     {
-        uniforms.load_image(app, 2);
+        uniforms.select_image(app, 2);
     }
 }

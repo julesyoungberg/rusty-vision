@@ -218,6 +218,7 @@ impl BufferStore {
      */
     pub fn set_program_defaults(
         &mut self,
+        app: &App,
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
     ) {
@@ -233,6 +234,10 @@ impl BufferStore {
 
         if subscriptions.color {
             self.color_uniforms.set_defaults(defaults);
+        }
+
+        if subscriptions.image {
+            self.image_uniforms.set_defaults(app, defaults);
         }
     }
 
