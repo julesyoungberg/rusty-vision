@@ -17,7 +17,7 @@ pub struct GeneralUniforms {
     pub data: Data,
 }
 
-impl Bufferable for GeneralUniforms {
+impl Bufferable<Data> for GeneralUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

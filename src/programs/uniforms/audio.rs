@@ -61,7 +61,7 @@ pub struct AudioUniforms {
     stream: Option<cpal::Stream>,
 }
 
-impl Bufferable for AudioUniforms {
+impl Bufferable<Data> for AudioUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

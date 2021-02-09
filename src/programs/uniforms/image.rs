@@ -24,7 +24,7 @@ pub struct ImageUniforms {
     pub updated: bool,
 }
 
-impl Bufferable for ImageUniforms {
+impl Bufferable<Data> for ImageUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

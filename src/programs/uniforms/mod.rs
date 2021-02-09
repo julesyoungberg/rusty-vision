@@ -31,10 +31,12 @@ pub struct UniformBuffer {
  * layout all into one object with generic functionality.
  */
 impl UniformBuffer {
-    pub fn new<T>(device: &wgpu::Device, data: &[u8], textures: Option<Vec<&wgpu::Texture>>) -> Self
+    pub fn new<T>(device: &wgpu::Device, uniforms: &impl Bufferable<T>) -> Self
     where
         T: Copy,
     {
+        let data = uniforms.as_bytes();
+        let textures = uniforms.textures();
         let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let buffer = device.create_buffer_with_data(data, usage);
 
@@ -90,11 +92,11 @@ impl UniformBuffer {
         &self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
-        data: &[u8],
+        uniforms: &impl Bufferable<T>,
     ) {
         let size = std::mem::size_of::<T>() as wgpu::BufferAddress;
         let usage = wgpu::BufferUsage::COPY_SRC;
-        let next_buffer = device.create_buffer_with_data(data, usage);
+        let next_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
         encoder.copy_buffer_to_buffer(&next_buffer, 0, &self.buffer, 0, size);
     }
 }
@@ -165,53 +167,28 @@ impl BufferStore {
     pub fn new(app: &App, device: &wgpu::Device) -> Self {
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
-        let audio_uniform_buffer = UniformBuffer::new::<audio::Data>(
-            device,
-            audio_uniforms.as_bytes(),
-            audio_uniforms.textures(),
-        );
+        let audio_uniform_buffer = UniformBuffer::new(device, &audio_uniforms);
 
         let camera_uniforms = camera::CameraUniforms::new();
-        let camera_uniform_buffer = UniformBuffer::new::<camera::Data>(
-            device,
-            camera_uniforms.as_bytes(),
-            camera_uniforms.textures(),
-        );
+        let camera_uniform_buffer = UniformBuffer::new(device, &camera_uniforms);
 
         let color_uniforms = color::ColorUniforms::new();
-        let color_uniform_buffer = UniformBuffer::new::<color::Data>(
-            device,
-            color_uniforms.as_bytes(),
-            color_uniforms.textures(),
-        );
+        let color_uniform_buffer = UniformBuffer::new(device, &color_uniforms);
 
         let general_uniforms = general::GeneralUniforms::new(pt2(
             app_config::SIZE[0] as f32,
             app_config::SIZE[1] as f32,
         ));
-        let general_uniform_buffer = UniformBuffer::new::<general::Data>(
-            device,
-            general_uniforms.as_bytes(),
-            general_uniforms.textures(),
-        );
+        let general_uniform_buffer = UniformBuffer::new(device, &general_uniforms);
 
         let geometry_uniforms = geometry::GeometryUniforms::new();
-        let geometry_uniform_buffer = UniformBuffer::new::<geometry::Data>(
-            device,
-            geometry_uniforms.as_bytes(),
-            geometry_uniforms.textures(),
-        );
+        let geometry_uniform_buffer = UniformBuffer::new(device, &geometry_uniforms);
 
         let image_uniforms = image::ImageUniforms::new(app);
-        let image_uniform_buffer = UniformBuffer::new::<image::Data>(
-            device,
-            image_uniforms.as_bytes(),
-            image_uniforms.textures(),
-        );
+        let image_uniform_buffer = UniformBuffer::new(device, &image_uniforms);
 
         let noise_uniforms = noise::NoiseUniforms::new();
-        let noise_uniform_buffer =
-            UniformBuffer::new::<noise::Data>(device, noise_uniforms.as_bytes(), None);
+        let noise_uniform_buffer = UniformBuffer::new(device, &noise_uniforms);
 
         // store buffers in map
         let mut buffers = HashMap::new();
@@ -287,12 +264,7 @@ impl BufferStore {
         if subscriptions.image && self.image_uniforms.updated {
             // recreate the uniform buffer object
             println!("rebuilding image bind group");
-            let image_uniform_buffer = UniformBuffer::new::<image::Data>(
-                device,
-                self.image_uniforms.as_bytes(),
-                self.image_uniforms.textures(),
-            );
-
+            let image_uniform_buffer = UniformBuffer::new(device, &self.image_uniforms);
             self.buffers
                 .insert(String::from("image"), image_uniform_buffer);
         }
@@ -310,49 +282,45 @@ impl BufferStore {
     ) {
         if subscriptions.audio {
             self.audio_uniforms.update_textures(device, encoder);
-            self.buffers.get("audio").unwrap().update::<audio::Data>(
-                device,
-                encoder,
-                self.audio_uniforms.as_bytes(),
-            );
+            self.buffers
+                .get("audio")
+                .unwrap()
+                .update(device, encoder, &self.audio_uniforms);
         }
 
         if subscriptions.camera {
-            self.buffers.get("camera").unwrap().update::<camera::Data>(
-                device,
-                encoder,
-                self.camera_uniforms.as_bytes(),
-            );
+            self.buffers
+                .get("camera")
+                .unwrap()
+                .update(device, encoder, &self.camera_uniforms);
         }
 
         if subscriptions.color {
-            self.buffers.get("color").unwrap().update::<color::Data>(
-                device,
-                encoder,
-                self.color_uniforms.as_bytes(),
-            );
+            self.buffers
+                .get("color")
+                .unwrap()
+                .update(device, encoder, &self.color_uniforms);
         }
 
         if subscriptions.general {
             self.buffers
                 .get("general")
                 .unwrap()
-                .update::<general::Data>(device, encoder, self.general_uniforms.as_bytes());
+                .update(device, encoder, &self.general_uniforms);
         }
 
         if subscriptions.geometry {
             self.buffers
                 .get("geometry")
                 .unwrap()
-                .update::<geometry::Data>(device, encoder, self.geometry_uniforms.as_bytes());
+                .update(device, encoder, &self.geometry_uniforms);
         }
 
         if subscriptions.noise {
-            self.buffers.get("noise").unwrap().update::<noise::Data>(
-                device,
-                encoder,
-                self.noise_uniforms.as_bytes(),
-            );
+            self.buffers
+                .get("noise")
+                .unwrap()
+                .update(device, encoder, &self.noise_uniforms);
         }
     }
 }

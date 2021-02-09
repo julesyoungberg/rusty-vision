@@ -23,7 +23,7 @@ pub struct ColorUniforms {
     pub data: Data,
 }
 
-impl Bufferable for ColorUniforms {
+impl Bufferable<Data> for ColorUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

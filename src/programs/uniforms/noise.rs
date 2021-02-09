@@ -20,7 +20,7 @@ pub struct NoiseUniforms {
     pub data: Data,
 }
 
-impl Bufferable for NoiseUniforms {
+impl Bufferable<Data> for NoiseUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

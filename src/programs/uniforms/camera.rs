@@ -24,7 +24,7 @@ pub struct CameraUniforms {
     pub data: Data,
 }
 
-impl Bufferable for CameraUniforms {
+impl Bufferable<Data> for CameraUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }

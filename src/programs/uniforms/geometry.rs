@@ -26,7 +26,7 @@ pub struct GeometryUniforms {
     pub data: Data,
 }
 
-impl Bufferable for GeometryUniforms {
+impl Bufferable<Data> for GeometryUniforms {
     fn as_bytes(&self) -> &[u8] {
         unsafe { wgpu::bytes::from(&self.data) }
     }
