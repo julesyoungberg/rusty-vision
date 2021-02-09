@@ -1,7 +1,5 @@
 use nannou::prelude::*;
 
-use crate::programs::config;
-
 /**
  * Generic interface
  */

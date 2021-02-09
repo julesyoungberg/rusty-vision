@@ -3,7 +3,6 @@ use nannou::image::GenericImageView;
 use nannou::prelude::*;
 use tinyfiledialogs;
 
-use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
