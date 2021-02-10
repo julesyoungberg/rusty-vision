@@ -32,20 +32,77 @@ layout(set = 1, binding = 3) uniform AudioUniforms {
 //@import util/rand
 //@import util/hsv2rgb
 
-vec2 rand2(vec2 p);
+vec3 rand3(vec3 p);
 vec3 hsv2rgb(vec3 c);
 
-//https://www.shadertoy.com/view/4djSRW
-float hash(vec2 p) {
-	vec3 p3  = fract(vec3(p.xyx) * .1031);
-    p3 += dot(p3, p3.yzx + 19.19);
-    return fract((p3.x + p3.y) * p3.z);
+vec3 get_point(vec3 coord) {
+    vec3 point = rand3(coord);
+    point = sin(time * 0.5 + 6.2831 * point) * 0.5 + 0.5;
+    return point;
 }
 
-vec2 get_point(vec2 coord) {
-    vec2 point = rand2(coord);
-    point = sin(time + 6.2831 * point) * 0.5 + 0.5;
-    return point;
+vec4 voroni(vec3 p, float scale) {
+    vec3 i_st = floor(p);
+    vec3 f_st = fract(p);
+
+    float m_dist = scale;
+    vec3 m_point;
+    vec3 m_coord;
+    vec3 m_diff;
+
+    // find the nearest cell center
+    #pragma unroll
+    for (int z = -1; z <= 1; z++) {
+        #pragma unroll
+        for (int y = -1; y <= 1; y++) {
+            #pragma unroll
+            for (int x = -1; x <= 1; x++) {
+                vec3 neighbor = vec3(x, y, z);
+                vec3 coord = i_st + neighbor;
+                vec3 point = get_point(coord);
+
+                vec3 diff = neighbor + point - f_st;
+                float dist = length(diff);
+
+                if (dist < m_dist) {
+                    m_dist = dist;
+                    m_point = point;
+                    m_coord = coord;
+                    m_diff = diff;
+                }
+            }
+        }
+    }
+
+    float m_edge_dist = scale;
+
+    // find the nearest edge
+    #pragma unroll
+    for (int z = -1; z <= 1; z++) {
+        #pragma unroll
+        for (int y = -1; y <= 1; y++) {
+            #pragma unroll
+            for (int x = -1; x <= 1; x++) {
+                vec3 neighbor = vec3(x, y, z);
+                vec3 coord = i_st + neighbor;
+                if (all(equal(m_coord, coord))) {
+                    continue;
+                }
+
+                vec3 point = get_point(coord);
+
+                vec3 diff = neighbor + point - f_st;
+                float dist = length(diff);
+
+                vec3 to_center = (m_diff + diff) * 0.5;
+                vec3 cell_diff = normalize(diff - m_diff);
+                float edge_dist = dot(to_center, cell_diff);
+                m_edge_dist = min(m_edge_dist, edge_dist);
+            }
+        }
+    }
+
+    return vec4(m_point, m_edge_dist);
 }
 
 void main() {
@@ -57,67 +114,17 @@ void main() {
     float scale = 20.0;
     st *= scale;
 
-    // Tile the space
-    vec2 i_st = floor(st);
-    vec2 f_st = fract(st);
-
-    float m_dist = scale;
-    vec2 m_point;
-    vec2 m_coord;
-    vec2 m_diff;
-
-    // find the nearest cell center
-    #pragma unroll
-    for (int y = -1; y <= 1; y++) {
-        #pragma unroll
-        for (int x = -1; x <= 1; x++) {
-            vec2 neighbor = vec2(x, y);
-            vec2 coord = i_st + neighbor;
-            vec2 point = get_point(coord);
-
-            vec2 diff = neighbor + point - f_st;
-            float dist = length(diff);
-
-            if (dist < m_dist) {
-                m_dist = dist;
-                m_point = point;
-                m_coord = coord;
-                m_diff = diff;
-            }
-        }
-    }
-
-    float m_edge_dist = scale;
-
-    // find the nearest edge
-    #pragma unroll
-    for (int y = -1; y <= 1; y++) {
-        #pragma unroll
-        for (int x = -1; x <= 1; x++) {
-            vec2 neighbor = vec2(x, y);
-            vec2 coord = i_st + neighbor;
-            if (all(equal(m_coord, coord))) {
-                continue;
-            }
-
-            vec2 point = get_point(coord);
-
-            vec2 diff = neighbor + point - f_st;
-            float dist = length(diff);
-
-            vec2 to_center = (m_diff + diff) * 0.5;
-            vec2 cell_diff = normalize(diff - m_diff);
-            float edge_dist = dot(to_center, cell_diff);
-            m_edge_dist = min(m_edge_dist, edge_dist);
-        }
-    }
+    vec3 p = vec3(st, time * 0.5);
+    vec4 val = voroni(p, scale);
+    vec3 m_point = val.xyz;
+    float m_edge_dist = val.w;
 
     // map point to 1d value between 0 and 1
     float point_val = dot(m_point, m_point) * 0.5;
     float intensity = texture(sampler2D(spectrum, audio_sampler), vec2(point_val, 0)).x;
 
     vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
-    color = mix(vec3(0), color, step(0.1, m_edge_dist));
+    color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
 
     // Draw cell center
     // color += 1.-step(.02, m_dist);
