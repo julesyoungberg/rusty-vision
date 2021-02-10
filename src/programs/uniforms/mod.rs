@@ -13,6 +13,7 @@ pub mod general;
 pub mod geometry;
 pub mod image;
 pub mod noise;
+pub mod webcam;
 
 /**
  * Stores a uniform buffer along with the relevant bind groups.
@@ -116,6 +117,7 @@ pub struct UniformSubscriptions {
     pub geometry: bool,
     pub image: bool,
     pub noise: bool,
+    pub webcam: bool,
 }
 
 /**
@@ -130,6 +132,7 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         general: false,
         image: false,
         noise: false,
+        webcam: false,
     };
 
     names.iter().for_each(|n| match n.as_str() {
@@ -140,6 +143,7 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
         "geometry" => subscriptions.geometry = true,
         "image" => subscriptions.image = true,
         "noise" => subscriptions.noise = true,
+        "webcam" => subscriptions.webcam = true,
         _ => (),
     });
 
@@ -158,6 +162,7 @@ pub struct BufferStore {
     pub geometry_uniforms: geometry::GeometryUniforms,
     pub image_uniforms: image::ImageUniforms,
     pub noise_uniforms: noise::NoiseUniforms,
+    pub webcam_uniforms: webcam::WebcamUniforms,
 }
 
 /**
@@ -190,6 +195,9 @@ impl BufferStore {
         let noise_uniforms = noise::NoiseUniforms::new();
         let noise_uniform_buffer = UniformBuffer::new(device, &noise_uniforms);
 
+        let webcam_uniforms = webcam::WebcamUniforms::new(device);
+        let webcam_uniform_buffer = UniformBuffer::new(device, &webcam_uniforms);
+
         // store buffers in map
         let mut buffers = HashMap::new();
         buffers.insert(String::from("audio"), audio_uniform_buffer);
@@ -199,6 +207,7 @@ impl BufferStore {
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
         buffers.insert(String::from("image"), image_uniform_buffer);
         buffers.insert(String::from("noise"), noise_uniform_buffer);
+        buffers.insert(String::from("webcam"), webcam_uniform_buffer);
 
         Self {
             audio_uniforms,
@@ -209,6 +218,7 @@ impl BufferStore {
             geometry_uniforms,
             image_uniforms,
             noise_uniforms,
+            webcam_uniforms,
         }
     }
 
@@ -314,6 +324,13 @@ impl BufferStore {
                 .get("noise")
                 .unwrap()
                 .update(device, encoder, &self.noise_uniforms);
+        }
+
+        if subscriptions.webcam {
+            self.buffers
+                .get("webcam")
+                .unwrap()
+                .update(device, encoder, &self.webcam_uniforms);
         }
     }
 }

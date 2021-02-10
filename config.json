@@ -1,5 +1,5 @@
 {
-  "default": "soundCells",
+  "default": "webcam",
   "programs": {
     "basic": {
       "pipeline": {
@@ -140,6 +140,13 @@
         "shape_rotation": [35.0, 0.0, 315.0],
         "color_mode": 1
       }
+    },
+    "webcam": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "webcam.frag"
+      },
+      "uniforms": ["general", "webcam"]
     }
   }
 }

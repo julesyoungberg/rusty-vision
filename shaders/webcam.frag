@@ -1,0 +1,25 @@
+#version 450
+
+layout(location = 0) in vec2 uv;
+layout(location = 0) out vec4 frag_color;
+
+layout(set = 0, binding = 0) uniform GeneralUniforms {
+    vec2 resolution;
+    float time;
+};
+
+// layout(set = 1, binding = 0) uniform sampler webcam_sampler;
+// layout(set = 1, binding = 1) uniform texture2D webcam;
+layout(set = 1, binding = 0) uniform WebcamUniforms {
+    vec2 image_size;
+};
+
+void main() {
+    vec2 st = uv * 0.5 + 0.5;
+    
+    // vec3 color = texture(sampler2D(webcam, webcam_sampler), st).xyz;
+    
+	// frag_color = vec4(color, 1.0);
+
+    frag_color = vec4(st, 0, 1);
+}
