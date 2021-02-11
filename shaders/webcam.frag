@@ -17,7 +17,7 @@ layout(set = 1, binding = 2) uniform WebcamUniforms {
 void main() {
     vec2 st = uv * 0.5 + 0.5;
     
-    vec3 color = texture(sampler2D(webcam, webcam_sampler), st).xyz;
+    vec3 color = texture(sampler2D(webcam, webcam_sampler), st).xyz / 255.0;
     
 	frag_color = vec4(color, 1.0);
 }
