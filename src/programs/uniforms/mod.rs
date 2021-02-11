@@ -15,9 +15,11 @@ pub mod image;
 pub mod noise;
 pub mod webcam;
 
-/**
- * Stores a uniform buffer along with the relevant bind groups.
- */
+/// Stores a uniform buffer along with the relevant bind groups.
+/// Maintains the uniform buffer.
+/// Since this application requires many uniform buffers but nearly no
+/// other type of GPU data, it makes sense to wrap the bind_group and
+/// layout all into one object with generic functionality.
 #[derive(Debug)]
 pub struct UniformBuffer {
     pub bind_group: wgpu::BindGroup,
@@ -25,12 +27,6 @@ pub struct UniformBuffer {
     pub buffer: wgpu::Buffer,
 }
 
-/**
- * Maintains the uniform buffer.
- * Since this application requires many uniform buffers but nearly no
- * other type of GPU data, it makes sense to wrap the bind_group and
- * layout all into one object with generic functionality.
- */
 impl UniformBuffer {
     pub fn new<T>(device: &wgpu::Device, uniforms: &impl Bufferable<T>) -> Self
     where
@@ -86,9 +82,7 @@ impl UniformBuffer {
         }
     }
 
-    /**
-     * updates the buffer with new data
-     */
+    /// updates the buffer with new data
     pub fn update<T>(
         &self,
         device: &wgpu::Device,
@@ -104,10 +98,8 @@ impl UniformBuffer {
 
 pub type UniformBuffers = HashMap<String, UniformBuffer>;
 
-/**
- * Defines a program's subscriptions to uniform data.
- * This determines which data should be fetched / updated.
- */
+/// Defines a program's subscriptions to uniform data.
+/// This determines which data should be fetched / updated.
 #[derive(Debug)]
 pub struct UniformSubscriptions {
     pub audio: bool,
@@ -120,9 +112,7 @@ pub struct UniformSubscriptions {
     pub webcam: bool,
 }
 
-/**
- * Build a subscriptions struct from a list of uniform names
- */
+/// Build a subscriptions struct from a list of uniform names
 pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
         audio: false,
@@ -150,9 +140,8 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
     subscriptions
 }
 
-/**
- * Stores all different uniforms
- */
+/// Stores all different uniforms.
+/// Mantains the uniform data and the corresponding GPU buffers.
 pub struct BufferStore {
     pub audio_uniforms: audio::AudioUniforms,
     pub buffers: UniformBuffers,
@@ -165,9 +154,6 @@ pub struct BufferStore {
     pub webcam_uniforms: webcam::WebcamUniforms,
 }
 
-/**
- * Mantains the uniform data and the corresponding GPU buffers
- */
 impl BufferStore {
     pub fn new(device: &wgpu::Device) -> Self {
         // create uniforms and buffers
@@ -222,10 +208,8 @@ impl BufferStore {
         }
     }
 
-    /**
-     * Set default uniforms for current selected program.
-     * Also a place to do any initialization and/or cleanup.
-     */
+    /// Set default uniforms for current selected program.
+    /// Also a place to do any initialization and/or cleanup.
     pub fn set_program_defaults(
         &mut self,
         app: &App,
@@ -249,12 +233,14 @@ impl BufferStore {
         if subscriptions.image {
             self.image_uniforms.set_defaults(app, defaults);
         }
+
+        if subscriptions.webcam {
+            self.webcam_uniforms.set_defaults(defaults);
+        }
     }
 
-    /**
-     * Update uniform data.
-     * Call every timestep.
-     */
+    /// Update uniform data.
+    /// Call every timestep.
     pub fn update(&mut self, device: &wgpu::Device, subscriptions: &UniformSubscriptions) {
         if subscriptions.audio {
             self.audio_uniforms.update();
@@ -271,12 +257,14 @@ impl BufferStore {
             self.buffers
                 .insert(String::from("image"), image_uniform_buffer);
         }
+
+        if subscriptions.webcam {
+            self.webcam_uniforms.update();
+        }
     }
 
-    /**
-     * Update GPU uniform buffers with current data.
-     * Call in draw() before rendering.
-     */
+    /// Update GPU uniform buffers with current data.
+    /// Call in draw() before rendering.
     pub fn update_buffers(
         &self,
         device: &wgpu::Device,

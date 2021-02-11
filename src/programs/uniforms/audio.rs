@@ -129,14 +129,12 @@ impl AudioUniforms {
             }
         }
 
-        self.start_session();
+        self.running = self.start_session();
     }
 
-    /**
-     * Initialize the MIR session with the mirlin server
-     * - setup audio listener
-     * - establish subscription with the server
-     */
+    /// Initialize the MIR session with the mirlin server
+    /// - setup audio listener
+    /// - establish subscription with the server
     pub fn start_session(&mut self) -> bool {
         if self.running {
             return true;
@@ -440,15 +438,11 @@ impl AudioUniforms {
             }
         }));
 
-        self.running = true;
-
         return true;
     }
 
-    /**
-     * Ends a session by stopping the stream, disconnecting from the server,
-     * and any other clean up
-     */
+    /// Ends a session by stopping the stream, disconnecting from the server,
+    /// and any other clean up
     pub fn end_session(&mut self) {
         if !self.running {
             return;
@@ -497,9 +491,7 @@ impl AudioUniforms {
         self.smoothing * prev + (1.0 - self.smoothing) * next
     }
 
-    /**
-     * Update data based on recently received features and handle any errors
-     */
+    /// Update data based on recently received features and handle any errors
     pub fn update(&mut self) {
         if !self.running {
             return;
@@ -613,6 +605,7 @@ impl AudioUniforms {
         }
     }
 
+    /// Update GPU textures with new data
     pub fn update_textures(
         &self,
         device: &wgpu::Device,

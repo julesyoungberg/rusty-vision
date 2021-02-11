@@ -43,9 +43,7 @@ fn controls_height(model: &mut app::Model) -> f32 {
     height
 }
 
-/**
- * Main UI logic / layout
- */
+/// Main UI logic / layout
 pub fn update(app: &App, model: &mut app::Model) {
     let mut height = controls_height(model);
     let border = 40.0;
@@ -237,9 +235,7 @@ pub fn update(app: &App, model: &mut app::Model) {
     }
 }
 
-/**
- * Draw the state of the `Ui` to the frame.
- */
+/// Draw the state of the `Ui` to the frame.
 pub fn draw(app: &App, model: &app::Model, frame: &Frame) {
     let color_attachment_desc = frame.color_attachment_descriptor();
     let primitives = model.ui.draw();

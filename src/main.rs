@@ -11,9 +11,7 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
-/**
- * App setup
- */
+/// App setup
 fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
@@ -50,13 +48,11 @@ fn model(app: &App) -> app::Model {
     }
 }
 
-/**
- * Update app state.
- * WARNING: order is very important here.
- * The image uniforms use an update flag so other parts of the app know to update.
- * This flag is set by the interface and unset by the profram store.
- * Update order should be: interface, uniforms, shaders
- */
+/// Update app state.
+/// WARNING: order is very important here.
+/// The image uniforms use an update flag so other parts of the app know to update.
+/// This flag is set by the interface and unset by the profram store.
+/// Update order should be: interface, uniforms, shaders
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
@@ -69,9 +65,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         .update_shaders(device, window.msaa_samples());
 }
 
-/**
- * Handle key pressed event
- */
+/// Handle key pressed event
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     if !model.program_store.current_subscriptions.camera {
         // currently no uniforms other than camera use keys
@@ -101,9 +95,7 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     }
 }
 
-/**
- * Draw the state of the app to the frame
- */
+/// Draw the state of the app to the frame
 fn draw(model: &app::Model, frame: &Frame) -> bool {
     // setup environment
     let device = frame.device_queue_pair().device();
@@ -138,9 +130,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     true
 }
 
-/**
- * Render app
- */
+/// Render app
 fn view(app: &App, model: &app::Model, frame: Frame) {
     if !draw(model, &frame) {
         let draw = app.draw();

@@ -6,9 +6,8 @@ use std::fs;
 use crate::app_config;
 use crate::util;
 
-/**
- * Stores data that represents a single shader file
- */
+/// Stores data that represents a single shader file
+/// and manages the compiling of a shader.
 #[derive(Debug)]
 pub struct Shader {
     pub error: Option<shaderc::Error>,
@@ -16,9 +15,6 @@ pub struct Shader {
     pub module: Option<wgpu::ShaderModule>,
 }
 
-/**
- * Manages the compiling of a shader
- */
 impl Shader {
     pub fn new(filename: String) -> Self {
         Self {
@@ -28,9 +24,7 @@ impl Shader {
         }
     }
 
-    /**
-     * Compile the shader file
-     */
+    /// Compile the shader file
     pub fn compile(&mut self, device: &wgpu::Device, compiler: &mut shaderc::Compiler) {
         let split = self.filename.split(".").collect::<Vec<&str>>();
         let ext = split[1];

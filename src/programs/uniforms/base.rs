@@ -1,8 +1,6 @@
 use nannou::prelude::*;
 
-/**
- * Generic interface
- */
+/// Generic interface
 pub trait Bufferable<T>: Sized {
     fn as_bytes(&self) -> &[u8];
 

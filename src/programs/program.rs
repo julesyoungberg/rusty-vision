@@ -8,9 +8,9 @@ use crate::util;
 
 pub type ProgramErrors = HashMap<String, String>;
 
-/**
- * represents a GPU program (series of shaders)
- */
+/// represents a GPU program (series of shaders).
+/// Manages the compilation of code and
+/// creation of the program as a GPU Render Pipeline.
 #[derive(Debug)]
 pub struct Program {
     pub errors: ProgramErrors,
@@ -19,10 +19,6 @@ pub struct Program {
     pub vert_shader: shaders::Shader,
 }
 
-/**
- * Manages the compilation of code and
- * creation of the program as a GPU Render Pipeline
- */
 impl Program {
     pub fn new(vert_name: String, frag_name: String) -> Self {
         Self {
@@ -42,9 +38,7 @@ impl Program {
         self.pipeline = None;
     }
 
-    /**
-     * Compile the program with the latest shader code.
-     */
+    /// Compile the program with the latest shader code.
     pub fn compile(
         &mut self,
         device: &wgpu::Device,

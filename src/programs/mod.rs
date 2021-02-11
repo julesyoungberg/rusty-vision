@@ -15,9 +15,14 @@ pub mod uniforms;
 
 pub type Programs = HashMap<String, program::Program>;
 
-/**
- * Stores GPU programs and related data
- */
+/// Stores GPU programs and related data.
+/// Manages the maintenance of shader programs.
+/// - listens to directory
+/// - compiles code
+/// - manages modules
+/// - handles errors
+/// - builds render pipelines
+/// - manages uniform buffers
 pub struct ProgramStore {
     pub buffer_store: uniforms::BufferStore,
     pub changes_channel: Receiver<DebouncedEvent>,
@@ -35,15 +40,6 @@ pub struct ProgramStore {
     pub shader_watcher: notify::ReadDirectoryChangesWatcher,
 }
 
-/**
- * Manages the maintenance of shader programs.
- * - listens to directory
- * - compiles code
- * - manages modules
- * - handles errors
- * - builds render pipelines
- * - manages uniform buffers
- */
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device) -> Self {
         let program_config = config::get_config();
@@ -110,10 +106,8 @@ impl ProgramStore {
         }
     }
 
-    /**
-     * Compile current program with latest shader code.
-     * Call once after initialization.
-     */
+    /// Compile current program with latest shader code.
+    /// Call once after initialization.
     pub fn compile_current(&mut self, device: &wgpu::Device, num_samples: u32) {
         // update the current GPU program to use the latest code
         let name = &self.program_names[self.current_program];
@@ -135,10 +129,8 @@ impl ProgramStore {
         program.compile(device, &layout_desc, num_samples);
     }
 
-    /**
-     * Check if changes have been made to shaders and recompile if needed.
-     * Call every timestep.
-     */
+    /// Check if changes have been made to shaders and recompile if needed.
+    /// Call every timestep.
     pub fn update_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
         // check for changes
         if let Ok(event) = self.changes_channel.try_recv() {
@@ -161,34 +153,26 @@ impl ProgramStore {
         }
     }
 
-    /**
-     * Update uniform data.
-     * Call every timestep.
-     */
+    /// Update uniform data.
+    /// Call every timestep.
     pub fn update_uniforms(&mut self, device: &wgpu::Device) {
         self.buffer_store
             .update(device, &self.current_subscriptions);
     }
 
-    /**
-     * Fetch current GPU program.
-     */
+    /// Fetch current GPU program.
     pub fn current_program(&self) -> &program::Program {
         self.programs
             .get(&self.program_names[self.current_program])
             .unwrap()
     }
 
-    /**
-     * Fetch current GPU program.
-     */
+    /// Fetch current GPU program.
     pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
         self.current_program().pipeline.as_ref()
     }
 
-    /**
-     * Selects the current program performs any housekeeping / initialization
-     */
+    /// Selects the current program performs any housekeeping / initialization
     pub fn select_program(&mut self, app: &App, selected: usize) {
         if selected == self.current_program {
             return;
@@ -212,10 +196,8 @@ impl ProgramStore {
         );
     }
 
-    /**
-     * Update GPU uniform buffers with current data.
-     * Call in draw() before rendering.
-     */
+    /// Update GPU uniform buffers with current data.
+    /// Call in draw() before rendering.
     pub fn update_uniform_buffers(
         &self,
         device: &wgpu::Device,
@@ -225,10 +207,8 @@ impl ProgramStore {
             .update_buffers(device, encoder, &self.current_subscriptions);
     }
 
-    /**
-     * Fetch the appropriate bind groups to set positions for the current program.
-     * Call in draw() right before rendering.
-     */
+    /// Fetch the appropriate bind groups to set positions for the current program.
+    /// Call in draw() right before rendering.
     pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
         self.program_uniforms
             .get(&self.program_names[self.current_program])

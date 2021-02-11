@@ -1,8 +1,5 @@
 use nannou::ui::prelude::*;
 
-/**
- * UI Components
- */
 pub fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
     widget::BorderedRectangle::new(dimensions)
         .rgba(0.1, 0.1, 0.1, 0.9)

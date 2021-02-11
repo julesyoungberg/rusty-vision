@@ -4,9 +4,7 @@ use nannou::ui::prelude::*;
 use crate::programs;
 
 widget_ids! {
-    /**
-     * UI widget ids
-     */
+    /// UI widget ids
     pub struct WidgetIds {
         color_mode,
         color_mode_label,
@@ -77,9 +75,7 @@ widget_ids! {
     }
 }
 
-/**
- * Main application state
- */
+/// Main application state
 #[allow(dead_code)] // needed for shader_watcher
 pub struct Model {
     pub widget_ids: WidgetIds,

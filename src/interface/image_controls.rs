@@ -5,10 +5,8 @@ use crate::app;
 use crate::interface::components;
 use crate::programs::uniforms::image;
 
-/**
- * Section height, computes and returns the current height.
- * Used to compute the container height.
- */
+/// Section height, computes and returns the current height.
+/// Used to compute the container height.
 pub fn height(model: &mut app::Model) -> f32 {
     let mut h = 0.0;
 
@@ -19,9 +17,7 @@ pub fn height(model: &mut app::Model) -> f32 {
     h
 }
 
-/**
- * Section update, defines layout and update logic of the section
- */
+/// Section update, defines layout and update logic of the section
 pub fn update(
     app: &App,
     widget_ids: &app::WidgetIds,
