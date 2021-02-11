@@ -65,6 +65,7 @@ impl WebcamUniforms {
             match capture.read(&mut frame) {
                 Ok(success) => {
                     if !success {
+                        println!("No video frame available");
                         continue;
                     }
                 }
@@ -78,6 +79,7 @@ impl WebcamUniforms {
             println!("captured frame: {:?}", frame);
 
             if let Ok(()) = close_channel_rx.try_recv() {
+                println!("Closing capture thread");
                 break;
             }
         }));
