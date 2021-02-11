@@ -1,3 +1,4 @@
+use nannou::image;
 use nannou::prelude::*;
 use opencv::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
@@ -91,12 +92,12 @@ impl WebcamUniforms {
                 .format(wgpu::TextureFormat::Rgba8Uint)
                 .build(device),
         );
-        self.frame_data = vec![0 as u8; (width * height * 4.0) as usize];
+        self.frame_data = vec![0 as u8; (width * height * 3.0) as usize];
 
         let video_ring_buffer = RingBuffer::<Vec<u8>>::new(2);
         let (mut video_producer, video_consumer) = video_ring_buffer.split();
         video_producer
-            .push(vec![0 as u8; (width * height * 4.0) as usize])
+            .push(vec![0 as u8; (width * height * 3.0) as usize])
             .unwrap();
         self.video_consumer = Some(video_consumer);
 
@@ -120,18 +121,11 @@ impl WebcamUniforms {
             // get usable data
             let data: Vec<Vec<opencv::core::Vec3b>> = frame.to_vec_2d().unwrap();
 
-            // convert from 3 channel to 4
             let img_data = data
                 .iter()
                 .map(|row| {
                     row.iter()
-                        .map(|raw_pixel| {
-                            let mut pixel = vec![255 as u8; 4];
-                            raw_pixel.iter().enumerate().for_each(|(i, v)| {
-                                pixel[i] = *v;
-                            });
-                            pixel
-                        })
+                        .map(|pixel| pixel.iter().map(|v| *v).collect::<Vec<u8>>())
                         .flatten()
                         .collect::<Vec<u8>>()
                 })
@@ -196,7 +190,21 @@ impl WebcamUniforms {
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
         if let Some(video_texture) = &self.video_texture {
-            video_texture.upload_data(device, encoder, &self.frame_data[..]);
+            let width = self.data.video_size.x as u32;
+            let height = self.data.video_size.y as u32;
+
+            let image = image::ImageBuffer::from_fn(width, height, |x, y| {
+                let index = (((height - y - 1) * width + x) * 3) as usize;
+                image::Rgba([
+                    self.frame_data[index],
+                    self.frame_data[index + 1],
+                    self.frame_data[index + 2],
+                    std::u8::MAX,
+                ])
+            });
+
+            let flat_samples = image.as_flat_samples();
+            video_texture.upload_data(device, encoder, &flat_samples.as_slice());
         }
     }
 }
