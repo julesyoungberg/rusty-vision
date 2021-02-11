@@ -8,6 +8,7 @@ edition = "2018"
 apodize = "1.0.0"
 cpal = "0.13.1"
 bytemuck = { version = "1.4", features = [ "derive" ] }
+half = "1.7.1"
 nannou = "0.15"
 notify = "4.0.12"
 opencv = {version = "0.49", features = ["clang-runtime"]}

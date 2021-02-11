@@ -1,3 +1,4 @@
+use half::f16;
 use nannou::prelude::*;
 use opencv::prelude::*;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -47,6 +48,8 @@ impl WebcamUniforms {
         self.running = self.start_session();
     }
 
+    /// Starts a webcam session.
+    /// Spawns a thread to consumer webcam data with OpenCV.
     pub fn start_session(&mut self) -> bool {
         if self.running {
             return true;
@@ -58,9 +61,14 @@ impl WebcamUniforms {
         let (close_channel_tx, close_channel_rx) = channel();
         self.close_channel_tx = Some(close_channel_tx);
 
-        let mut capture = opencv::videoio::VideoCapture::default().unwrap();
+        let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
+
+        let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH);
+        let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT);
+        println!("Capture dimensions: [{:?}, {:?}]", width, height);
 
         self.capture_thread = Some(thread::spawn(move || loop {
+            // read from camera
             let mut frame = opencv::core::Mat::default().unwrap();
             match capture.read(&mut frame) {
                 Ok(success) => {
@@ -76,7 +84,28 @@ impl WebcamUniforms {
                 }
             }
 
-            println!("captured frame: {:?}", frame);
+            // get usable data
+            let data: Vec<Vec<opencv::core::Vec3b>> = frame.to_vec_2d().unwrap();
+            println!("data dimensions: [{:?}, {:?}]", data.len(), data[0].len());
+
+            // convert from u8 to f16 and flatten
+            let img_data = data
+                .iter()
+                .map(|row| {
+                    row.iter()
+                        .map(|pixel| {
+                            pixel
+                                .iter()
+                                .map(|v| f16::from_f32(*v as f32 / 255.0))
+                                .collect::<Vec<f16>>()
+                        })
+                        .flatten()
+                        .collect::<Vec<f16>>()
+                })
+                .flatten()
+                .collect::<Vec<f16>>();
+
+            // push to ring buffer for consumption by main thread
 
             if let Ok(()) = close_channel_rx.try_recv() {
                 println!("Closing capture thread");
