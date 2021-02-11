@@ -66,8 +66,8 @@ impl Bufferable<Data> for AudioUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
-        Some(vec![&self.mfcc_texture, &self.spectrum_texture])
+    fn textures(&self) -> Vec<&wgpu::Texture> {
+        vec![&self.mfcc_texture, &self.spectrum_texture]
     }
 }
 

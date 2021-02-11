@@ -40,20 +40,18 @@ impl UniformBuffer {
         let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
         let mut texture_views = vec![];
 
-        if let Some(texs) = &textures {
-            if texs.len() > 0 {
-                layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
+        if textures.len() > 0 {
+            layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
 
-                for tex in texs.iter() {
-                    let texture_view = tex.view().build();
-                    layout_builder = layout_builder.sampled_texture(
-                        wgpu::ShaderStage::FRAGMENT,
-                        false,
-                        wgpu::TextureViewDimension::D2,
-                        texture_view.component_type(),
-                    );
-                    texture_views.push(texture_view);
-                }
+            for texture in textures.iter() {
+                let texture_view = texture.view().build();
+                layout_builder = layout_builder.sampled_texture(
+                    wgpu::ShaderStage::FRAGMENT,
+                    false,
+                    wgpu::TextureViewDimension::D2,
+                    texture_view.component_type(),
+                );
+                texture_views.push(texture_view);
             }
         }
 
@@ -181,7 +179,7 @@ impl BufferStore {
         let noise_uniforms = noise::NoiseUniforms::new();
         let noise_uniform_buffer = UniformBuffer::new(device, &noise_uniforms);
 
-        let webcam_uniforms = webcam::WebcamUniforms::new(device);
+        let webcam_uniforms = webcam::WebcamUniforms::new();
         let webcam_uniform_buffer = UniformBuffer::new(device, &webcam_uniforms);
 
         // store buffers in map
@@ -213,6 +211,7 @@ impl BufferStore {
     pub fn set_program_defaults(
         &mut self,
         app: &App,
+        device: &wgpu::Device,
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
     ) {
@@ -235,7 +234,12 @@ impl BufferStore {
         }
 
         if subscriptions.webcam {
-            self.webcam_uniforms.set_defaults(defaults);
+            self.webcam_uniforms.set_defaults(device, defaults);
+            if self.webcam_uniforms.updated {
+                let webcam_uniform_buffer = UniformBuffer::new(device, &self.webcam_uniforms);
+                self.buffers
+                    .insert(String::from("webcam"), webcam_uniform_buffer);
+            }
         }
     }
 
@@ -315,6 +319,7 @@ impl BufferStore {
         }
 
         if subscriptions.webcam {
+            self.webcam_uniforms.update_texture(device, encoder);
             self.buffers
                 .get("webcam")
                 .unwrap()

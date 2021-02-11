@@ -4,7 +4,7 @@ use nannou::prelude::*;
 pub trait Bufferable<T>: Sized {
     fn as_bytes(&self) -> &[u8];
 
-    fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
-        None
+    fn textures(&self) -> Vec<&wgpu::Texture> {
+        vec![]
     }
 }

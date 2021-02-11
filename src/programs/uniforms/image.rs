@@ -28,8 +28,8 @@ impl Bufferable<Data> for ImageUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
-        Some(vec![&self.image1_texture, &self.image2_texture])
+    fn textures(&self) -> Vec<&wgpu::Texture> {
+        vec![&self.image1_texture, &self.image2_texture]
     }
 }
 
@@ -38,13 +38,13 @@ impl ImageUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
         let image1_texture = wgpu::TextureBuilder::new()
             .size([1, 1])
-            .usage(wgpu::TextureUsage::OUTPUT_ATTACHMENT | wgpu::TextureUsage::SAMPLED)
+            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
             .format(wgpu::TextureFormat::Rgba16Float)
             .build(device);
 
         let image2_texture = wgpu::TextureBuilder::new()
             .size([1, 1])
-            .usage(wgpu::TextureUsage::OUTPUT_ATTACHMENT | wgpu::TextureUsage::SAMPLED)
+            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
             .format(wgpu::TextureFormat::Rgba16Float)
             .build(device);
 

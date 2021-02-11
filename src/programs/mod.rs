@@ -89,6 +89,7 @@ impl ProgramStore {
             uniforms::get_subscriptions(&program_uniforms.get(program_name).unwrap());
         buffer_store.set_program_defaults(
             app,
+            device,
             &current_subscriptions,
             &program_defaults.get(program_name).unwrap(),
         );
@@ -141,15 +142,19 @@ impl ProgramStore {
             }
         }
 
-        // check for a UI program change
-        if self.current_program().is_new() {
+        if self.current_program().is_new()
+            || self.buffer_store.image_uniforms.updated
+            || self.buffer_store.webcam_uniforms.updated
+        {
             self.compile_current(device, num_samples);
-        }
 
-        // check for an image change
-        if self.buffer_store.image_uniforms.updated {
-            self.compile_current(device, num_samples);
-            self.buffer_store.image_uniforms.updated = false;
+            if self.buffer_store.image_uniforms.updated {
+                self.buffer_store.image_uniforms.updated = false;
+            }
+
+            if self.buffer_store.webcam_uniforms.updated {
+                self.buffer_store.webcam_uniforms.updated = false;
+            }
         }
     }
 
@@ -173,7 +178,7 @@ impl ProgramStore {
     }
 
     /// Selects the current program performs any housekeeping / initialization
-    pub fn select_program(&mut self, app: &App, selected: usize) {
+    pub fn select_program(&mut self, app: &App, device: &wgpu::Device, selected: usize) {
         if selected == self.current_program {
             return;
         }
@@ -191,6 +196,7 @@ impl ProgramStore {
             uniforms::get_subscriptions(&self.program_uniforms.get(name).unwrap());
         self.buffer_store.set_program_defaults(
             app,
+            device,
             &self.current_subscriptions,
             &self.program_defaults.get(name).unwrap(),
         );

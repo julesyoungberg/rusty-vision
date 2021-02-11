@@ -1,6 +1,6 @@
-use half::f16;
 use nannou::prelude::*;
 use opencv::prelude::*;
+use ringbuf::{Consumer, RingBuffer};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
@@ -10,15 +10,20 @@ use crate::programs::uniforms::base::Bufferable;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub image_size: Vector2,
+    pub video_size: Vector2,
 }
 
 pub struct WebcamUniforms {
+    pub updated: bool,
+
     capture_thread: Option<std::thread::JoinHandle<()>>,
     close_channel_tx: Option<Sender<()>>,
     data: Data,
     error_channel_rx: Option<Receiver<String>>,
+    frame_data: Vec<u8>,
     running: bool,
+    video_consumer: Option<Consumer<Vec<u8>>>,
+    video_texture: Option<wgpu::Texture>,
 }
 
 impl Bufferable<Data> for WebcamUniforms {
@@ -26,31 +31,42 @@ impl Bufferable<Data> for WebcamUniforms {
         unsafe { wgpu::bytes::from(&self.data) }
     }
 
-    fn textures(&self) -> Option<Vec<&wgpu::Texture>> {
-        None
+    fn textures(&self) -> Vec<&wgpu::Texture> {
+        match &self.video_texture {
+            Some(t) => vec![&t],
+            None => vec![],
+        }
     }
 }
 
 impl WebcamUniforms {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new() -> Self {
         Self {
             capture_thread: None,
             close_channel_tx: None,
             data: Data {
-                image_size: pt2(0.0, 0.0),
+                video_size: pt2(0.0, 0.0),
             },
             error_channel_rx: None,
+            frame_data: vec![],
             running: false,
+            updated: false,
+            video_consumer: None,
+            video_texture: None,
         }
     }
 
-    pub fn set_defaults(&mut self, default: &Option<config::ProgramDefaults>) {
-        self.running = self.start_session();
+    pub fn set_defaults(
+        &mut self,
+        device: &wgpu::Device,
+        _default: &Option<config::ProgramDefaults>,
+    ) {
+        self.running = self.start_session(device);
     }
 
     /// Starts a webcam session.
     /// Spawns a thread to consumer webcam data with OpenCV.
-    pub fn start_session(&mut self) -> bool {
+    pub fn start_session(&mut self, device: &wgpu::Device) -> bool {
         if self.running {
             return true;
         }
@@ -63,9 +79,26 @@ impl WebcamUniforms {
 
         let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
 
-        let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH);
-        let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT);
-        println!("Capture dimensions: [{:?}, {:?}]", width, height);
+        let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH).unwrap();
+        let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT).unwrap();
+
+        self.data.video_size = pt2(width as f32, height as f32);
+
+        self.video_texture = Some(
+            wgpu::TextureBuilder::new()
+                .size([width as u32, height as u32])
+                .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
+                .format(wgpu::TextureFormat::Rgba8Uint)
+                .build(device),
+        );
+        self.frame_data = vec![0 as u8; (width * height * 4.0) as usize];
+
+        let video_ring_buffer = RingBuffer::<Vec<u8>>::new(2);
+        let (mut video_producer, video_consumer) = video_ring_buffer.split();
+        video_producer
+            .push(vec![0 as u8; (width * height * 4.0) as usize])
+            .unwrap();
+        self.video_consumer = Some(video_consumer);
 
         self.capture_thread = Some(thread::spawn(move || loop {
             // read from camera
@@ -86,32 +119,34 @@ impl WebcamUniforms {
 
             // get usable data
             let data: Vec<Vec<opencv::core::Vec3b>> = frame.to_vec_2d().unwrap();
-            println!("data dimensions: [{:?}, {:?}]", data.len(), data[0].len());
 
-            // convert from u8 to f16 and flatten
+            // convert from 3 channel to 4
             let img_data = data
                 .iter()
                 .map(|row| {
                     row.iter()
-                        .map(|pixel| {
+                        .map(|raw_pixel| {
+                            let mut pixel = vec![255 as u8; 4];
+                            raw_pixel.iter().enumerate().for_each(|(i, v)| {
+                                pixel[i] = *v;
+                            });
                             pixel
-                                .iter()
-                                .map(|v| f16::from_f32(*v as f32 / 255.0))
-                                .collect::<Vec<f16>>()
                         })
                         .flatten()
-                        .collect::<Vec<f16>>()
+                        .collect::<Vec<u8>>()
                 })
                 .flatten()
-                .collect::<Vec<f16>>();
+                .collect::<Vec<u8>>();
 
-            // push to ring buffer for consumption by main thread
+            video_producer.push(img_data).ok();
 
             if let Ok(()) = close_channel_rx.try_recv() {
                 println!("Closing capture thread");
                 break;
             }
         }));
+
+        self.updated = true;
 
         return true;
     }
@@ -140,6 +175,28 @@ impl WebcamUniforms {
             println!("Webcam error: {:?}", err);
             self.end_session();
             return;
+        }
+
+        match self.video_consumer.take() {
+            Some(mut c) => {
+                let popped = c.pop();
+                self.video_consumer = Some(c);
+                match popped {
+                    Some(d) => self.frame_data = d,
+                    None => (),
+                };
+            }
+            None => (),
+        };
+    }
+
+    pub fn update_texture(
+        &self,
+        device: &wgpu::Device,
+        encoder: &mut nannou::wgpu::CommandEncoder,
+    ) {
+        if let Some(video_texture) = &self.video_texture {
+            video_texture.upload_data(device, encoder, &self.frame_data[..]);
         }
     }
 }

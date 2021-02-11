@@ -44,7 +44,7 @@ fn controls_height(model: &mut app::Model) -> f32 {
 }
 
 /// Main UI logic / layout
-pub fn update(app: &App, model: &mut app::Model) {
+pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     let mut height = controls_height(model);
     let border = 40.0;
     let scroll = height > app_config::SIZE[1] as f32 - border;
@@ -87,7 +87,7 @@ pub fn update(app: &App, model: &mut app::Model) {
         .down(5.0)
         .set(model.widget_ids.current_program, ui)
     {
-        model.program_store.select_program(app, selected);
+        model.program_store.select_program(app, device, selected);
     }
 
     let mut left = -200.0;
