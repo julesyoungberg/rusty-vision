@@ -24,6 +24,7 @@ impl Bufferable<Data> for GeneralUniforms {
 
 impl GeneralUniforms {
     pub fn new(resolution: Vector2) -> Self {
+        println!("resolution: {:?}", resolution);
         Self {
             clock: SystemTime::now(),
             data: Data {

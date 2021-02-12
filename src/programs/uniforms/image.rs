@@ -91,7 +91,6 @@ impl ImageUniforms {
             _ => return,
         };
 
-        println!("updated image texture");
         self.updated = true;
     }
 

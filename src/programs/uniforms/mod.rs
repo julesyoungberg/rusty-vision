@@ -256,7 +256,6 @@ impl BufferStore {
 
         if subscriptions.image && self.image_uniforms.updated {
             // recreate the uniform buffer object
-            println!("rebuilding image bind group");
             let image_uniform_buffer = UniformBuffer::new(device, &self.image_uniforms);
             self.buffers
                 .insert(String::from("image"), image_uniform_buffer);

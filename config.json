@@ -1,5 +1,5 @@
 {
-  "default": "webcamCells",
+  "default": "kaleidoscope",
   "programs": {
     "basic": {
       "pipeline": {
@@ -44,6 +44,16 @@
       "defaults": {
         "image1": "fractal1.png",
         "image2": "fractal2.png"
+      }
+    },
+    "kaleidoscope": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kaleidoscope.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
       }
     },
     "mandelbox": {
