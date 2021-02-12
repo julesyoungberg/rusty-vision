@@ -194,11 +194,12 @@ impl WebcamUniforms {
             let height = self.data.video_size.y as u32;
 
             let image = image::ImageBuffer::from_fn(width, height, |x, y| {
-                let index = (((height - y - 1) * width + x) * 3) as usize;
+                let index = (((height - y - 1) * width + (width - x - 1)) * 3) as usize;
+                // convert from BGR to RGB
                 image::Rgba([
-                    self.frame_data[index],
-                    self.frame_data[index + 1],
                     self.frame_data[index + 2],
+                    self.frame_data[index + 1],
+                    self.frame_data[index],
                     std::u8::MAX,
                 ])
             });

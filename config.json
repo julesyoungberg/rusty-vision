@@ -1,5 +1,5 @@
 {
-  "default": "webcam",
+  "default": "webcamCells",
   "programs": {
     "basic": {
       "pipeline": {
@@ -145,6 +145,13 @@
       "pipeline": {
         "vert": "basic.vert",
         "frag": "webcam.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    },
+    "webcamCells": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "webcamCells.frag"
       },
       "uniforms": ["general", "webcam"]
     }
