@@ -38,4 +38,8 @@ impl GeneralUniforms {
         let elapsed = self.clock.elapsed().unwrap();
         self.data.time = elapsed.as_millis() as f32 / 1000.0;
     }
+
+    pub fn set_size(&mut self, size: Vector2) {
+        self.data.resolution = size;
+    }
 }

@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 use std::collections::HashMap;
 
-use crate::app_config;
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
@@ -153,7 +152,7 @@ pub struct BufferStore {
 }
 
 impl BufferStore {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, size: Vector2) -> Self {
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
         let audio_uniform_buffer = UniformBuffer::new(device, &audio_uniforms);
@@ -164,10 +163,7 @@ impl BufferStore {
         let color_uniforms = color::ColorUniforms::new();
         let color_uniform_buffer = UniformBuffer::new(device, &color_uniforms);
 
-        let general_uniforms = general::GeneralUniforms::new(pt2(
-            app_config::SIZE[0] as f32,
-            app_config::SIZE[1] as f32,
-        ));
+        let general_uniforms = general::GeneralUniforms::new(size);
         let general_uniform_buffer = UniformBuffer::new(device, &general_uniforms);
 
         let geometry_uniforms = geometry::GeometryUniforms::new();

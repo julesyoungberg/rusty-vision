@@ -20,6 +20,8 @@ fn model(app: &App) -> app::Model {
         .key_pressed(key_pressed)
         .unfocused(unfocused)
         .focused(focused)
+        .resizable(true)
+        .resized(resized)
         .view(view)
         .build()
         .unwrap();
@@ -27,7 +29,8 @@ fn model(app: &App) -> app::Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
-    let mut program_store = programs::ProgramStore::new(app, device);
+    let size = pt2(app_config::SIZE[0] as f32, app_config::SIZE[1] as f32);
+    let mut program_store = programs::ProgramStore::new(app, device, size);
     program_store.compile_current(device, msaa_samples);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
@@ -46,6 +49,7 @@ fn model(app: &App) -> app::Model {
         ui_show_geometry: false,
         ui_show_image: false,
         ui_show_noise: false,
+        size,
         vertex_buffer,
     }
 }
@@ -104,6 +108,15 @@ fn unfocused(_app: &App, model: &mut app::Model) {
 
 fn focused(_app: &App, model: &mut app::Model) {
     model.program_store.unpause();
+}
+
+fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
+    model.size = size;
+    model
+        .program_store
+        .buffer_store
+        .general_uniforms
+        .set_size(size);
 }
 
 /// Draw the state of the app to the frame

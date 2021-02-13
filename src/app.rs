@@ -88,5 +88,6 @@ pub struct Model {
     pub ui_show_geometry: bool,
     pub ui_show_image: bool,
     pub ui_show_noise: bool,
+    pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
 }

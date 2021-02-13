@@ -3,7 +3,6 @@ use nannou::ui::prelude::*;
 use nannou::ui::DrawToFrameError;
 
 use crate::app;
-use crate::app_config;
 
 mod audio_controls;
 mod color_controls;
@@ -47,9 +46,9 @@ fn controls_height(model: &mut app::Model) -> f32 {
 pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     let mut height = controls_height(model);
     let border = 40.0;
-    let scroll = height > app_config::SIZE[1] as f32 - border;
+    let scroll = height > model.size[1] - border;
     if scroll {
-        height = app_config::SIZE[1] as f32 - border;
+        height = model.size[1] - border;
     }
 
     // Calling `set_widgets` allows us to instantiate some widgets.
