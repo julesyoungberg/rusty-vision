@@ -9,7 +9,6 @@ use serde_json::{json, Value};
 use std::string::ToString;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time;
 use websocket::client::ClientBuilder;
 use websocket::OwnedMessage;
 
@@ -22,6 +21,11 @@ const NUM_MFCCS: usize = 12;
 const HOP_SIZE: usize = 512;
 const WINDOW_SIZE: usize = 1024;
 const SPECTRUM_SIZE: usize = 16;
+
+enum AudioMessage {
+    Data(Vec<f32>),
+    Close(()),
+}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -51,11 +55,11 @@ pub struct AudioUniforms {
 
     error_channel_rx: Option<Receiver<String>>,
     feature_consumer: Option<Consumer<serde_json::Value>>,
-    fft_close_channel_tx: Option<Sender<OwnedMessage>>,
+    fft_close_channel_tx: Option<Sender<AudioMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
     mfccs: [f32; NUM_MFCCS],
     recv_thread: Option<std::thread::JoinHandle<()>>,
-    send_close_channel_tx: Option<Sender<OwnedMessage>>,
+    send_close_channel_tx: Option<Sender<AudioMessage>>,
     send_thread: Option<std::thread::JoinHandle<()>>,
     spectrum: Vec<f32>,
     spectrum_consumer: Option<Consumer<Vec<f32>>>,
@@ -257,17 +261,21 @@ impl AudioUniforms {
         let error_channel_tx_1 = error_channel_tx.clone();
 
         let (audio_channel_tx, audio_channel_rx) = channel();
-        let (send_close_channel_tx, send_close_channel_rx) = channel();
-        self.send_close_channel_tx = Some(send_close_channel_tx);
+        self.send_close_channel_tx = Some(audio_channel_tx.clone());
 
         let (fft_input_channel_tx, fft_input_channel_rx) = channel();
+        self.fft_close_channel_tx = Some(fft_input_channel_tx.clone());
 
         // build audio stream
         let stream_builder = audio_device.build_input_stream(
             &audio_config.config(),
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                audio_channel_tx.send(data.to_vec()).unwrap();
-                fft_input_channel_tx.send(data.to_vec()).unwrap();
+                audio_channel_tx
+                    .send(AudioMessage::Data(data.to_vec()))
+                    .unwrap();
+                fft_input_channel_tx
+                    .send(AudioMessage::Data(data.to_vec()))
+                    .unwrap();
             },
             move |err| {
                 error_channel_tx
@@ -300,31 +308,24 @@ impl AudioUniforms {
         // forward audio from the audio thread to mirlin
         // check the close channel for messages to end the session
         self.send_thread = Some(thread::spawn(move || {
-            'sender: loop {
-                // check the audio channel for data, forward to mirlin if available
-                if let Ok(data) = audio_channel_rx.try_recv() {
-                    let frame_message = json!({
-                        "type": "audio_frame",
-                        "payload": &data[..],
-                    });
-                    let message = OwnedMessage::Text(frame_message.to_string());
-                    match sender.send_message(&message) {
-                        Ok(()) => (),
-                        Err(e) => {
-                            println!("Error sending frame: {:?}", e);
-                            break 'sender;
+            'sender: for message in audio_channel_rx.iter() {
+                match message {
+                    AudioMessage::Data(data) => {
+                        let frame_message = json!({
+                            "type": "audio_frame",
+                            "payload": &data[..],
+                        });
+                        let message = OwnedMessage::Text(frame_message.to_string());
+                        match sender.send_message(&message) {
+                            Ok(()) => (),
+                            Err(e) => {
+                                println!("Error sending frame: {:?}", e);
+                                break 'sender;
+                            }
                         }
                     }
+                    AudioMessage::Close(()) => break 'sender,
                 }
-
-                // check the close channel, break if needed
-                if let Ok(m) = send_close_channel_rx.try_recv() {
-                    if let OwnedMessage::Close(_) = m {
-                        break 'sender;
-                    }
-                }
-
-                thread::sleep(time::Duration::from_millis(10));
             }
 
             // close the connection and end the session
@@ -385,58 +386,51 @@ impl AudioUniforms {
         self.spectrum_consumer = Some(spectrum_consumer);
         let spec_group_size = (WINDOW_SIZE / 2) / SPECTRUM_SIZE;
 
-        let (fft_close_channel_tx, fft_close_channel_rx) = channel();
-        self.fft_close_channel_tx = Some(fft_close_channel_tx);
-
         // create the fft thread
         self.fft_thread = Some(thread::spawn(move || {
             let mut frames = vec![];
             frames.push(vec![0.0; HOP_SIZE]);
             frames.push(vec![0.0; HOP_SIZE]);
 
-            loop {
-                if let Ok(frame) = fft_input_channel_rx.try_recv() {
-                    // add new frame to memory and build the window
-                    frames.remove(0);
-                    frames.push(frame);
-                    let mut window = frames
-                        .clone()
-                        .into_iter()
-                        .flatten()
-                        .enumerate()
-                        .take(WINDOW_SIZE)
-                        .map(|(i, s)| Complex {
-                            re: s * hanning_window[i] as f32,
-                            im: 0.0,
-                        })
-                        .collect::<Vec<Complex<f32>>>();
+            for message in fft_input_channel_rx.iter() {
+                match message {
+                    AudioMessage::Data(frame) => {
+                        // add new frame to memory and build the window
+                        frames.remove(0);
+                        frames.push(frame);
+                        let mut window = frames
+                            .clone()
+                            .into_iter()
+                            .flatten()
+                            .enumerate()
+                            .take(WINDOW_SIZE)
+                            .map(|(i, s)| Complex {
+                                re: s * hanning_window[i] as f32,
+                                im: 0.0,
+                            })
+                            .collect::<Vec<Complex<f32>>>();
 
-                    // perform the fft to get the spectrum
-                    fft.process(&mut window[..]);
-                    let spectrum = window
-                        .iter()
-                        .take(WINDOW_SIZE / 2)
-                        .map(|s| s.norm())
-                        .collect::<Vec<f32>>();
+                        // perform the fft to get the spectrum
+                        fft.process(&mut window[..]);
+                        let spectrum = window
+                            .iter()
+                            .take(WINDOW_SIZE / 2)
+                            .map(|s| s.norm())
+                            .collect::<Vec<f32>>();
 
-                    // downsample the spectrum
-                    let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
-                    for i in 0..SPECTRUM_SIZE {
-                        let mut sum = 0.0;
-                        for j in 0..spec_group_size {
-                            sum += spectrum[(i * spec_group_size) + j];
+                        // downsample the spectrum
+                        let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
+                        for i in 0..SPECTRUM_SIZE {
+                            let mut sum = 0.0;
+                            for j in 0..spec_group_size {
+                                sum += spectrum[(i * spec_group_size) + j];
+                            }
+                            reduced_spectrum[i] = sum / spec_group_size as f32;
                         }
-                        reduced_spectrum[i] = sum / spec_group_size as f32;
-                    }
 
-                    spectrum_producer.push(reduced_spectrum).ok();
-                }
-
-                // check the close channel, break if needed
-                if let Ok(m) = fft_close_channel_rx.try_recv() {
-                    if let OwnedMessage::Close(_) = m {
-                        break;
+                        spectrum_producer.push(reduced_spectrum).ok();
                     }
+                    AudioMessage::Close(()) => break,
                 }
             }
         }));
@@ -460,12 +454,12 @@ impl AudioUniforms {
 
         // send a message to the close channel to stop the sender thread
         if let Some(close_channel) = self.send_close_channel_tx.take() {
-            close_channel.send(OwnedMessage::Close(None)).unwrap();
+            close_channel.send(AudioMessage::Close(())).unwrap();
         }
 
         // send a message to the close channel to stop the fft thread
         if let Some(close_channel) = self.fft_close_channel_tx.take() {
-            close_channel.send(OwnedMessage::Close(None)).unwrap();
+            close_channel.send(AudioMessage::Close(())).unwrap();
         }
 
         // join the sender thread
