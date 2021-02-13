@@ -140,7 +140,7 @@ impl WebcamUniforms {
                 break;
             }
 
-            thread::sleep(time::Duration::from_millis(10));
+            thread::sleep(time::Duration::from_millis(50));
         }));
 
         self.updated = true;
