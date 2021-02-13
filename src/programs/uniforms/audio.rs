@@ -608,6 +608,10 @@ impl AudioUniforms {
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
+        if !self.running {
+            return;
+        }
+
         self.mfcc_texture
             .upload_data(device, encoder, bytemuck::bytes_of(&self.mfccs));
 

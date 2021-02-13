@@ -329,12 +329,24 @@ impl BufferStore {
     }
 
     pub fn pause(&mut self, subscriptions: &UniformSubscriptions) {
+        if subscriptions.audio {
+            self.audio_uniforms.end_session();
+        }
+
         if subscriptions.webcam {
             self.webcam_uniforms.pause();
         }
     }
 
-    pub fn unpause(&mut self, subscriptions: &UniformSubscriptions) {
+    pub fn unpause(
+        &mut self,
+        subscriptions: &UniformSubscriptions,
+        defaults: &Option<config::ProgramDefaults>,
+    ) {
+        if subscriptions.audio {
+            self.audio_uniforms.set_defaults(defaults);
+        }
+
         if subscriptions.webcam {
             self.webcam_uniforms.unpause();
         }
