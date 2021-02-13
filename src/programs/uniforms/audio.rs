@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 use std::string::ToString;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+use std::time;
 use websocket::client::ClientBuilder;
 use websocket::OwnedMessage;
 
@@ -322,6 +323,8 @@ impl AudioUniforms {
                         break 'sender;
                     }
                 }
+
+                thread::sleep(time::Duration::from_millis(10));
             }
 
             // close the connection and end the session

@@ -4,6 +4,7 @@ use opencv::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+use std::time;
 
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
@@ -138,6 +139,8 @@ impl WebcamUniforms {
                 println!("Closing capture thread");
                 break;
             }
+
+            thread::sleep(time::Duration::from_millis(10));
         }));
 
         self.updated = true;
