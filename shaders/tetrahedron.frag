@@ -8,6 +8,7 @@ layout(location = 0) out vec4 fragColor;
 // uniform vec3 rsRotation1;
 // uniform vec3 rsRotation2;
 layout(set = 0, binding = 0) uniform GeneralUniforms {
+    vec2 mouse;
     vec2 resolution;
     float time;
 };

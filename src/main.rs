@@ -22,6 +22,7 @@ fn model(app: &App) -> app::Model {
         .focused(focused)
         .resizable(true)
         .resized(resized)
+        .mouse_moved(mouse_moved)
         .view(view)
         .build()
         .unwrap();
@@ -117,6 +118,14 @@ fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
         .buffer_store
         .general_uniforms
         .set_size(size);
+}
+
+fn mouse_moved(_app: &App, model: &mut app::Model, position: Vector2) {
+    model
+        .program_store
+        .buffer_store
+        .general_uniforms
+        .set_mouse(position);
 }
 
 /// Draw the state of the app to the frame

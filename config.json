@@ -1,5 +1,5 @@
 {
-  "default": "kifs",
+  "default": "basic",
   "programs": {
     "basic": {
       "pipeline": {
@@ -32,7 +32,7 @@
       },
       "uniforms": ["general", "image"],
       "defaults": {
-        "image1": "fractal1.png"
+        "image1": "forest.jpg"
       }
     },
     "imageFade": {

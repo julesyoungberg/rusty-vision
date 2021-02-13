@@ -5,6 +5,7 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
 layout(set = 0, binding = 0) uniform GeneralUniforms {
+    vec2 mouse;
     vec2 resolution;
     float time;
 };
