@@ -240,6 +240,8 @@ impl BufferStore {
                 self.buffers
                     .insert(String::from("webcam"), webcam_uniform_buffer);
             }
+        } else {
+            self.webcam_uniforms.end_session();
         }
     }
 
@@ -323,6 +325,18 @@ impl BufferStore {
                 .get("webcam")
                 .unwrap()
                 .update(device, encoder, &self.webcam_uniforms);
+        }
+    }
+
+    pub fn pause(&mut self, subscriptions: &UniformSubscriptions) {
+        if subscriptions.webcam {
+            self.webcam_uniforms.pause();
+        }
+    }
+
+    pub fn unpause(&mut self, subscriptions: &UniformSubscriptions) {
+        if subscriptions.webcam {
+            self.webcam_uniforms.unpause();
         }
     }
 }

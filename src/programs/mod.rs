@@ -227,4 +227,12 @@ impl ProgramStore {
     pub fn errors(&self) -> &program::ProgramErrors {
         &self.current_program().errors
     }
+
+    pub fn pause(&mut self) {
+        self.buffer_store.pause(&self.current_subscriptions);
+    }
+
+    pub fn unpause(&mut self) {
+        self.buffer_store.unpause(&self.current_subscriptions);
+    }
 }

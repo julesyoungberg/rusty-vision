@@ -18,6 +18,8 @@ fn model(app: &App) -> app::Model {
         .new_window()
         .size(app_config::SIZE[0], app_config::SIZE[1])
         .key_pressed(key_pressed)
+        .unfocused(unfocused)
+        .focused(focused)
         .view(view)
         .build()
         .unwrap();
@@ -94,6 +96,14 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
         Key::D => camera.rotate(util::rotate_around_axis(camera_up, -theta)),
         _ => (),
     }
+}
+
+fn unfocused(_app: &App, model: &mut app::Model) {
+    model.program_store.pause();
+}
+
+fn focused(_app: &App, model: &mut app::Model) {
+    model.program_store.unpause();
 }
 
 /// Draw the state of the app to the frame

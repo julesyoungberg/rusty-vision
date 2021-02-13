@@ -9,6 +9,12 @@ use std::time;
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
+enum Message {
+    Close(()),
+    Pause(()),
+    Unpause(()),
+}
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
@@ -19,7 +25,7 @@ pub struct WebcamUniforms {
     pub updated: bool,
 
     capture_thread: Option<std::thread::JoinHandle<()>>,
-    close_channel_tx: Option<Sender<()>>,
+    message_channel_tx: Option<Sender<Message>>,
     data: Data,
     error_channel_rx: Option<Receiver<String>>,
     frame_data: Vec<u8>,
@@ -45,7 +51,7 @@ impl WebcamUniforms {
     pub fn new() -> Self {
         Self {
             capture_thread: None,
-            close_channel_tx: None,
+            message_channel_tx: None,
             data: Data {
                 video_size: pt2(0.0, 0.0),
             },
@@ -76,8 +82,8 @@ impl WebcamUniforms {
         let (error_channel_tx, error_channel_rx) = channel();
         self.error_channel_rx = Some(error_channel_rx);
 
-        let (close_channel_tx, close_channel_rx) = channel();
-        self.close_channel_tx = Some(close_channel_tx);
+        let (message_channel_tx, message_channel_rx) = channel();
+        self.message_channel_tx = Some(message_channel_tx);
 
         let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
 
@@ -135,9 +141,24 @@ impl WebcamUniforms {
 
             video_producer.push(img_data).ok();
 
-            if let Ok(()) = close_channel_rx.try_recv() {
-                println!("Closing capture thread");
-                break;
+            if let Ok(msg) = message_channel_rx.try_recv() {
+                match msg {
+                    Message::Close(()) => {
+                        // break from the outer loop
+                        println!("Closing capture thread");
+                        break;
+                    }
+                    Message::Pause(()) => {
+                        // the stream has been paused, block it is unpaused
+                        for message in message_channel_rx.iter() {
+                            match message {
+                                Message::Unpause(()) => break, // break from this inner loop
+                                _ => (),                       // continue waiting
+                            }
+                        }
+                    }
+                    Message::Unpause(()) => (),
+                }
             }
 
             thread::sleep(time::Duration::from_millis(50));
@@ -153,13 +174,15 @@ impl WebcamUniforms {
             return;
         }
 
-        if let Some(close_channel) = self.close_channel_tx.take() {
-            close_channel.send(()).unwrap();
+        if let Some(message_channel) = self.message_channel_tx.take() {
+            message_channel.send(Message::Close(())).unwrap();
         }
 
         if let Some(handle) = self.capture_thread.take() {
             handle.join().unwrap();
         }
+
+        self.running = false;
     }
 
     pub fn update(&mut self) {
@@ -209,6 +232,20 @@ impl WebcamUniforms {
 
             let flat_samples = image.as_flat_samples();
             video_texture.upload_data(device, encoder, &flat_samples.as_slice());
+        }
+    }
+
+    pub fn pause(&mut self) {
+        if let Some(message_channel) = self.message_channel_tx.take() {
+            message_channel.send(Message::Pause(())).unwrap();
+            self.message_channel_tx = Some(message_channel);
+        }
+    }
+
+    pub fn unpause(&mut self) {
+        if let Some(message_channel) = self.message_channel_tx.take() {
+            message_channel.send(Message::Unpause(())).unwrap();
+            self.message_channel_tx = Some(message_channel);
         }
     }
 }
