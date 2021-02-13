@@ -16,6 +16,8 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
     vec2 image2_size;
 };
 
+#define PI 3.14159265359
+
 // https://www.iquilezles.org/www/articles/deform/deform.htm
 // some things to try
 // u = x*cos(2*r) - y*sin(2*r)
@@ -37,19 +39,19 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
 
 void main() {
     vec2 st = uv * resolution / resolution.y;
-    st *= 2.0;
+    st *= 0.1;
 
     float x = st.x;
     float y = st.y;
 
-    float d = length(st);
+    float r = length(st);
     float a = atan(y, x);
 
-    float u = x * cos(2.0 * d + time) - y * sin(2.0 * d);
-    float v = y * cos(2.0 * d) + x * sin(2.0 * d - time);
+    float u = 0.02 * y + 0.03 * cos(a * 3 + time * 0.1) / (r * 0.5 * sin(time * 0.01));
+    float v = 0.02 * x + 0.03 * sin(a * 3 - time * 0.1) / r;
     
     vec2 coord = vec2(u, v) * 0.5 + 0.5;
-    vec3 color = texture(sampler2D(image1, image_sampler), coord).xyz;
+    vec3 color = texture(sampler2D(image1, image_sampler), mod(coord, 1.0)).xyz;
     
 	frag_color = vec4(color, 1.0);
 }

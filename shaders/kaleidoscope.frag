@@ -38,7 +38,7 @@ vec2 transform(vec2 st) {
 }
 
 vec4 scene(vec2 st) {
-    return texture(sampler2D(image1, image_sampler), mod(transform(mod(st + 0.1, 1.0)) * 2.0, 1.0));
+    return texture(sampler2D(image1, image_sampler), mod(transform(st) * 2.0, 1.0));
 }
 
 void main() {
