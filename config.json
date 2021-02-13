@@ -1,5 +1,5 @@
 {
-  "default": "kaleidoscope",
+  "default": "kifs",
   "programs": {
     "basic": {
       "pipeline": {
@@ -50,6 +50,16 @@
       "pipeline": {
         "vert": "basic.vert",
         "frag": "kaleidoscope.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kifs.frag"
       },
       "uniforms": ["general", "image"],
       "defaults": {

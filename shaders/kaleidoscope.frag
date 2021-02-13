@@ -22,15 +22,15 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
 vec2 kaleidoscope(vec2 st) {
     float a = atan(st.y, st.x);
     float r = pow(length(st), 0.9);
-    float p = sin(2.0 * PI * time / 10.0);
-    float q = 2.0 * PI / (5.0 + 4.0 * p);
+    float p = sin(2.0 * PI * time * 0.02);
+    float q = 2.0 * PI / 9.0;
     a = abs(mod(a, q) - 0.5 * q);
-    float factor = pow(r, 1.3 + 1.3 / (1.3 + sin(2.0 * PI * time / 3.0))) * 0.1;
+    float factor = pow(r, 1.3) * 0.1;
     return vec2(cos(a), sin(a)) * factor;
 }
 
 vec2 transform(vec2 st) {
-    float a = time * 0.1;
+    float a = time * 0.02;
     vec2 v;
     v.x = st.x * cos(a) - st.y * sin(a) - 0.3 * sin(a);
     v.y = st.x * sin(a) + st.y * cos(a) + 0.3 * cos(a);
@@ -38,7 +38,7 @@ vec2 transform(vec2 st) {
 }
 
 vec4 scene(vec2 st) {
-    return texture(sampler2D(image1, image_sampler), transform(mod(st + 0.1, 1.0)) * 2.0);
+    return texture(sampler2D(image1, image_sampler), mod(transform(mod(st + 0.1, 1.0)) * 2.0, 1.0));
 }
 
 void main() {
