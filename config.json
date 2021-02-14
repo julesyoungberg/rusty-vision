@@ -1,5 +1,5 @@
 {
-  "default": "basic",
+  "default": "shapeScope",
   "programs": {
     "basic": {
       "pipeline": {
@@ -93,6 +93,13 @@
         "shape_rotation": [0.0, 0.0, 0.0],
         "color_mode": 0
       }
+    },
+    "shapeScope": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "shapeScope.frag"
+      },
+      "uniforms": ["general"]
     },
     "soundBall": {
       "pipeline": {
