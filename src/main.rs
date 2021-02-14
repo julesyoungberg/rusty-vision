@@ -64,7 +64,9 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
 
-    interface::update(app, device, model);
+    if model.show_controls {
+        interface::update(app, device, model);
+    }
 
     model.program_store.update_uniforms(device);
 

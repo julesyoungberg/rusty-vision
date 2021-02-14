@@ -1,5 +1,5 @@
 {
-  "default": "shapeScope",
+  "default": "kaleidoscope1Image",
   "programs": {
     "basic": {
       "pipeline": {
@@ -46,10 +46,27 @@
         "image2": "fractal2.png"
       }
     },
-    "kaleidoscope": {
+    "kaleidoImage": {
       "pipeline": {
         "vert": "basic.vert",
-        "frag": "kaleidoscope.frag"
+        "frag": "kaleidoImage.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kaleidoscope1": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kaleidoscope1.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "kaleidoscope1Image": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kaleidoscope1Image.frag"
       },
       "uniforms": ["general", "image"],
       "defaults": {
