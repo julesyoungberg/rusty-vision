@@ -1,5 +1,5 @@
 {
-  "default": "kaleidoscope1Image",
+  "default": "kifs3",
   "programs": {
     "basic": {
       "pipeline": {
@@ -77,6 +77,26 @@
       "pipeline": {
         "vert": "basic.vert",
         "frag": "kifs.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs2": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kifs2.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs3": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "kifs3.frag"
       },
       "uniforms": ["general", "image"],
       "defaults": {

@@ -23,38 +23,40 @@ vec2 N(float angle) {
     return vec2(sin(angle), cos(angle));
 }
 
+float sdBox(in vec2 p, in vec2 b) {
+    vec2 d = abs(p) - b;
+    return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
 void main() {
     vec2 st = uv;
     st.y *= resolution.y / resolution.x;
     st *= 1.5;
     vec3 color = vec3(0);
+    vec2 size = vec2(0.5);
 
-    st.x = abs(st.x);
-    st.y += tan(5.0 / 6.0 * PI) * 0.5;
-    vec2 n = N(5.0 / 6.0 * PI);
-    float d = dot(st - vec2(0.5, 0.0), n);
-    st -= n * max(d, 0.0) * 2.0;
-
-    n = N(2.0 / 3.0 * PI); // sin(time * 0.0) * PI);
-    float factor = 3.0; // (sin(time * 0.01) * 0.5 + 0.75) * 5.0;
-    float shift = -1.5; // * sin(time * 0.05 - 1.5);
     float scale = 1.0;
-    st.x -= shift / factor; // compensate for -= 1.5
-    for (int i = 0; i < 4; i++) {
-        st *= factor;
-        scale *= factor;
-        st.x += shift;
+    float dist = 100.0;
 
-        st.x = abs(st.x);
-        st.x -= 0.5;
-        st -= n * min(dot(st, n), 0.0) * 2.0;
+    for (int i = 0; i < 10; i++) {
+        dist = min(dist, sdBox(st, size) * scale);
+
+        if (st.y > st.x) {
+            st = vec2(st.y, st.x);
+        }
+
+        if (st.y < -st.x) {
+            st = vec2(-st.y, st.x);
+        }
+
+        st *= 3.0;
+        scale /= 3.0;
+        st.x -= 2.0;
     }
 
-    st /= scale;
-    // d = length(st - vec2(clamp(st.x, -1.0, 1.0), 0));
-    // color += smoothstep(1.0 / resolution.y, 0.0, d / scale);
+    st *= scale;
     color = texture(sampler2D(image1, image_sampler), mod(st - time * 0.05, 1.0)).xyz;
-    // color.rg += st * 0.1;
+    // color += 1.0 - sign(dist);
 
     frag_color = vec4(color, 1.0);
 }

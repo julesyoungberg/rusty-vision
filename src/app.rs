@@ -90,4 +90,5 @@ pub struct Model {
     pub ui_show_noise: bool,
     pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
+    pub window_focused: bool,
 }

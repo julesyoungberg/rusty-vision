@@ -52,6 +52,7 @@ fn model(app: &App) -> app::Model {
         ui_show_noise: false,
         size,
         vertex_buffer,
+        window_focused: true,
     }
 }
 
@@ -61,6 +62,10 @@ fn model(app: &App) -> app::Model {
 /// This flag is set by the interface and unset by the profram store.
 /// Update order should be: interface, uniforms, shaders
 fn update(app: &App, model: &mut app::Model, _update: Update) {
+    if !model.window_focused {
+        return;
+    }
+
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
 
@@ -106,10 +111,12 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
 }
 
 fn unfocused(_app: &App, model: &mut app::Model) {
+    model.window_focused = false;
     model.program_store.pause();
 }
 
 fn focused(_app: &App, model: &mut app::Model) {
+    model.window_focused = true;
     model.program_store.unpause();
 }
 
@@ -167,6 +174,10 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
 
 /// Render app
 fn view(app: &App, model: &app::Model, frame: Frame) {
+    if !model.window_focused {
+        return;
+    }
+
     if !draw(model, &frame) {
         let draw = app.draw();
         draw.background().color(DARKGRAY);
