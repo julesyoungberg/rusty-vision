@@ -29,7 +29,7 @@ void main() {
     float scale = PI / 3.0;
 
     for (float i = 0.0; i < 3; i += 1.0) {
-        float scaleFactor = i + sin(time * 0.05) + 1.5;
+        float scaleFactor = i; // + sin(time * 0.05) + 1.5;
 
         float angle = time * scaleFactor * 0.01;
         st *= mat2(cos(angle + PI * 0.25 * vec4(0, 6, 2, 0)));
@@ -41,7 +41,7 @@ void main() {
         vec2 codir = dir.yx * vec2(-1, 1);
 
         st = vec2(dot(dir, st), dot(codir, st));
-        st.xy += vec2(sin(time), cos(time * 1.1)) * scaleFactor * 0.035;
+        st.xy += vec2(sin(time * 0.5), cos(time * 0.7)) * scaleFactor * 0.035;
         st = abs(fract(st + 0.5) * 2.0 - 1.0) * 0.7;
     }
 

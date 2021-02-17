@@ -18,6 +18,7 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
 };
 
 #define PI 3.14159265359
+#define PHI 1.6180339887
 
 vec2 N(float angle) {
     return vec2(sin(angle), cos(angle));
@@ -28,10 +29,17 @@ float sdBox(in vec2 p, in vec2 b) {
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
+float square(in vec2 p, in vec2 b) {
+    float angle = PI * 0.25 * time * -0.5;
+    float c = cos(angle);
+    float s = sin(angle);
+    return sdBox(p * mat2(c, -s, s, c), b);
+}
+
 void main() {
     vec2 st = uv;
     st.y *= resolution.y / resolution.x;
-    st *= 1.5;
+    st *= 3.0;
     vec3 color = vec3(0);
     vec2 size = vec2(0.5);
 
@@ -39,14 +47,28 @@ void main() {
     float dist = 100.0;
 
     for (int i = 0; i < 10; i++) {
-        dist = min(dist, sdBox(st, size) * scale);
+        float angle = time * 0.1 + i;
+        float c = cos(angle);
+        float s = sin(angle);
+        st *= mat2(c, -s, s, c);
 
-        st.x = abs(st.x);
-        st.y = abs(st.y);
+        bool even = mod(i, 2) == 0;
+        dist = min(dist, square(st, size) * scale);
 
-        st *= 3.0;
-        scale /= 3.0;
-        st -= 1.5;
+        if (even) {
+            st.x = abs(st.x);
+        } else {
+            st.y = abs(st.y);
+        }
+
+        st *= PHI;
+        scale /= PHI;
+
+        if (even) {
+            st.x -= PHI * sqrt(2);
+        } else {
+            st.y -= PHI * sqrt(2);
+        }
     }
 
     st *= scale;

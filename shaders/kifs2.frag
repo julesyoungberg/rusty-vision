@@ -31,7 +31,7 @@ float sdBox(in vec2 p, in vec2 b) {
 void main() {
     vec2 st = uv;
     st.y *= resolution.y / resolution.x;
-    st *= 1.5;
+    st *= 2.0;
     vec3 color = vec3(0);
     vec2 size = vec2(0.5);
 
@@ -41,17 +41,17 @@ void main() {
     for (int i = 0; i < 10; i++) {
         dist = min(dist, sdBox(st, size) * scale);
 
-        if (st.y > st.x) {
-            st = vec2(st.y, st.x);
-        }
+        float angle = time * 0.1;
+        float c = cos(angle);
+        float s = sin(angle);
+        st *= mat2(c, -s, s, c);
 
-        if (st.y < -st.x) {
-            st = vec2(-st.y, st.x);
-        }
+        st.x = abs(st.x);
+        st.y = abs(st.y);
 
         st *= 3.0;
         scale /= 3.0;
-        st.x -= 2.0;
+        st -= 1.5;
     }
 
     st *= scale;

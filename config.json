@@ -1,5 +1,5 @@
 {
-  "default": "kifs3",
+  "default": "kaleidoscope1",
   "programs": {
     "basic": {
       "pipeline": {
@@ -61,7 +61,10 @@
         "vert": "basic.vert",
         "frag": "kaleidoscope1.frag"
       },
-      "uniforms": ["general"]
+      "uniforms": ["general", "audio"],
+      "defaults": {
+        "audio_feature_smoothing": 0.97
+      }
     },
     "kaleidoscope1Image": {
       "pipeline": {
