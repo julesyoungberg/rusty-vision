@@ -40,9 +40,9 @@ float sdBox(in vec2 p, in vec2 b) {
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
-float square(in vec2 p) {
+float square(in vec2 p, in float width) {
     float dist = sdBox(p, vec2(1));
-    return smoothstep(0.005, 0.0, dist) - smoothstep(0.0, -0.005, dist);
+    return smoothstep(width, 0.0, dist) - smoothstep(0.0, -width, dist);
 }
 
 void main() {
@@ -54,19 +54,23 @@ void main() {
     float c = cos(angle);
     float s = sin(angle);
     st *= mat2(c, -s, s, c);
-    
+
     vec3 color = vec3(0);
 
     for (float i = 0.0; i < ITERATIONS; i += 1.0) {
-        float f = i / ITERATIONS;
-        float intensity = texture(sampler2D(spectrum, audio_sampler), vec2(f, 0)).x;
-        color += square(st) * hsv2rgb(vec3(f, 1, 1)) * intensity; // * exp(i * 0.5);
+        float m = mod(i * 3.2, ITERATIONS);
+        float intensity =
+            texture(sampler2D(spectrum, audio_sampler), vec2(m / ITERATIONS, 0))
+                .x;
+        color += square(st, 0.006 * intensity) *
+                 hsv2rgb(vec3(mod(i / ITERATIONS - time * 0.3, 1.0), 1, 1)) *
+                 sqrt(intensity * 0.5) * 0.1 * (m + 1.0);
 
         angle = (i + 1) * PI * 0.002 * sin(time * 0.5);
         c = cos(angle);
         s = sin(angle);
         st *= mat2(c, -s, s, c);
-        st *= sin(time * 0.7) * 0.05 + 0.95;
+        st *= (sin(time * 0.7) * 0.5 + 0.5) * 0.04 + 0.92;
     }
 
     frag_color = vec4(color, 1.0);
