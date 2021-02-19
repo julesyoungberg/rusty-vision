@@ -44,7 +44,7 @@ void main() {
             lgv *= mat2(c, -s, s, c);
 
             float center_dist = length(lid) * 0.3;
-            float r = mix(0.1, 1.5, pow(sin(t + center_dist), 2.0) * 0.5 + 0.5);
+            float r = mix(0.5 , 1.5, sin(t + center_dist) * 0.5 + 0.5);
             float circle_dist = length(lgv);
             m = Xor(smoothstep(r, r * 0.95, circle_dist), m);
         }

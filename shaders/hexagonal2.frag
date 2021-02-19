@@ -9,12 +9,13 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
-
 //@import util/hsv2rgb
 
 vec3 hsv2rgb(vec3 c);
+
+bool is_above_line(vec2 r, vec2 q, vec2 p) {
+    return dot(vec2(q.y - r.y, r.x - q.x), q - p) > 0.0;
+}
 
 float hex_dist(in vec2 p) {
     p = abs(p);
@@ -30,11 +31,9 @@ vec4 hex_coords(in vec2 st) {
 
     vec2 gv = length(a) < length(b) ? a : b;
 
-    float x = atan(gv.x, gv.y);
-    float y = 0.5 - hex_dist(gv);
     vec2 id = st - gv;
 
-    return vec4(x, y, id);
+    return vec4(gv, id);
 }
 
 void main() {
@@ -43,19 +42,33 @@ void main() {
 
     vec3 color = vec3(0);
 
-    st *= 10.0;
+    st *= 5.0;
 
     vec4 coords = hex_coords(st);
     vec2 gv = coords.xy;
     vec2 id = coords.zw;
 
     float i = dot(id, id);
-    float d = smoothstep(0.01, 0.03, gv.y * sin(i + time));
-    // color += c;
 
-    float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(mod(i * 0.1, 1), 0)).x;
-    color = d * hsv2rgb(vec3(sin(i + time * 0.5), 1, 1)).zxy * intensity * 2.0; // * log(intensity * 10.0);
-    // color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
+    vec2 center = vec2(0, 0);
+    vec2 right = vec2(sqrt(3.0) * 0.5, 0.5);
+    vec2 left = vec2(-sqrt(3.0) * 0.5, 0.5);
+    vec2 bottom = vec2(0.0, -1.0);
+
+    bool cr = is_above_line(center, right, gv);
+    bool cl = is_above_line(center, left, gv);
+    bool cb = is_above_line(center, bottom, gv);
+
+    float hue = 0.0;
+    if (cr && !cl) { // top
+        hue = 0.0;
+    } else if (!cr && cb) { // right 
+        hue = 0.33;
+    } else if (cl && !cb) { // left
+        hue = 0.66;
+    }
+
+    color = hsv2rgb(vec3(mod(hue + time * 0.2 + i * 0.4, 1), 0.8 + sin(time * 0.1 + i * 0.3 + hue * 2.0) * 0.1, 0.6 + sin(time * 0.06 + i * 0.7 + hue * 4.0) * 0.3));
 
     frag_color = vec4(color, 1);
 }
