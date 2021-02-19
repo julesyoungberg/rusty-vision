@@ -9,10 +9,9 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform sampler audio_sampler;
+layout(set = 1, binding = 0) uniform sampler mfcc_sampler;
 layout(set = 1, binding = 1) uniform texture2D mfccs;
-layout(set = 1, binding = 2) uniform texture2D spectrum;
-layout(set = 1, binding = 3) uniform AudioUniforms {
+layout(set = 1, binding = 2) uniform AudioFeatures {
     float dissonance;
     float energy;
     float loudness;
@@ -28,7 +27,11 @@ layout(set = 1, binding = 3) uniform AudioUniforms {
     float tristimulus3;
 };
 
-#define BANDS 16
+
+layout(set = 2, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 2, binding = 1) uniform texture2D spectrum;
+
+#define BANDS 32
 
 float circle(in vec2 st, in float radius) { 
     vec2 dist = st - vec2(0.5);
@@ -49,7 +52,7 @@ void main() {
     st = fract(st);
 
     vec3 tristimulus = vec3(tristimulus1, tristimulus2, tristimulus3);
-    float bandLoudness = texture(sampler2D(spectrum, audio_sampler), vec2(tilePos.x / BANDS, 0)).x;
+    float bandLoudness = texture(sampler2D(spectrum, spectrum_sampler), vec2(tilePos.x / BANDS, 0)).x;
     vec3 color = tristimulus + vec3(circle(st, bandLoudness * 0.05));
     // vec3 color = tristimulus + vec3(circle(st, clamp(log(bandLoudness + 1.0), 0.0, 0.25)));
 

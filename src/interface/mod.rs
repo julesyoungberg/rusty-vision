@@ -4,7 +4,8 @@ use nannou::ui::DrawToFrameError;
 
 use crate::app;
 
-mod audio_controls;
+mod audio_features_controls;
+mod audio_fft_controls;
 mod color_controls;
 mod components;
 mod errors;
@@ -19,9 +20,10 @@ fn controls_height(model: &mut app::Model) -> f32 {
     let subscriptions = &model.program_store.current_subscriptions;
 
     [
+        subscriptions.audio_features,
+        subscriptions.audio_fft,
         subscriptions.color,
         subscriptions.geometry,
-        subscriptions.audio,
         subscriptions.image,
         subscriptions.noise,
     ]
@@ -33,7 +35,8 @@ fn controls_height(model: &mut app::Model) -> f32 {
     });
 
     height = height
-        + audio_controls::height(model)
+        + audio_features_controls::height(model)
+        + audio_fft_controls::height(model)
         + color_controls::height(model)
         + geometry_controls::height(model)
         + image_controls::height(model)
@@ -142,25 +145,48 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     }
 
     //////////////////////////////////////////////////
-    // Audio Controls
+    // Audio Features Controls
     //////////////////////////////////////////////////
-    if model.program_store.current_subscriptions.audio {
+    if model.program_store.current_subscriptions.audio_features {
         for _click in components::button_big()
             .parent(model.widget_ids.controls_wrapper)
             .down(20.0)
             .left(left as f64)
-            .label("Audio")
-            .set(model.widget_ids.audio_folder, ui)
+            .label("Audio Features")
+            .set(model.widget_ids.audio_features_folder, ui)
         {
-            println!("toggle audio controls");
-            model.ui_show_audio = !model.ui_show_audio;
+            println!("toggle audio features controls");
+            model.ui_show_audio_features = !model.ui_show_audio_features;
         }
 
-        if model.ui_show_audio {
-            audio_controls::update(
+        if model.ui_show_audio_features {
+            audio_features_controls::update(
                 &model.widget_ids,
                 ui,
-                &mut model.program_store.buffer_store.audio_uniforms,
+                &mut model.program_store.buffer_store.audio_features_uniforms,
+            );
+        }
+    }
+
+    //////////////////////////////////////////////////
+    // Audio FFT Controls
+    //////////////////////////////////////////////////
+    if model.program_store.current_subscriptions.audio_fft {
+        for _click in components::button_big()
+            .parent(model.widget_ids.controls_wrapper)
+            .down(20.0)
+            .label("Audio FFT")
+            .set(model.widget_ids.audio_fft_folder, ui)
+        {
+            println!("toggle audio fft controls");
+            model.ui_show_audio_fft = !model.ui_show_audio_fft;
+        }
+
+        if model.ui_show_audio_fft {
+            audio_fft_controls::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.audio_fft_uniforms,
             );
         }
     }
@@ -229,8 +255,20 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     let compile_errors = model.program_store.errors();
     if compile_errors.keys().len() > 0 {
         errors::compilation_errors(&model.widget_ids, ui, &compile_errors);
-    } else if let Some(audio_error) = &model.program_store.buffer_store.audio_uniforms.error {
+    } else if let Some(audio_error) = &model.program_store.buffer_store.audio_source.error {
         errors::update(&model.widget_ids, ui, "Audio Error", audio_error.as_str());
+    } else if let Some(audio_error) = &model
+        .program_store
+        .buffer_store
+        .audio_features_uniforms
+        .error
+    {
+        errors::update(
+            &model.widget_ids,
+            ui,
+            "Audio Features Error",
+            audio_error.as_str(),
+        );
     }
 }
 

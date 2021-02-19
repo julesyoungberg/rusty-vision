@@ -5,6 +5,9 @@ use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 pub mod audio;
+pub mod audio_features;
+pub mod audio_fft;
+pub mod audio_source;
 pub mod base;
 pub mod camera;
 pub mod color;
@@ -23,7 +26,7 @@ pub mod webcam;
 pub struct UniformBuffer {
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
-    pub buffer: wgpu::Buffer,
+    pub buffer: Option<wgpu::Buffer>,
 }
 
 impl UniformBuffer {
@@ -33,8 +36,6 @@ impl UniformBuffer {
     {
         let data = uniforms.as_bytes();
         let textures = uniforms.textures();
-        let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-        let buffer = device.create_buffer_with_data(data, usage);
 
         let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
         let mut texture_views = vec![];
@@ -54,9 +55,15 @@ impl UniformBuffer {
             }
         }
 
-        let bind_group_layout = layout_builder
-            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
-            .build(device);
+        let mut buffer = None;
+        if data.len() > 0 {
+            layout_builder = layout_builder.uniform_buffer(wgpu::ShaderStage::FRAGMENT, false);
+            let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
+            let buff = device.create_buffer_with_data(data, usage);
+            buffer = Some(buff);
+        }
+
+        let bind_group_layout = layout_builder.build(device);
 
         let mut group_builder = wgpu::BindGroupBuilder::new();
         let sampler = wgpu::SamplerBuilder::new().build(device);
@@ -68,9 +75,11 @@ impl UniformBuffer {
             }
         }
 
-        let bind_group = group_builder
-            .buffer::<T>(&buffer, 0..1)
-            .build(device, &bind_group_layout);
+        if let Some(buff) = &buffer {
+            group_builder = group_builder.buffer::<T>(buff, 0..1);
+        }
+
+        let bind_group = group_builder.build(device, &bind_group_layout);
 
         Self {
             bind_group,
@@ -86,10 +95,12 @@ impl UniformBuffer {
         encoder: &mut nannou::wgpu::CommandEncoder,
         uniforms: &impl Bufferable<T>,
     ) {
-        let size = std::mem::size_of::<T>() as wgpu::BufferAddress;
-        let usage = wgpu::BufferUsage::COPY_SRC;
-        let next_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
-        encoder.copy_buffer_to_buffer(&next_buffer, 0, &self.buffer, 0, size);
+        if let Some(buffer) = &self.buffer {
+            let size = std::mem::size_of::<T>() as wgpu::BufferAddress;
+            let usage = wgpu::BufferUsage::COPY_SRC;
+            let next_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
+            encoder.copy_buffer_to_buffer(&next_buffer, 0, buffer, 0, size);
+        }
     }
 }
 
@@ -100,6 +111,8 @@ pub type UniformBuffers = HashMap<String, UniformBuffer>;
 #[derive(Debug)]
 pub struct UniformSubscriptions {
     pub audio: bool,
+    pub audio_features: bool,
+    pub audio_fft: bool,
     pub camera: bool,
     pub color: bool,
     pub general: bool,
@@ -113,6 +126,8 @@ pub struct UniformSubscriptions {
 pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
         audio: false,
+        audio_features: false,
+        audio_fft: false,
         camera: false,
         color: false,
         geometry: false,
@@ -124,6 +139,8 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
 
     names.iter().for_each(|n| match n.as_str() {
         "audio" => subscriptions.audio = true,
+        "audio_features" => subscriptions.audio_features = true,
+        "audio_fft" => subscriptions.audio_fft = true,
         "camera" => subscriptions.camera = true,
         "color" => subscriptions.color = true,
         "general" => subscriptions.general = true,
@@ -140,6 +157,9 @@ pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
 /// Stores all different uniforms.
 /// Mantains the uniform data and the corresponding GPU buffers.
 pub struct BufferStore {
+    pub audio_features_uniforms: audio_features::AudioFeaturesUniforms,
+    pub audio_fft_uniforms: audio_fft::AudioFftUniforms,
+    pub audio_source: audio_source::AudioSource,
     pub audio_uniforms: audio::AudioUniforms,
     pub buffers: UniformBuffers,
     pub camera_uniforms: camera::CameraUniforms,
@@ -153,9 +173,17 @@ pub struct BufferStore {
 
 impl BufferStore {
     pub fn new(device: &wgpu::Device, size: Vector2) -> Self {
+        let audio_source = audio_source::AudioSource::new();
+
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
         let audio_uniform_buffer = UniformBuffer::new(device, &audio_uniforms);
+
+        let audio_features_uniforms = audio_features::AudioFeaturesUniforms::new(device);
+        let audio_features_uniform_buffer = UniformBuffer::new(device, &audio_features_uniforms);
+
+        let audio_fft_uniforms = audio_fft::AudioFftUniforms::new(device);
+        let audio_fft_uniform_buffer = UniformBuffer::new(device, &audio_fft_uniforms);
 
         let camera_uniforms = camera::CameraUniforms::new();
         let camera_uniform_buffer = UniformBuffer::new(device, &camera_uniforms);
@@ -181,6 +209,11 @@ impl BufferStore {
         // store buffers in map
         let mut buffers = HashMap::new();
         buffers.insert(String::from("audio"), audio_uniform_buffer);
+        buffers.insert(
+            String::from("audio_features"),
+            audio_features_uniform_buffer,
+        );
+        buffers.insert(String::from("audio_fft"), audio_fft_uniform_buffer);
         buffers.insert(String::from("camera"), camera_uniform_buffer);
         buffers.insert(String::from("color"), color_uniform_buffer);
         buffers.insert(String::from("general"), general_uniform_buffer);
@@ -191,6 +224,9 @@ impl BufferStore {
 
         Self {
             audio_uniforms,
+            audio_features_uniforms,
+            audio_fft_uniforms,
+            audio_source,
             buffers,
             camera_uniforms,
             color_uniforms,
@@ -202,6 +238,50 @@ impl BufferStore {
         }
     }
 
+    pub fn start_audio_session(&mut self, subscriptions: &UniformSubscriptions) {
+        let mut audio_channels = vec![];
+        let mut error_channels = vec![];
+
+        if subscriptions.audio {
+            audio_channels.push(self.audio_uniforms.start_session());
+        }
+
+        if subscriptions.audio_features {
+            let (audio_channel, error_channel) = self.audio_features_uniforms.create_channels();
+            audio_channels.push(audio_channel);
+            error_channels.push(error_channel);
+        }
+
+        if subscriptions.audio_fft {
+            audio_channels.push(self.audio_fft_uniforms.start_session());
+        }
+
+        if audio_channels.len() > 0 {
+            if !self
+                .audio_source
+                .start_session(audio_channels, error_channels)
+            {
+                self.end_audio_session();
+            }
+        }
+
+        if subscriptions.audio_features {
+            if !self
+                .audio_features_uniforms
+                .start_session(self.audio_source.sample_rate)
+            {
+                self.end_audio_session();
+            }
+        }
+    }
+
+    pub fn end_audio_session(&mut self) {
+        self.audio_source.end_session();
+        self.audio_uniforms.end_session();
+        self.audio_features_uniforms.end_session();
+        self.audio_fft_uniforms.end_session();
+    }
+
     /// Set default uniforms for current selected program.
     /// Also a place to do any initialization and/or cleanup.
     pub fn set_program_defaults(
@@ -211,11 +291,17 @@ impl BufferStore {
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
     ) {
-        if subscriptions.audio {
-            self.audio_uniforms.set_defaults(defaults);
-        } else {
-            self.audio_uniforms.end_session();
+        self.end_audio_session();
+
+        if subscriptions.audio_features {
+            self.audio_features_uniforms.set_defaults(defaults);
         }
+
+        if subscriptions.audio_fft {
+            self.audio_fft_uniforms.set_defaults(defaults);
+        }
+
+        self.start_audio_session(subscriptions);
 
         if subscriptions.camera {
             self.camera_uniforms.set_defaults(defaults);
@@ -244,8 +330,20 @@ impl BufferStore {
     /// Update uniform data.
     /// Call every timestep.
     pub fn update(&mut self, device: &wgpu::Device, subscriptions: &UniformSubscriptions) {
+        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+            self.audio_source.update();
+        }
+
         if subscriptions.audio {
             self.audio_uniforms.update();
+        }
+
+        if subscriptions.audio_features {
+            self.audio_features_uniforms.update();
+        }
+
+        if subscriptions.audio_fft {
+            self.audio_fft_uniforms.update();
         }
 
         if subscriptions.general {
@@ -273,11 +371,20 @@ impl BufferStore {
         subscriptions: &UniformSubscriptions,
     ) {
         if subscriptions.audio {
-            self.audio_uniforms.update_textures(device, encoder);
-            self.buffers
-                .get("audio")
-                .unwrap()
-                .update(device, encoder, &self.audio_uniforms);
+            self.audio_uniforms.update_texture(device, encoder);
+        }
+
+        if subscriptions.audio_features {
+            self.audio_features_uniforms.update_texture(device, encoder);
+            self.buffers.get("audio_features").unwrap().update(
+                device,
+                encoder,
+                &self.audio_features_uniforms,
+            );
+        }
+
+        if subscriptions.audio_fft {
+            self.audio_fft_uniforms.update_texture(device, encoder);
         }
 
         if subscriptions.camera {
@@ -325,8 +432,8 @@ impl BufferStore {
     }
 
     pub fn pause(&mut self, subscriptions: &UniformSubscriptions) {
-        if subscriptions.audio {
-            self.audio_uniforms.end_session();
+        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+            self.end_audio_session();
         }
 
         if subscriptions.webcam {
@@ -334,13 +441,9 @@ impl BufferStore {
         }
     }
 
-    pub fn unpause(
-        &mut self,
-        subscriptions: &UniformSubscriptions,
-        defaults: &Option<config::ProgramDefaults>,
-    ) {
-        if subscriptions.audio {
-            self.audio_uniforms.set_defaults(defaults);
+    pub fn unpause(&mut self, subscriptions: &UniformSubscriptions) {
+        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+            self.start_audio_session(subscriptions);
         }
 
         if subscriptions.webcam {

@@ -139,7 +139,7 @@ impl WebcamUniforms {
                 .flatten()
                 .collect::<Vec<u8>>();
 
-            video_producer.push(img_data).ok();
+            video_producer.push(img_data).unwrap();
 
             if let Ok(msg) = message_channel_rx.try_recv() {
                 match msg {

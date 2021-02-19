@@ -9,26 +9,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform sampler audio_sampler;
-layout(set = 1, binding = 1) uniform texture2D mfccs;
-layout(set = 1, binding = 2) uniform texture2D spectrum;
-layout(set = 1, binding = 3) uniform AudioUniforms {
-    float dissonance;
-    float energy;
-    float loudness;
-    float noisiness;
-    float onset;
-    float pitch;
-    float rms;
-    float spectral_centroid;
-    float spectral_complexity;
-    float spectral_contrast;
-    float tristimulus1;
-    float tristimulus2;
-    float tristimulus3;
-};
-
-#define NUM_MFCCS 12
+layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 1, binding = 1) uniform texture2D spectrum;
 
 //@import util/rand
 //@import util/hsv2rgb
@@ -122,7 +104,7 @@ void main() {
 
     // map point to 1d value between 0 and 1
     float point_val = dot(m_point, m_point) * 0.5;
-    float intensity = texture(sampler2D(spectrum, audio_sampler), vec2(point_val, 0)).x;
+    float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(point_val, 0)).x;
 
     vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
     color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));

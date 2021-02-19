@@ -9,24 +9,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform sampler audio_sampler;
-layout(set = 1, binding = 1) uniform texture2D mfccs;
-layout(set = 1, binding = 2) uniform texture2D spectrum;
-layout(set = 1, binding = 3) uniform AudioUniforms {
-    float dissonance;
-    float energy;
-    float loudness;
-    float noisiness;
-    float onset;
-    float pitch;
-    float rms;
-    float spectral_centroid;
-    float spectral_complexity;
-    float spectral_contrast;
-    float tristimulus1;
-    float tristimulus2;
-    float tristimulus3;
-};
+layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 1, binding = 1) uniform texture2D spectrum;
 
 #define PI 3.14159265359
 #define ITERATIONS 32.0
@@ -60,7 +44,7 @@ void main() {
     for (float i = 0.0; i < ITERATIONS; i += 1.0) {
         float m = mod(i * 3.2, ITERATIONS);
         float intensity =
-            texture(sampler2D(spectrum, audio_sampler), vec2(m / ITERATIONS, 0))
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(m / ITERATIONS, 0))
                 .x;
         color += square(st, 0.006 * intensity) *
                  hsv2rgb(vec3(mod(i / ITERATIONS - time * 0.3, 1.0), 1, 1)) *

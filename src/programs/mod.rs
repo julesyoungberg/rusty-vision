@@ -233,12 +233,6 @@ impl ProgramStore {
     }
 
     pub fn unpause(&mut self) {
-        self.buffer_store.unpause(
-            &self.current_subscriptions,
-            &self
-                .program_defaults
-                .get(&self.program_names[self.current_program])
-                .unwrap(),
-        );
+        self.buffer_store.unpause(&self.current_subscriptions);
     }
 }

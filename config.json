@@ -13,7 +13,7 @@
         "vert": "basic.vert",
         "frag": "basicAudio.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_features"],
       "defaults": {
         "audio_feature_smoothing": 0.4
       }
@@ -61,9 +61,9 @@
         "vert": "basic.vert",
         "frag": "kaleidoscope1.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.97
+        "audio_feature_smoothing": 0.99
       }
     },
     "kaleidoscope1Image": {
@@ -146,7 +146,7 @@
         "vert": "basic.vert",
         "frag": "soundBall.frag"
       },
-      "uniforms": ["general", "audio", "camera"],
+      "uniforms": ["general", "audio_features", "camera"],
       "defaults": {
         "camera_position": [0.0, 0.0, 2.0],
         "camera_target": [0.0, 0.0, 0.0],
@@ -159,7 +159,7 @@
         "vert": "basic.vert",
         "frag": "soundBands.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_features", "audio_fft"],
       "defaults": {
         "audio_feature_smoothing": 0.7
       }
@@ -169,7 +169,7 @@
         "vert": "basic.vert",
         "frag": "soundCells.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_fft"],
       "defaults": {
         "audio_feature_smoothing": 0.97
       }
@@ -179,7 +179,7 @@
         "vert": "basic.vert",
         "frag": "soundFBM.frag"
       },
-      "uniforms": ["general", "audio", "noise"],
+      "uniforms": ["general", "audio_features", "noise"],
       "defaults": {
         "audio_feature_smoothing": 0.8
       }
@@ -189,7 +189,7 @@
         "vert": "basic.vert",
         "frag": "soundLights.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_fft"],
       "defaults": {
         "audio_feature_smoothing": 0.9
       }
@@ -199,7 +199,7 @@
         "vert": "basic.vert",
         "frag": "squareSpiral.frag"
       },
-      "uniforms": ["general", "audio"],
+      "uniforms": ["general", "audio_fft"],
       "defaults": {
         "audio_feature_smoothing": 0.97
       }
