@@ -1,5 +1,5 @@
 {
-  "default": "squareSpiral",
+  "default": "hexagonal1",
   "programs": {
     "basic": {
       "pipeline": {
@@ -33,6 +33,16 @@
       "uniforms": ["general", "image"],
       "defaults": {
         "image1": "forest.jpg"
+      }
+    },
+    "hexagonal1": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "hexagonal1.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_feature_smoothing": 0.97
       }
     },
     "imageFade": {
@@ -193,6 +203,13 @@
       "defaults": {
         "audio_feature_smoothing": 0.9
       }
+    },
+    "space": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "space.frag"
+      },
+      "uniforms": ["general"]
     },
     "squareSpiral": {
       "pipeline": {
