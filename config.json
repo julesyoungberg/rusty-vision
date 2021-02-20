@@ -1,5 +1,5 @@
 {
-  "default": "hexagonal1",
+  "default": "hexagonal2",
   "programs": {
     "basic": {
       "pipeline": {
@@ -50,7 +50,10 @@
         "vert": "basic.vert",
         "frag": "hexagonal2.frag"
       },
-      "uniforms": ["general"]
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_feature_smoothing": 0.97
+      }
     },
     "imageFade": {
       "pipeline": {

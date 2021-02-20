@@ -9,6 +9,11 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
+layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 1, binding = 1) uniform texture2D spectrum;
+
+#define AUDIO_REACTIVE 1
+
 //@import util/hsv2rgb
 
 vec3 hsv2rgb(vec3 c);
@@ -73,6 +78,11 @@ void main() {
         0.6 + sin(time * 0.13 * (hue + 0.5) + i * 0.3 + hue * 2.23) * 0.3, 
         0.7 + sin(time * 0.11 * (hue + 0.5) + i * 0.7 + hue * 3.55) * 0.2
     ));
+
+    if (AUDIO_REACTIVE == 1) {
+        float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(mod(dot(id, id) * 0.1 + hue + time * 0.01, 1), 0)).x;
+        color *= clamp(log(intensity * 2.0), 0.3, 1.1);
+    }
 
     frag_color = vec4(color, 1);
 }
