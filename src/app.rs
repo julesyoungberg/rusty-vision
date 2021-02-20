@@ -84,6 +84,8 @@ widget_ids! {
 pub struct Model {
     pub widget_ids: WidgetIds,
     pub main_window_id: WindowId,
+    pub original_height: u32,
+    pub original_width: u32,
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
     pub ui: Ui,

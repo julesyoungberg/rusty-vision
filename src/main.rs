@@ -16,7 +16,7 @@ fn model(app: &App) -> app::Model {
     // create window
     let main_window_id = app
         .new_window()
-        .size(app_config::SIZE[0], app_config::SIZE[1])
+        .size(1920, 1080)
         .key_pressed(key_pressed)
         .unfocused(unfocused)
         .focused(focused)
@@ -30,7 +30,8 @@ fn model(app: &App) -> app::Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
-    let size = pt2(app_config::SIZE[0] as f32, app_config::SIZE[1] as f32);
+    let (width, height) = window.inner_size_pixels();
+    let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
     program_store.compile_current(device, msaa_samples);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
@@ -42,6 +43,8 @@ fn model(app: &App) -> app::Model {
     app::Model {
         widget_ids,
         main_window_id,
+        original_height: height,
+        original_width: width,
         program_store,
         show_controls: true,
         ui,
@@ -81,11 +84,22 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         .update_shaders(device, window.msaa_samples());
 }
 
+fn resize(app: &App, model: &mut app::Model, width: u32, height: u32) {
+    let window = app.window(model.main_window_id).unwrap();
+    window.set_inner_size_pixels(width, height);
+}
+
 /// Handle key pressed event
-fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
+fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
     match key {
         Key::H => model.show_controls = !model.show_controls,
-        _ => ()
+        Key::Key1 => resize(app, model, 852, 480),
+        Key::Key2 => resize(app, model, 1280, 720),
+        Key::Key3 => resize(app, model, 1920, 1080),
+        Key::Key4 => resize(app, model, 2560, 1440),
+        Key::Key5 => resize(app, model, 3840, 2160),
+        Key::Key0 => resize(app, model, model.original_width, model.original_height),
+        _ => (),
     };
 
     if !model.program_store.current_subscriptions.camera {
