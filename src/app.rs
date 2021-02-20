@@ -74,6 +74,8 @@ widget_ids! {
         image1_load_button,
         image2_label,
         image2_load_button,
+        fps_container,
+        fps,
     }
 }
 

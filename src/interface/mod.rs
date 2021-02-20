@@ -6,12 +6,12 @@ use crate::app;
 
 mod audio_features_controls;
 mod audio_fft_controls;
+mod camera_info;
 mod color_controls;
 mod components;
 mod errors;
 mod geometry_controls;
 mod image_controls;
-mod info_box;
 mod noise_controls;
 
 fn controls_height(model: &mut app::Model) -> f32 {
@@ -242,12 +242,22 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     // Other UI
     //////////////////////////////////////////////////
     if model.program_store.current_subscriptions.camera {
-        info_box::update(
+        camera_info::update(
             &model.widget_ids,
             ui,
             &mut model.program_store.buffer_store.camera_uniforms,
         );
     }
+
+    components::container([80.0, 35.0])
+        .no_parent()
+        .bottom_right_with_margin(10.0)
+        .set(model.widget_ids.fps_container, ui);
+
+    components::text(&format!("FPS: {:.2}", app.fps()))
+        .parent(model.widget_ids.fps_container)
+        .top_left_with_margin(10.0)
+        .set(model.widget_ids.fps, ui);
 
     //////////////////////////////////////////////////
     // Error Display

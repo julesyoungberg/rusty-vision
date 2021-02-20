@@ -1,5 +1,5 @@
 {
-  "default": "hexagonal2",
+  "default": "truchet",
   "programs": {
     "basic": {
       "pipeline": {
@@ -244,6 +244,13 @@
         "shape_rotation": [35.0, 0.0, 315.0],
         "color_mode": 1
       }
+    },
+    "truchet": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "truchet.frag"
+      },
+      "uniforms": ["general"]
     },
     "webcam": {
       "pipeline": {

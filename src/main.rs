@@ -83,6 +83,11 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 
 /// Handle key pressed event
 fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
+    match key {
+        Key::H => model.show_controls = !model.show_controls,
+        _ => ()
+    };
+
     if !model.program_store.current_subscriptions.camera {
         // currently no uniforms other than camera use keys
         return;
@@ -98,7 +103,6 @@ fn key_pressed(_app: &App, model: &mut app::Model, key: Key) {
     let cross_dir = util::normalize_vector(cross);
 
     match key {
-        Key::H => model.show_controls = !model.show_controls,
         Key::Up => camera.translate(camera_dir * scale),
         Key::Down => camera.translate(camera_dir * -scale),
         Key::Left => camera.translate(cross_dir * -scale),
