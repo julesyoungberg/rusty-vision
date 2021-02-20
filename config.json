@@ -1,5 +1,5 @@
 {
-  "default": "hexagonal2",
+  "default": "hexagonal1",
   "programs": {
     "basic": {
       "pipeline": {
@@ -42,7 +42,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.95
+        "audio_feature_smoothing": 0.85
       }
     },
     "hexagonal2": {

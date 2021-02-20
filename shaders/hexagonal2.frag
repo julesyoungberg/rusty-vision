@@ -48,7 +48,7 @@ void main() {
     vec2 gv = coords.xy;
     vec2 id = coords.zw;
 
-    float i = dot(id, id);
+    float i = dot(id, id + vec2(13, 17));
 
     vec2 center = vec2(0, 0);
     vec2 right = vec2(sqrt(3.0) * 0.5, 0.5);
@@ -68,7 +68,11 @@ void main() {
         hue = 0.66;
     }
 
-    color = hsv2rgb(vec3(mod(hue + time * 0.2 + i * 0.4, 1), 0.8 + sin(time * 0.1 + i * 0.3 + hue * 2.0) * 0.1, 0.6 + sin(time * 0.06 + i * 0.7 + hue * 4.0) * 0.3));
+    color = hsv2rgb(vec3(
+        mod(hue + time * 0.2 * (hue + 0.5) + i * 0.4, 1), 
+        0.6 + sin(time * 0.13 * (hue + 0.5) + i * 0.3 + hue * 2.23) * 0.3, 
+        0.7 + sin(time * 0.11 * (hue + 0.5) + i * 0.7 + hue * 3.55) * 0.2
+    ));
 
     frag_color = vec4(color, 1);
 }

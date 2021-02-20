@@ -50,11 +50,13 @@ void main() {
     vec2 id = coords.zw;
 
     float i = dot(id, id);
-    float d = smoothstep(0.01, 0.03, gv.y * sin(i + time));
-    // color += c;
 
     float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(mod(i * 0.1, 1), 0)).x;
-    color = d * hsv2rgb(vec3(sin(i + time * 0.5), 1, 1)).zxy * intensity * 2.0; // * log(intensity * 10.0);
+
+    float d = smoothstep(0.01, 0.03, gv.y * sin(i + time)); // * intensity * 0.5
+    // color += c;
+
+    color = d * hsv2rgb(vec3(sin(i + time * 0.1), 1, 1)).zxy * log(intensity * 10.0);
     // color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
 
     frag_color = vec4(color, 1);
