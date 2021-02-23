@@ -11,6 +11,11 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 
 #define PI 3.14159265359
 
+// reference https://www.shadertoy.com/view/llSyDh
+const vec2 s = vec2(1, 1.7320508);
+
+mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+
 float hex_dist(in vec2 p) {
     p = abs(p);
     return max(dot(p, normalize(vec2(1.0, sqrt(3)))), p.x);
@@ -35,8 +40,19 @@ float hash21(vec2 p) {
     return fract(p.x * p.y);
 }
 
-bool is_above_line(vec2 r, vec2 q, vec2 p) {
-    return dot(vec2(q.y - r.y, r.x - q.x), q - p) > 0.0;
+// Polar coordinate of the arc pixel.
+float polar_coord(vec2 q, float dir) {
+    // The actual animation. You perform that before polar conversion.
+    q = r2(time * dir) * q;
+    // Polar angle.
+    float a = atan(q.y, q.x);
+    // Wrapping the polar angle.
+    return mod(a / PI, 2.0) - 1.0;
+}
+
+// Dot pattern.
+float dots(in vec2 p) {
+    return length(abs(fract(p) - 0.5));
 }
 
 void main() {
@@ -54,28 +70,31 @@ void main() {
     float edge_dist = 0.5 - hex_dist(gv);
 
     float h = hash21(id + 0.001);
-    if (h < 0.5) {
-        gv.y *= -1.0;
-    }
+    if (h < 0.5) gv.y *= -1.0;
 
-    vec2 center = vec2(0, 0);
-    vec2 right = vec2(sqrt(3.0) * 0.5, 0.5);
-    vec2 left = vec2(-sqrt(3.0) * 0.5, 0.5);
-    vec2 bottom = vec2(0.0, -1.0);
+    const float r = 1.0;
+    const float th = 0.2;
+    vec2 q;
 
-    bool cr = is_above_line(center, right, gv);
-    bool cl = is_above_line(center, left, gv);
-    bool cb = is_above_line(center, bottom, gv);
+    // Arc one.
+    q = gv - vec2(0, r) / s;
+    vec3 da = vec3(q, length(q));
+    
+    // Arc two.
+    q = r2(PI * 2.0 / 3.0) * gv - vec2(0, r) / s;
+    vec3 db = vec3(q, length(q));
 
-    if (!cr && cl) { // bottom
-        vec2 n = normalize(vec2(1, sqrt(3)));
-        gv -= n * min(dot(gv, n), 0.0) * 2.0;
-    } else if (cr && !cb) { // left
-        gv.x = abs(gv.x);
-    }
+    // Arc three. 
+    q = r2(PI * 4.0 / 3.0) * gv - vec2(0, r) / s;
+    vec3 dc = vec3(q, length(q));
+    
+    // Compare distance fields, and return the vector used to produce the closest one.
+    vec3 q3 = (da.z < db.z && da.z < dc.z) ? da : (db.z < dc.z) ? db : dc;
 
-    vec2 c_uv = gv - vec2(0.5, 1 / (2 * sqrt(3)));
-    float d = abs(length(c_uv) - 0.289);
+    q3.z -= 0.57735 / 2.0 + th / 2.0;
+    q3.z = max(q3.z, -th - q3.z);
+
+    float d = q3.z;
     float sd = floor(mod(d * 25.0 - time, 3));
     // color += sd / 3.0;
 
@@ -83,24 +102,23 @@ void main() {
     vec3 color2 = vec3(0.87, 0.71, 0.28);
     vec3 color3 = vec3(0.03, 0.26, 0.34);
 
+    // background / distance field coloring
     color = mix(mix(color1, color2, sd), color3, sd - 1.0);
 
     float width = 0.1;
-    float mask = smoothstep(0.01, -0.01, d - width);
+    float mask = smoothstep(0.015, 0.0, d);
 
-    color = mix(color, color * smoothstep(0.1, 0.0, d), mask);
+    // faux 3d edge shading
+    color = mix(color, color * smoothstep(0.1, -0.1, d), mask);
 
-    // TODO figure out UV coords for inside the truchet pattern
-    // refrence: https://www.shadertoy.com/view/llSyDh
-    float angle = atan(gv.x - 0.5, gv.y - 1 / (2 * sqrt(3)));
-    color.g += angle * mask;
-    // float checker = mod(id.x + id.y + 0.001, 2.0) * 2.0 - 1.0;
+    // uv coords
+    float a = polar_coord(q3.xy, 1.0);
+    vec2 t_uv = vec2(q3.z + 1.0, a);
+    float d2 = min(dots(t_uv * 4.5), dots(t_uv * 4.5 + 0.5)) - 0.3;
 
-    // float x = fract(angle / 2.09);
-    // float y = (d - (0.5 - width)) / (width * 2.0);
-    // color += mask; // * x;
-
-    // if (edge_dist < 0.01) color = vec3(1, 0, 0);
+    // poka dots
+    color = mix(color, vec3(0), mask * (1.0 - smoothstep(0.0, 0.02, d2)));
+    color = mix(color, vec3(1.0, 0.4, 0.4), mask * (1.0 - smoothstep(0.0, 0.02, d2 + 0.125)));
 
     frag_color = vec4(color, 1);
 }
