@@ -48,7 +48,7 @@ impl AudioFftUniforms {
         self.smoothing = 0.5;
 
         if let Some(cnfg) = defaults {
-            if let Some(smoothing) = cnfg.audio_feature_smoothing {
+            if let Some(smoothing) = cnfg.audio_fft_smoothing {
                 self.smoothing = smoothing;
             }
         }

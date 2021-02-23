@@ -10,52 +10,13 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     float time;
 };
 
-layout(set = 1, binding = 0) uniform CameraUniforms {
-    float cameraPosX;
-    float cameraPosY;
-    float cameraPosZ;
-    float cameraTargetX;
-    float cameraTargetY;
-    float cameraTargetZ;
-    float cameraUpX;
-    float cameraUpY;
-    float cameraUpZ;
-};
-
-layout(set = 2, binding = 0) uniform ColorUniforms {
-    int colorMode;
-    float color1R;
-    float color1G;
-    float color1B;
-    float color2R;
-    float color2G;
-    float color2B;
-    float color3R;
-    float color3G;
-    float color3B;
-};
-
-layout(set = 3, binding = 0) uniform GeometryUniforms {
-    int drawFloor;
-    float fogDist;
-    float rotation1X;
-    float rotation1Y;
-    float rotation1Z;
-    float rotation2X;
-    float rotation2Y;
-    float rotation2Z;
-    float offset1X;
-    float offset1Y;
-    float offset1Z;
-    float shapeRotationX;
-    float shapeRotationY;
-    float shapeRotationZ;
-};
+layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 1, binding = 1) uniform texture2D spectrum;
 
 // ray marching
 #define FRAME_OF_VIEW 5.0
-#define MAX_RAY_LENGTH 20.0
-#define MAX_TRACE_DISTANCE 20.0
+#define MAX_RAY_LENGTH 30.0
+#define MAX_TRACE_DISTANCE 30.0
 #define MIN_HIT_DISTANCE 0.001
 #define NUM_STEPS 100
 #define RAY_PUSH 0.02
@@ -74,6 +35,7 @@ layout(set = 3, binding = 0) uniform GeometryUniforms {
 #define FLOOR_FADE_START 25.
 #define FLOOR_FADE_END 50.
 #define FLOOR_LEVEL -2.0
+#define FOG_DIST 15
 
 #define EPSILON 1e-5
 
@@ -82,7 +44,6 @@ layout(set = 3, binding = 0) uniform GeometryUniforms {
 //@import util/calculatePhong
 //@import util/calculateReflectionsWithTrap
 //@import util/calculateShadow
-//@import util/castRay
 //@import util/folding
 //@import util/marchRayWithTrap
 //@import util/rotate
@@ -106,18 +67,14 @@ float sdMandelbulb(const vec3 pos, const int iterations,
     float r = 0.0;
 
     orbitTrap = vec3(1e20);
-    vec3 rotation = vec3(rotation1X, rotation1Y, rotation1Z);
-    mat4 rotationMatrix = createRotationMatrix(rotation);
 
-    float power = 8.0;
+    float power = 8.0 ; //+ sin(time * 0.1) * 4.0;
 
     for (int i = 0; i < iterations; i++) {
         r = length(z);
         if (r > bailout) {
             break;
         }
-
-        z = rotateVec(z, rotationMatrix);
 
         // convert to polar coordinates
         float theta = acos(z.z / r) - time * 0.1;
@@ -142,9 +99,7 @@ float sdMandelbulb(const vec3 pos, const int iterations,
 }
 
 float shapeDist(in vec3 pos, out vec3 orbitTrap) {
-    mat4 rot = createRotationMatrix(vec3(shapeRotationX, shapeRotationY, shapeRotationZ));
-    vec3 p = rotateVec(pos, rot);
-    return sdMandelbulb(p, 10, 2.0, orbitTrap);
+    return sdMandelbulb(pos, 10, 2.0, orbitTrap);
 }
 
 float distFromNearest(in vec3 p, out vec3 trap) {
@@ -162,19 +117,28 @@ float calculateShadow(const vec3 position, const vec3 normal,
                       const vec3 lightPos);
 
 vec3 calculateColor(in vec3 position, in vec3 normal, in vec3 eyePos, in vec3 trap) {
-    vec3 color = vec3(color1R, color1G, color1B);
+    vec3 paletteColor1 = mod(vec3(
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.77, 0)).x * 1.9,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.44, 0)).x * 0.7,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.11, 0)).x * 0.3
+    ) + vec3(1.2, 3.7, 7.5), 1);
+    vec3 paletteColor2 = mod(vec3(
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.22, 0)).x * 0.4,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.55, 0)).x,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.88, 0)).x * 2.1
+    ) + vec3(0.3, 10.6, 6.9), 1);
+    vec3 paletteColor3 = mod(vec3(
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.33, 0)).x * 0.5,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.66, 0)).x * 1.6,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.99, 0)).x * 2.3
+    ) + vec3(0.8, 5.1, 13.9), 1);
+    
+    vec3 color = paletteColor1 * clamp(pow(trap.x, 20.0), 0.0, 1.0);
+    color += paletteColor2 * clamp(pow(trap.y, 20.0), 0.0, 1.0);
+    color += paletteColor3 * clamp(pow(trap.z, 20.0), 0.0, 1.0);
 
-    if (colorMode == 0) {
-        vec3 paletteColor1 = color;
-        vec3 paletteColor2 = vec3(color2R, color2G, color2B);
-        vec3 paletteColor3 = vec3(color3R, color3G, color3B);
-        color = paletteColor1 * clamp(pow(trap.x, 20.0), 0.0, 1.0);
-        color += paletteColor2 * clamp(pow(trap.y, 20.0), 0.0, 1.0);
-        color += paletteColor3 * clamp(pow(trap.z, 20.0), 0.0, 1.0);
-    }
-
-    color = calculatePhong(position, normal, eyePos, LIGHT_POS, color);
-    color *= calculateShadow(position, normal, LIGHT_POS);
+    color = calculatePhong(position, normal, eyePos, eyePos, color);
+    color *= calculateShadow(position, normal, eyePos);
     return color;
 }
 
@@ -188,36 +152,28 @@ vec3 calculateReflectionsWithTrap(in vec3 position, in vec3 normal,
 vec3 calculateNormal(in vec3 point);
 
 void main() {
-    vec3 camPos = vec3(cameraPosX, cameraPosY, cameraPosZ);
-    vec3 lookAt = vec3(cameraTargetX, cameraTargetY, cameraTargetZ);
-    vec3 camUp = vec3(cameraUpX, cameraUpY, cameraUpZ);
+    float freq = 80.0 + time;
+    vec3 camPos = vec3(3.0 * cos(0.1 * 0.125 * freq) * sin(0.1 * 0.5 * freq), sin(0.1 * freq), 2.0 * cos(0.1 * 0.5 * freq));
+    const vec3 camTarget = vec3(0);
+    const float fov = 90.0 * 3.141592 / 180.0;
+    float h = 1.0;
+    vec3 camDir = normalize(camTarget - camPos);
+    vec3 camSide = normalize(cross(vec3(0,1,0), camDir));
+    vec3 camUp = normalize(cross(camDir, camSide));
 
     vec2 currentUV = uv;
     currentUV.x *= resolution.x / resolution.y;
-    vec3 rayDir = castRay(currentUV, camPos, lookAt, camUp);
+
+    vec3 rayDir = normalize(currentUV.x * h * camSide + currentUV.y * h * camUp + camDir - camPos);
     vec3 backgroundColor = getBackgroundColor(currentUV);
 
     vec3 trap;
     float dist = marchRayWithTrap(camPos, rayDir, 0.0, trap);
-    vec3 lightPos = LIGHT_POS;
     vec3 color = vec3(1.0);
     bool isFloor = false;
     vec3 surfacePos, surfaceNorm;
     if (dist < 0.0) {
-        if (drawFloor == 1) {
-            dist = calculateFloorDist(camPos, rayDir, FLOOR_LEVEL);
-            if (dist >= 0.0) {
-                isFloor = true;
-                surfacePos = camPos + rayDir * dist;
-                surfaceNorm = vec3(0, 1, 0);
-                color = vec3(1.0);
-                color = calculatePhong(surfacePos, surfaceNorm, camPos, lightPos, color);
-                color *= calculateShadow(surfacePos, surfaceNorm, lightPos);
-                color = calculateReflectionsWithTrap(surfacePos, surfaceNorm, color, camPos, vec3(0.0));
-            }
-        } else {
-            dist = fogDist;
-        }
+        dist = FOG_DIST;
     } else {
         surfacePos = camPos + rayDir * dist;
         surfaceNorm = calculateNormal(surfacePos);
@@ -226,7 +182,7 @@ void main() {
 
     float backgroundBlend = smoothstep(FLOOR_FADE_START, FLOOR_FADE_END, dist);
     color = mix(color, backgroundColor, backgroundBlend);
-    color = mix(color, vec3(0.5), pow(dist / fogDist, 2.0));
+    color = mix(color, vec3(0.5), pow(dist / FOG_DIST, 2.0));
 
     fragColor = vec4(pow(color, vec3(1. / 2.2)), 1);
 }

@@ -1,5 +1,5 @@
 {
-  "default": "truchet",
+  "default": "truchet2",
   "programs": {
     "basic": {
       "pipeline": {
@@ -42,7 +42,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.85
+        "audio_fft_smoothing": 0.85
       }
     },
     "hexagonal2": {
@@ -52,7 +52,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.97
+        "audio_fft_smoothing": 0.97
       }
     },
     "imageFade": {
@@ -83,7 +83,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.99
+        "audio_fft_smoothing": 0.99
       }
     },
     "kaleidoscope1Image": {
@@ -154,6 +154,16 @@
         "color_mode": 0
       }
     },
+    "mandelbulbSound": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "mandelbulbSound.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
     "shapeScope": {
       "pipeline": {
         "vert": "basic.vert",
@@ -181,7 +191,8 @@
       },
       "uniforms": ["general", "audio_features", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.7
+        "audio_feature_smoothing": 0.7,
+        "audio_fft_smoothing": 0.7
       }
     },
     "soundCells": {
@@ -191,7 +202,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.97
+        "audio_fft_smoothing": 0.97
       }
     },
     "soundFBM": {
@@ -211,7 +222,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.9
+        "audio_fft_smoothing": 0.9
       }
     },
     "space": {
@@ -228,7 +239,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.97
+        "audio_fft_smoothing": 0.97
       }
     },
     "tetrahedron": {
@@ -245,10 +256,17 @@
         "color_mode": 1
       }
     },
-    "truchet": {
+    "truchet1": {
       "pipeline": {
         "vert": "basic.vert",
-        "frag": "truchet.frag"
+        "frag": "truchet1.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "truchet2": {
+      "pipeline": {
+        "vert": "basic.vert",
+        "frag": "truchet2.frag"
       },
       "uniforms": ["general"]
     },

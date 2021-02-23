@@ -12,6 +12,7 @@ pub struct PipelineConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProgramDefaults {
     pub audio_feature_smoothing: Option<f32>,
+    pub audio_fft_smoothing: Option<f32>,
     pub camera_position: Option<Vector3<f32>>,
     pub camera_target: Option<Vector3<f32>>,
     pub camera_up: Option<Vector3<f32>>,
