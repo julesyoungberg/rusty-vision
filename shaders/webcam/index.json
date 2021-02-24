@@ -1,15 +1,30 @@
 {
-  "default": "webcamCells",
+  "default": "glitch",
   "programs": {
-    "webcam": {
+    "cells": {
       "pipeline": {
-        "frag": "webcam.frag"
+        "frag": "cells.frag"
       },
       "uniforms": ["general", "webcam"]
     },
-    "webcamCells": {
+    "dots": {
       "pipeline": {
-        "frag": "webcamCells.frag"
+        "frag": "dots.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    },
+    "glitch": {
+      "pipeline": {
+        "frag": "glitch.frag"
+      },
+      "uniforms": ["general", "audio_fft", "webcam"],
+      "defaults": {
+        "audio_fft_smoothing": 0.5
+      }
+    },
+    "webcam": {
+      "pipeline": {
+        "frag": "webcam.frag"
       },
       "uniforms": ["general", "webcam"]
     }

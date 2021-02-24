@@ -139,7 +139,7 @@ impl WebcamUniforms {
                 .flatten()
                 .collect::<Vec<u8>>();
 
-            video_producer.push(img_data).unwrap();
+            video_producer.push(img_data).ok();
 
             if let Ok(msg) = message_channel_rx.try_recv() {
                 match msg {
@@ -161,7 +161,7 @@ impl WebcamUniforms {
                 }
             }
 
-            thread::sleep(time::Duration::from_millis(50));
+            thread::sleep(time::Duration::from_millis(10));
         }));
 
         self.updated = true;
