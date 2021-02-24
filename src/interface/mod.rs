@@ -15,7 +15,7 @@ mod image_controls;
 mod noise_controls;
 
 fn controls_height(model: &mut app::Model) -> f32 {
-    let mut height = 90.0;
+    let mut height = 140.0;
 
     let subscriptions = &model.program_store.current_subscriptions;
 
@@ -74,6 +74,25 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .set(model.widget_ids.toggle_controls_hint, ui);
 
     /////////////////////////
+    // current folder select
+    components::label("Folder")
+        .parent(model.widget_ids.controls_wrapper)
+        .set(model.widget_ids.current_folder_label, ui);
+    let folder_names = model
+        .program_store
+        .folder_names
+        .iter()
+        .map(|s| s.as_str())
+        .collect::<Vec<&str>>();
+    for selected in components::drop_down(&folder_names[..], model.program_store.folder_index)
+        .parent(model.widget_ids.controls_wrapper)
+        .down(5.0)
+        .set(model.widget_ids.current_folder, ui)
+    {
+        model.program_store.select_folder(app, device, selected);
+    }
+
+    /////////////////////////
     // current program select
     components::label("Shader")
         .parent(model.widget_ids.controls_wrapper)
@@ -84,12 +103,14 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>();
-    for selected in components::drop_down(&program_names[..], model.program_store.current_program)
+    for selected in components::drop_down(&program_names[..], model.program_store.program_index)
         .parent(model.widget_ids.controls_wrapper)
         .down(5.0)
         .set(model.widget_ids.current_program, ui)
     {
-        model.program_store.select_program(app, device, selected);
+        model
+            .program_store
+            .select_program(app, device, selected, false);
     }
 
     let mut left = -200.0;

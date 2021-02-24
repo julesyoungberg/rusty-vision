@@ -1,0 +1,65 @@
+{
+  "default": "hexagonal1",
+  "programs": {
+    "hexagonal1": {
+      "pipeline": {
+        "frag": "hexagonal1.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.85
+      }
+    },
+    "hexagonal2": {
+      "pipeline": {
+        "frag": "hexagonal2.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.97
+      }
+    },
+    "shapeScope": {
+      "pipeline": {
+        "frag": "shapeScope.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "soundCells": {
+      "pipeline": {
+        "frag": "soundCells.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.97
+      }
+    },
+    "soundFBM": {
+      "pipeline": {
+        "frag": "soundFBM.frag"
+      },
+      "uniforms": ["general", "audio_features", "noise"],
+      "defaults": {
+        "audio_feature_smoothing": 0.8
+      }
+    },
+    "space": {
+      "pipeline": {
+        "frag": "space.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "truchet1": {
+      "pipeline": {
+        "frag": "truchet1.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "truchet2": {
+      "pipeline": {
+        "frag": "truchet2.frag"
+      },
+      "uniforms": ["general"]
+    }
+  }
+}

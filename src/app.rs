@@ -10,6 +10,8 @@ widget_ids! {
         color_mode_label,
         current_program,
         current_program_label,
+        current_folder,
+        current_folder_label,
         draw_floor,
         draw_floor_label,
         fog_dist,
@@ -80,7 +82,6 @@ widget_ids! {
 }
 
 /// Main application state
-#[allow(dead_code)] // needed for shader_watcher
 pub struct Model {
     pub widget_ids: WidgetIds,
     pub main_window_id: WindowId,

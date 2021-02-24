@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 
 mod app;
-mod app_config;
 mod interface;
 mod programs;
 mod quad_2d;
@@ -33,7 +32,7 @@ fn model(app: &App) -> app::Model {
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
-    program_store.compile_current(device, msaa_samples);
+    program_store.compile_current(app, device, msaa_samples);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
     // create UI
@@ -81,7 +80,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 
     model
         .program_store
-        .update_shaders(device, window.msaa_samples());
+        .update_shaders(app, device, window.msaa_samples());
 }
 
 fn resize(app: &App, model: &mut app::Model, width: u32, height: u32) {

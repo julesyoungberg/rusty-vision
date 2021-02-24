@@ -1,0 +1,86 @@
+{
+  "default": "basic",
+  "programs": {
+    "basic": {
+      "pipeline": {
+        "frag": "basic.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "basicAudio": {
+      "pipeline": {
+        "frag": "basicAudio.frag"
+      },
+      "uniforms": ["general", "audio_features"],
+      "defaults": {
+        "audio_feature_smoothing": 0.4
+      }
+    },
+    "deformed": {
+      "pipeline": {
+        "frag": "deformed.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "deformedImage": {
+      "pipeline": {
+        "frag": "deformedImage.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "imageFade": {
+      "pipeline": {
+        "frag": "imageFade.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "fractal1.png",
+        "image2": "fractal2.png"
+      }
+    },
+    "soundBall": {
+      "pipeline": {
+        "frag": "soundBall.frag"
+      },
+      "uniforms": ["general", "audio_features", "camera"],
+      "defaults": {
+        "camera_position": [0.0, 0.0, 2.0],
+        "camera_target": [0.0, 0.0, 0.0],
+        "camera_up": [0.0, 1.0, 0.0],
+        "audio_feature_smoothing": 0.5
+      }
+    },
+    "soundBands": {
+      "pipeline": {
+        "frag": "soundBands.frag"
+      },
+      "uniforms": ["general", "audio_features", "audio_fft"],
+      "defaults": {
+        "audio_feature_smoothing": 0.7,
+        "audio_fft_smoothing": 0.7
+      }
+    },
+    "soundLights": {
+      "pipeline": {
+        "frag": "soundLights.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "squareSpiral": {
+      "pipeline": {
+        "frag": "squareSpiral.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.97
+      }
+    }
+  }
+}
+  

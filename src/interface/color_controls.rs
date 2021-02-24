@@ -1,9 +1,10 @@
 use nannou::ui::prelude::*;
 
 use crate::app;
-use crate::app_config;
 use crate::interface::components;
 use crate::programs::uniforms::color;
+
+const COLOR_MODES: &'static [&'static str] = &["palette", "solid"];
 
 /// Section height, computes and returns the current height.
 /// Used to compute the container height.
@@ -35,14 +36,13 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut color
     components::label("Color Mode")
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.color_mode_label, ui);
-    for selected in
-        components::drop_down(app_config::COLOR_MODES, uniforms.data.color_mode as usize)
-            .parent(widget_ids.controls_wrapper)
-            .down(5.0)
-            .set(widget_ids.color_mode, ui)
+    for selected in components::drop_down(COLOR_MODES, uniforms.data.color_mode as usize)
+        .parent(widget_ids.controls_wrapper)
+        .down(5.0)
+        .set(widget_ids.color_mode, ui)
     {
         if selected as i32 != uniforms.data.color_mode {
-            println!("color mode selected: {}", app_config::COLOR_MODES[selected]);
+            println!("color mode selected: {}", COLOR_MODES[selected]);
             uniforms.data.color_mode = selected as i32;
         }
     }

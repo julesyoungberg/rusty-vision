@@ -109,3 +109,13 @@ pub fn universal_path(input: String) -> String {
         .into_string()
         .unwrap()
 }
+
+pub fn shaders_path(app: &App) -> PathBuf {
+    app.project_path()
+        .expect("failed to locate `project_path`")
+        .join("shaders")
+}
+
+pub fn shaders_path_string(app: &App) -> String {
+    shaders_path(app).into_os_string().into_string().unwrap()
+}

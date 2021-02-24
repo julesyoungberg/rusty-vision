@@ -1,0 +1,54 @@
+{
+  "default": "mandelbulb",
+  "programs": {
+    "mandelbox": {
+      "pipeline": {
+        "frag": "mandelbox.frag"
+      },
+      "uniforms": ["general", "camera", "color", "geometry"],
+      "defaults": {
+        "camera_position": [25.0, 0.0, 15.0],
+        "camera_target": [0.0, 0.0, 0.0],
+        "camera_up": [0.0, 1.0, 0.0],
+        "shape_rotation": [0.0, 0.0, 0.0],
+        "color_mode": 0
+      }
+    },
+    "mandelbulb": {
+      "pipeline": {
+        "frag": "mandelbulb.frag"
+      },
+      "uniforms": ["general", "camera", "color", "geometry"],
+      "defaults": {
+        "camera_position": [5.0, 0.0, 5.0],
+        "camera_target": [0.0, 0.0, 0.0],
+        "camera_up": [0.0, 1.0, 0.0],
+        "shape_rotation": [0.0, 0.0, 0.0],
+        "color_mode": 0
+      }
+    },
+    "mandelbulbSound": {
+      "pipeline": {
+        "frag": "mandelbulbSound.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "tetrahedron": {
+      "pipeline": {
+        "frag": "tetrahedron.frag"
+      },
+      "uniforms": ["general", "camera", "color", "geometry"],
+      "defaults": {
+        "camera_position": [7.0, 0.68, 6.72],
+        "camera_target": [2.0, 0.48, 1.72],
+        "camera_up": [-0.02, 1.0, -0.02],
+        "shape_rotation": [35.0, 0.0, 315.0],
+        "color_mode": 1
+      }
+    }
+  }
+}
+  

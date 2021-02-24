@@ -1,19 +1,15 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
-use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
-use crate::app_config;
 use crate::util;
 
 mod config;
 pub mod program;
 mod shaders;
 pub mod uniforms;
-
-pub type Programs = HashMap<String, program::Program>;
 
 /// Stores GPU programs and related data.
 /// Manages the maintenance of shader programs.
@@ -23,130 +19,130 @@ pub type Programs = HashMap<String, program::Program>;
 /// - handles errors
 /// - builds render pipelines
 /// - manages uniform buffers
+#[allow(dead_code)] // needed for shader_watcher
 pub struct ProgramStore {
     pub buffer_store: uniforms::BufferStore,
-    pub changes_channel: Receiver<DebouncedEvent>,
-    pub current_program: usize,
     pub current_subscriptions: uniforms::UniformSubscriptions,
-    pub programs: Programs,
+    pub folder_index: usize,
+    pub folder_names: Vec<String>,
     pub program_names: Vec<String>,
-    pub program_defaults: HashMap<String, Option<config::ProgramDefaults>>,
-    pub program_uniforms: HashMap<String, Vec<String>>,
+    pub program_index: usize,
+
+    changes_channel: Receiver<DebouncedEvent>,
+    config: config::Config,
+    current_program: program::Program,
     #[cfg(target_os = "macos")]
-    pub shader_watcher: notify::FsEventWatcher,
+    shader_watcher: notify::FsEventWatcher,
     #[cfg(target_os = "linux")]
-    pub shader_watcher: notify::INotifyWatcher,
+    shader_watcher: notify::INotifyWatcher,
     #[cfg(target_os = "windows")]
-    pub shader_watcher: notify::ReadDirectoryChangesWatcher,
+    shader_watcher: notify::ReadDirectoryChangesWatcher,
 }
 
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
-        let program_config = config::get_config();
+        let config = config::get_config(app);
 
         let mut buffer_store = uniforms::BufferStore::new(device, size);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
         let mut shader_watcher = watcher(send_channel, time::Duration::from_secs(1)).unwrap();
+        let shader_path = util::shaders_path_string(app);
         shader_watcher
-            .watch(
-                util::universal_path(app_config::SHADERS_PATH.to_string()).as_str(),
-                RecursiveMode::Recursive,
-            )
+            .watch(shader_path.as_str(), RecursiveMode::Recursive)
             .unwrap();
+
+        // get folder configuration
+        let mut folder_names = vec![];
+        for (name, _) in config.folders.iter() {
+            folder_names.push(name.clone());
+        }
+
+        folder_names.sort();
+        let folder_index = folder_names
+            .iter()
+            .position(|n| *n == config.default)
+            .unwrap();
+
+        let folder_name = &folder_names[folder_index];
+        let folder_config = config.folders.get(folder_name).unwrap();
 
         // get program configuration
         let mut program_names = vec![];
-        let mut programs = HashMap::new();
-        let mut program_uniforms = HashMap::new();
-        let mut program_defaults = HashMap::new();
-        for (program_name, program_config) in program_config.programs {
-            program_names.push(program_name.clone());
-
-            programs.insert(
-                program_name.clone(),
-                program::Program::new(program_config.pipeline.vert, program_config.pipeline.frag),
-            );
-
-            program_uniforms.insert(program_name.clone(), program_config.uniforms);
-
-            program_defaults.insert(program_name.clone(), program_config.defaults);
+        for (name, _) in folder_config.programs.iter() {
+            program_names.push(name.clone());
         }
 
         program_names.sort();
+        let program_index = program_names
+            .iter()
+            .position(|n| *n == folder_config.default)
+            .unwrap();
 
-        let mut current_program = 0;
-        for (index, program_name) in program_names.iter().enumerate() {
-            if *program_name == program_config.default {
-                current_program = index;
-            }
-        }
+        let program_name = &program_names[program_index];
+        let program_config = folder_config.programs.get(program_name).unwrap();
+        let current_program = program::Program::new(program_config.clone(), folder_name.clone());
 
-        let program_name = &program_names[current_program];
-
-        let current_subscriptions =
-            uniforms::get_subscriptions(&program_uniforms.get(program_name).unwrap());
+        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
         buffer_store.set_program_defaults(
             app,
             device,
             &current_subscriptions,
-            &program_defaults.get(program_name).unwrap(),
+            &program_config.defaults,
         );
 
         Self {
             buffer_store,
             changes_channel,
+            config,
             current_program,
             current_subscriptions,
-            programs,
+            folder_index,
+            folder_names,
+            program_index,
             program_names,
-            program_defaults,
-            program_uniforms,
             shader_watcher,
         }
     }
 
     /// Compile current program with latest shader code.
     /// Call once after initialization.
-    pub fn compile_current(&mut self, device: &wgpu::Device, num_samples: u32) {
+    pub fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
         // update the current GPU program to use the latest code
-        let name = &self.program_names[self.current_program];
-        let program = self.programs.get_mut(name).unwrap();
-        let program_uniforms = &self.program_uniforms.get(name).unwrap();
-        let uniform_buffers = &self.buffer_store.buffers;
-
+        let buffers = &self.buffer_store.buffers;
         // map the current program's uniform list to a list of bind group layouts
-        let bind_group_layout_iter = program_uniforms.iter().map(|u| {
-            &uniform_buffers
-                .get(&u.to_string())
-                .unwrap()
-                .bind_group_layout
-        });
+        let bind_group_layout_iter = self
+            .current_program
+            .config
+            .uniforms
+            .iter()
+            .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout);
 
         // update the program with the new shader code and appropriate layout description
         let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
-        program.compile(device, &layout_desc, num_samples);
+        self.current_program
+            .compile(app, device, &layout_desc, num_samples);
     }
 
     /// Check if changes have been made to shaders and recompile if needed.
     /// Call every timestep.
-    pub fn update_shaders(&mut self, device: &wgpu::Device, num_samples: u32) {
+    pub fn update_shaders(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
         // check for changes
         if let Ok(event) = self.changes_channel.try_recv() {
             if let DebouncedEvent::Write(path) = event {
                 let path_str = path.into_os_string().into_string().unwrap();
                 println!("changes written to: {}", path_str);
-                self.compile_current(device, num_samples);
+                self.compile_current(app, device, num_samples);
             }
         }
 
-        if self.current_program().is_new()
+        if self.current_program.is_new()
             || self.buffer_store.image_uniforms.updated
             || self.buffer_store.webcam_uniforms.updated
         {
-            self.compile_current(device, num_samples);
+            self.compile_current(app, device, num_samples);
 
             if self.buffer_store.image_uniforms.updated {
                 self.buffer_store.image_uniforms.updated = false;
@@ -166,40 +162,67 @@ impl ProgramStore {
     }
 
     /// Fetch current GPU program.
-    pub fn current_program(&self) -> &program::Program {
-        self.programs
-            .get(&self.program_names[self.current_program])
-            .unwrap()
-    }
-
-    /// Fetch current GPU program.
     pub fn current_pipeline(&self) -> Option<&wgpu::RenderPipeline> {
-        self.current_program().pipeline.as_ref()
+        self.current_program.pipeline.as_ref()
     }
 
     /// Selects the current program performs any housekeeping / initialization
-    pub fn select_program(&mut self, app: &App, device: &wgpu::Device, selected: usize) {
-        if selected == self.current_program {
+    pub fn select_program(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        selected: usize,
+        force: bool,
+    ) {
+        if !force && selected == self.program_index {
             return;
         }
 
         let name = &self.program_names[selected];
 
         // first, clear the current program
-        self.programs.get_mut(name).unwrap().clear();
+        self.current_program.clear();
 
         // next, update the current program and uniforms
         // it will be compiled in the next update()
         println!("program selected: {}", name);
-        self.current_program = selected;
-        self.current_subscriptions =
-            uniforms::get_subscriptions(&self.program_uniforms.get(name).unwrap());
+        self.program_index = selected;
+        let folder_name = &self.folder_names[self.folder_index];
+        let folder_config = self.config.folders.get(folder_name).unwrap();
+        let program_config = folder_config.programs.get(name).unwrap();
+        self.current_program = program::Program::new(program_config.clone(), folder_name.clone());
+        self.current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
         self.buffer_store.set_program_defaults(
             app,
             device,
             &self.current_subscriptions,
-            &self.program_defaults.get(name).unwrap(),
+            &program_config.defaults,
         );
+    }
+
+    /// Selects the current shader folder
+    pub fn select_folder(&mut self, app: &App, device: &wgpu::Device, selected: usize) {
+        if selected == self.folder_index {
+            return;
+        }
+
+        self.folder_index = selected;
+        let name = &self.folder_names[selected];
+        let folder_config = self.config.folders.get(name).unwrap();
+
+        self.program_names = vec![];
+        for (name, _) in folder_config.programs.iter() {
+            self.program_names.push(name.clone());
+        }
+
+        self.program_names.sort();
+        let program_index = self
+            .program_names
+            .iter()
+            .position(|n| *n == folder_config.default)
+            .unwrap();
+
+        self.select_program(app, device, program_index, true);
     }
 
     /// Update GPU uniform buffers with current data.
@@ -216,16 +239,16 @@ impl ProgramStore {
     /// Fetch the appropriate bind groups to set positions for the current program.
     /// Call in draw() right before rendering.
     pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
-        self.program_uniforms
-            .get(&self.program_names[self.current_program])
-            .unwrap()
+        self.current_program
+            .config
+            .uniforms
             .iter()
             .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group)
             .collect::<Vec<&wgpu::BindGroup>>()
     }
 
     pub fn errors(&self) -> &program::ProgramErrors {
-        &self.current_program().errors
+        &self.current_program.errors
     }
 
     pub fn pause(&mut self) {

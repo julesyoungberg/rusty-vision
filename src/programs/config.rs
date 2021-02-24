@@ -3,13 +3,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
-#[derive(Debug, Serialize, Deserialize)]
+use crate::util;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PipelineConfig {
-    pub vert: String,
+    pub vert: Option<String>,
     pub frag: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramDefaults {
     pub audio_feature_smoothing: Option<f32>,
     pub audio_fft_smoothing: Option<f32>,
@@ -22,22 +24,62 @@ pub struct ProgramDefaults {
     pub image2: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramConfig {
     pub pipeline: PipelineConfig,
     pub uniforms: Vec<String>,
     pub defaults: Option<ProgramDefaults>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FolderConfig {
     pub default: String,
     pub programs: HashMap<String, ProgramConfig>,
 }
 
-pub fn get_config() -> Config {
-    let json_string = fs::read_to_string("./config.json").expect("Error reading config.json");
-    let config: Config =
-        serde_json::from_str(json_string.as_str()).expect("Error parsing config.json");
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RootConfig {
+    pub default: String,
+    pub folders: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    pub default: String,
+    pub folders: HashMap<String, FolderConfig>,
+}
+
+pub fn get_config(app: &App) -> Config {
+    let root_path = util::shaders_path(app)
+        .join("index.json")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let root_json_string = fs::read_to_string(root_path.clone())
+        .expect(format!("Error reading '{:?}'", root_path).as_str());
+    let root_config: RootConfig = serde_json::from_str(root_json_string.as_str())
+        .expect(format!("Error parsing '{:?}'", root_path).as_str());
+
+    let mut config = Config {
+        default: root_config.default,
+        folders: HashMap::new(),
+    };
+
+    root_config.folders.iter().for_each(|folder| {
+        let path = util::shaders_path(app)
+            .join(folder)
+            .join("index.json")
+            .into_os_string()
+            .into_string()
+            .unwrap();
+
+        let json_string =
+            fs::read_to_string(path.clone()).expect(format!("Error reading '{:?}'", path).as_str());
+        let folder_config: FolderConfig = serde_json::from_str(json_string.as_str())
+            .expect(format!("Error parsing '{:?}'", path).as_str());
+
+        config.folders.insert(folder.clone(), folder_config);
+    });
+
     config
 }

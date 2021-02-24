@@ -3,6 +3,7 @@ use rayon::prelude::*;
 use shaderc;
 use std::collections::HashMap;
 
+use crate::programs::config;
 use crate::programs::shaders;
 use crate::util;
 
@@ -13,15 +14,24 @@ pub type ProgramErrors = HashMap<String, String>;
 /// creation of the program as a GPU Render Pipeline.
 #[derive(Debug)]
 pub struct Program {
+    pub config: config::ProgramConfig,
     pub errors: ProgramErrors,
-    pub frag_shader: shaders::Shader,
     pub pipeline: Option<wgpu::RenderPipeline>,
-    pub vert_shader: shaders::Shader,
+
+    frag_shader: shaders::Shader,
+    vert_shader: shaders::Shader,
 }
 
 impl Program {
-    pub fn new(vert_name: String, frag_name: String) -> Self {
+    pub fn new(config: config::ProgramConfig, folder_name: String) -> Self {
+        let frag_name = format!("{}/{}", folder_name, config.pipeline.frag);
+        let mut vert_name = "default.vert".to_owned();
+        if let Some(name) = &config.pipeline.vert {
+            vert_name = format!("{}/{}", folder_name, name);
+        }
+
         Self {
+            config,
             errors: HashMap::new(),
             frag_shader: shaders::Shader::new(frag_name),
             pipeline: None,
@@ -41,16 +51,18 @@ impl Program {
     /// Compile the program with the latest shader code.
     pub fn compile(
         &mut self,
+        app: &App,
         device: &wgpu::Device,
         layout_desc: &wgpu::PipelineLayoutDescriptor,
         num_samples: u32,
     ) {
         let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
+        let path = util::shaders_path(app);
 
         // compile shaders
         shaders.par_iter_mut().for_each(|shader| {
             let mut compiler = shaderc::Compiler::new().unwrap();
-            shader.compile(device, &mut compiler);
+            shader.compile(path.clone(), device, &mut compiler);
         });
 
         // collect errors

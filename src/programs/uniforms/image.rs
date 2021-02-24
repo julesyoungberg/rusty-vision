@@ -96,7 +96,7 @@ impl ImageUniforms {
 
     pub fn set_defaults(&mut self, app: &App, defaults: &Option<config::ProgramDefaults>) {
         if let Some(cnfg) = defaults {
-            let project_path = app.project_path().unwrap();
+            let project_path = app.project_path().expect("failed to locate `project_path`");
 
             if let Some(img1) = &cnfg.image1 {
                 self.load_image(
@@ -105,9 +105,9 @@ impl ImageUniforms {
                     project_path
                         .join("images")
                         .join(img1)
-                        .to_str()
-                        .unwrap()
-                        .to_string(),
+                        .into_os_string()
+                        .into_string()
+                        .unwrap(),
                 );
             }
 
@@ -118,9 +118,9 @@ impl ImageUniforms {
                     project_path
                         .join("images")
                         .join(img2)
-                        .to_str()
-                        .unwrap()
-                        .to_string(),
+                        .into_os_string()
+                        .into_string()
+                        .unwrap(),
                 );
             }
         }

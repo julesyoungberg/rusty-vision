@@ -2,8 +2,8 @@ use nannou::prelude::*;
 use regex::Regex;
 use shaderc;
 use std::fs;
+use std::path::PathBuf;
 
-use crate::app_config;
 use crate::util;
 
 /// Stores data that represents a single shader file
@@ -25,7 +25,12 @@ impl Shader {
     }
 
     /// Compile the shader file
-    pub fn compile(&mut self, device: &wgpu::Device, compiler: &mut shaderc::Compiler) {
+    pub fn compile(
+        &mut self,
+        shaders_path: PathBuf,
+        device: &wgpu::Device,
+        compiler: &mut shaderc::Compiler,
+    ) {
         let split = self.filename.split(".").collect::<Vec<&str>>();
         let ext = split[1];
         let mut kind = shaderc::ShaderKind::Fragment;
@@ -33,18 +38,15 @@ impl Shader {
             kind = shaderc::ShaderKind::Vertex;
         }
 
-        let filename = self.filename.as_str();
-
-        // create error message
-        let mut error = "Error reading shader: ".to_owned();
-        error.push_str(filename);
-
-        // build path
-        let mut path = app_config::SHADERS_PATH.to_owned();
-        path.push_str(filename);
-
-        // read shader
-        let src_string = fs::read_to_string(util::universal_path(path)).expect(error.as_str());
+        let filename = shaders_path
+            .clone()
+            .join(self.filename.clone())
+            .into_os_string()
+            .into_string()
+            .unwrap();
+        println!("reading: {}", filename);
+        let src_string = fs::read_to_string(util::universal_path(filename.clone()))
+            .expect(format!("Error reading shader: {}", filename).as_str());
         let src = src_string.as_str();
 
         // load shader dependencies ([^\r]*) deals with \r on windows
@@ -52,26 +54,34 @@ impl Shader {
         let complete_src = re
             .replace_all(src, |captures: &regex::Captures| {
                 let import = &captures[1];
-                let mut import_path = app_config::SHADERS_PATH.to_owned();
-                import_path.push_str(import);
-                import_path.push_str(".glsl");
+                let import_path = shaders_path
+                    .clone()
+                    .join(format!("{}.glsl", import))
+                    .into_os_string()
+                    .into_string()
+                    .unwrap();
 
-                let mut import_error = "Error reading shader '".to_owned();
-                import_error.push_str(filename);
-                import_error.push_str("' import '");
-                import_error.push_str(import);
-                import_error.push_str("'");
+                let import_error = format!(
+                    "Error reading shader '{}' import '{}': {}",
+                    filename, import, import_path
+                );
 
                 let mut import_src = "\n".to_owned();
-                let import_src_string = fs::read_to_string(util::universal_path(import_path))
-                    .expect(import_error.as_str());
+                let import_src_string =
+                    fs::read_to_string(import_path).expect(import_error.as_str());
                 import_src.push_str(import_src_string.as_str());
                 return import_src;
             })
             .to_string();
 
         // compile shader
-        match compiler.compile_into_spirv(complete_src.as_str(), kind, filename, "main", None) {
+        match compiler.compile_into_spirv(
+            complete_src.as_str(),
+            kind,
+            filename.as_str(),
+            "main",
+            None,
+        ) {
             Ok(program) => {
                 self.module = Some(wgpu::shader_from_spirv_bytes(
                     device,

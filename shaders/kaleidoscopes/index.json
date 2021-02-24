@@ -1,0 +1,60 @@
+{
+  "default": "kaleidoscope1",
+  "programs": {
+    "kaleidoImage": {
+      "pipeline": {
+        "frag": "kaleidoImage.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kaleidoscope1": {
+      "pipeline": {
+        "frag": "kaleidoscope1.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.99
+      }
+    },
+    "kaleidoscope1Image": {
+      "pipeline": {
+        "frag": "kaleidoscope1Image.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs": {
+      "pipeline": {
+        "frag": "kifs.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs2": {
+      "pipeline": {
+        "frag": "kifs2.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "kifs3": {
+      "pipeline": {
+        "frag": "kifs3.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    }
+  }
+}
+  

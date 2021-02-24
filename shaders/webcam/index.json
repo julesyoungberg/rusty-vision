@@ -1,0 +1,17 @@
+{
+  "default": "webcamCells",
+  "programs": {
+    "webcam": {
+      "pipeline": {
+        "frag": "webcam.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    },
+    "webcamCells": {
+      "pipeline": {
+        "frag": "webcamCells.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    }
+  }
+}
