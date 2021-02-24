@@ -22,13 +22,13 @@ For 3D programs, the camera can be moved with the arrow keys and rotated with WA
 
 ## adding shaders
 
-This rust application listens to the shaders directory (`shaders`), recompiling whenever changes are made. Shaders can be added to `shaders` and referenced in `src/config.json` to be included in the UI's menu.
+This rust application listens to the shaders directory (`shaders`), recompiling whenever changes are made. Shaders can be added to a subdirectory of `shaders` and referenced in the directory's `index.json` to be included in the UI's menu.
 
 ### program config
 
-Descriptions of values you must configure in `config.json` for each program:
+Descriptions of values you must configure in `index.json` for each program:
 
-- `pipeline`: defines the shaders that make up the GPU pipeline. `vert` and `frag` are required, these paths should be relative to `./shaders/`.
+- `pipeline`: defines the shaders that make up the GPU pipeline. `frag` is required, and should be relative to the containing directory.
 
 - `uniforms`: An array of uniform buffer lists for each program. Each list is a single string with uniform types separated with a comma.
 
