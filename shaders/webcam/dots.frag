@@ -30,10 +30,6 @@ void main() {
     p *= scale;
     vec2 gv = fract(p) - 0.5;
     vec2 id = floor(p);
-
-    // draw circle in each grid cell
-    float r = 0.4;
-    float d = smoothstep(r, r * 0.95, length(gv));
     
     // get corresponding pixel brightness
     vec2 coord = (id + 0.5) / scale;
@@ -44,6 +40,10 @@ void main() {
     // reduce number of shades
     float n_shades = 5.0;
     float shade = floor(mod(brightness * n_shades, n_shades)) / n_shades;
+
+    // draw circle in each grid cell
+    float r = 0.5 * shade;
+    float d = smoothstep(r, r * 0.95, length(gv));
 
     color += d * shade;
     

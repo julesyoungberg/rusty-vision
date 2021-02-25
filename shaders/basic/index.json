@@ -1,5 +1,5 @@
 {
-  "default": "basic",
+  "default": "flowImage",
   "programs": {
     "basic": {
       "pipeline": {
@@ -30,6 +30,27 @@
       "defaults": {
         "image1": "forest.jpg"
       }
+    },
+    "flow": {
+      "pipeline": {
+        "frag": "flow.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "flowImage": {
+      "pipeline": {
+        "frag": "flowImage.frag"
+      },
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "forest.jpg"
+      }
+    },
+    "flower": {
+      "pipeline": {
+        "frag": "flower.frag"
+      },
+      "uniforms": ["general"]
     },
     "imageFade": {
       "pipeline": {

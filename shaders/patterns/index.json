@@ -1,5 +1,5 @@
 {
-  "default": "hexagonal1",
+  "default": "space2",
   "programs": {
     "hexagonal1": {
       "pipeline": {
@@ -43,9 +43,15 @@
         "audio_feature_smoothing": 0.8
       }
     },
-    "space": {
+    "space1": {
       "pipeline": {
-        "frag": "space.frag"
+        "frag": "space1.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "space2": {
+      "pipeline": {
+        "frag": "space2.frag"
       },
       "uniforms": ["general"]
     },

@@ -1,5 +1,5 @@
 {
-  "default": "glitch",
+  "default": "dots",
   "programs": {
     "cells": {
       "pipeline": {
