@@ -1,5 +1,5 @@
 {
-  "default": "flowImage",
+  "default": "flower",
   "programs": {
     "basic": {
       "pipeline": {
@@ -61,6 +61,24 @@
         "image1": "fractal1.png",
         "image2": "fractal2.png"
       }
+    },
+    "lines1": {
+      "pipeline": {
+        "frag": "lines1.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "lines2": {
+      "pipeline": {
+        "frag": "lines2.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "mandala": {
+      "pipeline": {
+        "frag": "mandala.frag"
+      },
+      "uniforms": ["general"]
     },
     "soundBall": {
       "pipeline": {

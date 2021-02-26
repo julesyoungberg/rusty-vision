@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use std::{thread, time};
 
 mod app;
 mod interface;
@@ -193,6 +194,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
 /// Render app
 fn view(app: &App, model: &app::Model, frame: Frame) {
     if !model.window_focused {
+        thread::sleep(time::Duration::from_millis(500));
         return;
     }
 

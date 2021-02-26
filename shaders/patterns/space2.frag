@@ -57,13 +57,7 @@ void main() {
             }
         } 
 
-        if (i == 0.0) {
-            color.r += m;
-        } else if (i == 1.0) {
-            color.g += m;
-        } else {
-            color.b += m;
-        }
+        color[int(i)] += m;
     }
 
     frag_color = vec4(color, 1);
