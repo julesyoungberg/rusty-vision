@@ -22,7 +22,7 @@ void main() {
     float t1 = time * 1.13;
     float t2 = time * 0.9;
 
-    for (float i = 1.0; i < 15.0; i += 1.0) {
+    for (float i = 1.0; i < 5.0; i += 1.0) {
         vec2 p = st;
         p.x += 0.75 / i * sin(i * PI * st.y + t1 * 0.1);
         p.y += 0.35 / i * cos(i * PI * st.x + t2);

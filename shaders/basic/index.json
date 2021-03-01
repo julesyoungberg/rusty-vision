@@ -1,5 +1,5 @@
 {
-  "default": "flower",
+  "default": "eye",
   "programs": {
     "basic": {
       "pipeline": {
@@ -30,6 +30,12 @@
       "defaults": {
         "image1": "forest.jpg"
       }
+    },
+    "eye": {
+      "pipeline": {
+        "frag": "eye.frag"
+      },
+      "uniforms": ["general"]
     },
     "flow": {
       "pipeline": {
@@ -74,11 +80,14 @@
       },
       "uniforms": ["general"]
     },
-    "mandala": {
+    "palette": {
       "pipeline": {
-        "frag": "mandala.frag"
+        "frag": "pallete.frag"
       },
-      "uniforms": ["general"]
+      "uniforms": ["general", "image"],
+      "defaults": {
+        "image1": "jj.jpg"
+      }
     },
     "soundBall": {
       "pipeline": {

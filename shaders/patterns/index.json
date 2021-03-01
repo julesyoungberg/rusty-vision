@@ -1,6 +1,18 @@
 {
-  "default": "space2",
+  "default": "eyes",
   "programs": {
+    "candyWarp": {
+      "pipeline": {
+        "frag": "candyWarp.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "eyes": {
+      "pipeline": {
+        "frag": "eyes.frag"
+      },
+      "uniforms": ["general"]
+    },
     "hexagonal1": {
       "pipeline": {
         "frag": "hexagonal1.frag"
