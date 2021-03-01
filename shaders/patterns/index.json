@@ -1,5 +1,5 @@
 {
-  "default": "eyes",
+  "default": "eyeSound",
   "programs": {
     "candyWarp": {
       "pipeline": {
@@ -12,6 +12,15 @@
         "frag": "eyes.frag"
       },
       "uniforms": ["general"]
+    },
+    "eyeSound": {
+      "pipeline": {
+        "frag": "eyeSound.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.97
+      }
     },
     "hexagonal1": {
       "pipeline": {
