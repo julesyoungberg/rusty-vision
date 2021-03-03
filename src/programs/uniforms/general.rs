@@ -9,6 +9,7 @@ pub struct Data {
     pub mouse: Vector2,
     pub resolution: Vector2,
     pub time: f32,
+    pub mouse_down: i32,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -32,6 +33,7 @@ impl GeneralUniforms {
                 mouse: pt2(0.0, 0.0),
                 resolution,
                 time: 0.0,
+                mouse_down: 0,
             },
         }
     }

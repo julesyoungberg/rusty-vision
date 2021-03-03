@@ -23,6 +23,8 @@ fn model(app: &App) -> app::Model {
         .resizable(true)
         .resized(resized)
         .mouse_moved(mouse_moved)
+        .mouse_pressed(mouse_pressed)
+        .mouse_released(mouse_released)
         .view(view)
         .build()
         .unwrap();
@@ -154,6 +156,24 @@ fn mouse_moved(_app: &App, model: &mut app::Model, position: Vector2) {
         .buffer_store
         .general_uniforms
         .set_mouse(position);
+}
+
+fn mouse_pressed(_app: &App, model: &mut app::Model, _: nannou::event::MouseButton) {
+    model
+        .program_store
+        .buffer_store
+        .general_uniforms
+        .data
+        .mouse_down = 1;
+}
+
+fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseButton) {
+    model
+        .program_store
+        .buffer_store
+        .general_uniforms
+        .data
+        .mouse_down = 0;
 }
 
 /// Draw the state of the app to the frame

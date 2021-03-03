@@ -7,6 +7,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     vec2 mouse;
     vec2 resolution;
     float time;
+    int mouse_down;
 };
 
 layout(set = 1, binding = 0) uniform sampler mfcc_sampler;

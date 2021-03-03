@@ -7,6 +7,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     vec2 mouse;
     vec2 resolution;
     float time;
+    int mouse_down;
 };
 
 // based on: http://glslsandbox.com/e#38710.0 & https://editor.isf.video/shaders/5e7a802d7c113618206dec38
