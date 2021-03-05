@@ -10,9 +10,6 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
-
 // based on: https://editor.isf.video/shaders/5e7a7ff97c113618206de819
 
 #define C30 0.866025 // cos 30
@@ -38,9 +35,11 @@ vec4 voronoi(in vec2 p, float mode) {
     float m_corner_dist = 8.0;
     float m_corner_dist2 = 0.0;
     float m_id = 0.0;
-    float m_top = 0.0;
+    float m_side = 0.0;
 
+    #pragma unroll
     for (float y = -2.0; y <= 2.0; y++) {
+        #pragma unroll
         for (float x = -2.0; x <= 2.0; x++) {
             vec2 offset = vec2(x, y);
             vec2 coord = id + offset;
@@ -62,14 +61,14 @@ vec4 voronoi(in vec2 p, float mode) {
                 m_corner_dist2 = m_corner_dist;
                 m_corner_dist = d.x;
                 m_id = fract(length(coord));
-                m_top = d.y;
+                m_side = d.y;
             } else if (d.x < m_corner_dist2) {
                 m_corner_dist2 = d.x;
             }
         }
     }
 
-    return vec4(m_corner_dist, m_id, m_top, m_corner_dist2 - m_corner_dist);
+    return vec4(m_corner_dist, m_id, m_side * 0.5, m_corner_dist2 - m_corner_dist);
 }
 
 void main() {
@@ -82,9 +81,12 @@ void main() {
     float scale = 12.0;
     vec4 val = voronoi(st * scale, mode);
     
-    vec3 color = sin(val.y * 2.5 + vec3(2, 1, 0.5));
+    // unique cell color
+    vec3 color = sin(val.y * 10.0 + vec3(2, 1, 0.5) + time) * 0.5 + 0.5;
+    // slide edge shading
     color *= sqrt(clamp(1.0 - val.x, 0.0, 1.0));
-    color *= clamp(0.5 + (1.0 - val.z / 2.0) * 0.5, 0.0, 1.0);
+    // cube face shading
+    color *= clamp((1.0 - val.z) * 0.5 + 0.5, 0.0, 1.0);
 
     frag_color = vec4(color, 1.0);
 }
