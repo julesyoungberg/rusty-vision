@@ -111,6 +111,17 @@
         "audio_fft_smoothing": 0.7
       }
     },
+    "soundFBM": {
+      "pipeline": {
+        "frag": "soundFBM.frag"
+      },
+      "uniforms": ["general", "audio_features", "noise"],
+      "defaults": {
+        "audio_feature_smoothing": 0.8,
+        "noise_scale_by_prev": 1,
+        "noise_sharpen": 1
+      }
+    },
     "soundLights": {
       "pipeline": {
         "frag": "soundLights.frag"

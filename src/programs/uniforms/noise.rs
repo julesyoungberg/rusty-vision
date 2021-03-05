@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 
+use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 #[repr(C)]
@@ -35,10 +36,46 @@ impl NoiseUniforms {
                 invert: 0,
                 mirror: 0,
                 octaves: 4,
-                scale_by_prev: 1,
-                sharpen: 1,
+                scale_by_prev: 0,
+                sharpen: 0,
                 speed: 0.1,
             },
+        }
+    }
+
+    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+        if let Some(cnfg) = defaults {
+            if let Some(lacunarity) = cnfg.noise_lacunarity {
+                self.data.lacunarity = lacunarity;
+            }
+
+            if let Some(gain) = cnfg.noise_gain {
+                self.data.gain = gain;
+            }
+
+            if let Some(invert) = cnfg.noise_invert {
+                self.data.invert = invert;
+            }
+
+            if let Some(mirror) = cnfg.noise_mirror {
+                self.data.mirror = mirror;
+            }
+
+            if let Some(octaves) = cnfg.noise_octaves {
+                self.data.octaves = octaves;
+            }
+
+            if let Some(scale_by_prev) = cnfg.noise_scale_by_prev {
+                self.data.scale_by_prev = scale_by_prev;
+            }
+
+            if let Some(sharpen) = cnfg.noise_sharpen {
+                self.data.sharpen = sharpen;
+            }
+
+            if let Some(speed) = cnfg.noise_speed {
+                self.data.speed = speed;
+            }
         }
     }
 }

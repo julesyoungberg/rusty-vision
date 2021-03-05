@@ -26,14 +26,14 @@ float noise3(in vec3 p);
 float rand21(vec2 co);
 float rand31(vec3 co);
 
-const vec2 s = vec2(1, 1.7320508);
 const float SCALE = 5.0;
+const vec2 s = vec2(1, 1.7320508);
 
 // shane's hexagonal tiling (https://www.shadertoy.com/view/llSyDh)
 vec4 get_hex(vec2 p) {
-    vec4 hC = floor(vec4(p, p - vec2(.5, 1))/s.xyxy) + .5;
-    vec4 h = vec4(p - hC.xy*s, p - (hC.zw + .5)*s);
-    return dot(h.xy, h.xy)<dot(h.zw, h.zw) ? vec4(h.xy, hC.xy) : vec4(h.zw, hC.zw + vec2(.5, 1));
+    vec4 hc = floor(vec4(p, p - vec2(0.5, 1)) / s.xyxy) + 0.5;
+    vec4 h = vec4(p - hc.xy * s, p - (hc.zw + 0.5) * s);
+    return (dot(h.xy, h.xy) < dot(h.zw, h.zw)) ? vec4(h.xy, hc.xy) : vec4(h.zw, hc.zw + vec2(0.5, 1));
 }
 
 mat2 m = mat2(0.8, 0.6, -0.6, 0.8);

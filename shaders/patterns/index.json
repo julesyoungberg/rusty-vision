@@ -1,5 +1,5 @@
 {
-  "default": "eyes",
+  "default": "voronoiCubes",
   "programs": {
     "candyWarp": {
       "pipeline": {
@@ -49,13 +49,13 @@
         "audio_fft_smoothing": 0.97
       }
     },
-    "soundFBM": {
+    "soundCellsHex": {
       "pipeline": {
-        "frag": "soundFBM.frag"
+        "frag": "soundCellsHex.frag"
       },
-      "uniforms": ["general", "audio_features", "noise"],
+      "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_feature_smoothing": 0.8
+        "audio_fft_smoothing": 0.85
       }
     },
     "space1": {
@@ -70,6 +70,12 @@
       },
       "uniforms": ["general"]
     },
+    "spaceHex": {
+      "pipeline": {
+        "frag": "spaceHex.frag"
+      },
+      "uniforms": ["general"]
+    },
     "truchet1": {
       "pipeline": {
         "frag": "truchet1.frag"
@@ -79,6 +85,12 @@
     "truchet2": {
       "pipeline": {
         "frag": "truchet2.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "voronoiCubes": {
+      "pipeline": {
+        "frag": "voronoiCubes.frag"
       },
       "uniforms": ["general"]
     }

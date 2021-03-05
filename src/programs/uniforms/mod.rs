@@ -315,6 +315,10 @@ impl BufferStore {
             self.image_uniforms.set_defaults(app, defaults);
         }
 
+        if subscriptions.noise {
+            self.noise_uniforms.set_defaults(defaults);
+        }
+
         if subscriptions.webcam {
             self.webcam_uniforms.set_defaults(device, defaults);
             if self.webcam_uniforms.updated {

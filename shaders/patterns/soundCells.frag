@@ -13,11 +13,11 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
-//@import util/rand
 //@import util/hsv2rgb
+//@import util/rand
 
-vec3 rand3(vec3 p);
 vec3 hsv2rgb(vec3 c);
+vec3 rand3(vec3 p);
 
 vec3 get_point(vec3 coord) {
     vec3 point = rand3(coord);
@@ -25,7 +25,7 @@ vec3 get_point(vec3 coord) {
     return point;
 }
 
-vec4 voroni(vec3 p, float scale) {
+vec4 voronoi(vec3 p, float scale) {
     vec3 i_st = floor(p);
     vec3 f_st = fract(p);
 
@@ -99,7 +99,7 @@ void main() {
     st *= scale;
 
     vec3 p = vec3(st, time * 0.5);
-    vec4 val = voroni(p, scale);
+    vec4 val = voronoi(p, scale);
     vec3 m_point = val.xyz;
     float m_edge_dist = val.w;
 

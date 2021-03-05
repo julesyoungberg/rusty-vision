@@ -22,6 +22,14 @@ pub struct ProgramDefaults {
     pub shape_rotation: Option<Vector3<f32>>,
     pub image1: Option<String>,
     pub image2: Option<String>,
+    pub noise_lacunarity: Option<f32>,
+    pub noise_gain: Option<f32>,
+    pub noise_invert: Option<i32>,
+    pub noise_mirror: Option<i32>,
+    pub noise_octaves: Option<i32>,
+    pub noise_scale_by_prev: Option<i32>,
+    pub noise_sharpen: Option<i32>,
+    pub noise_speed: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
