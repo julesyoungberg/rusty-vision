@@ -35,35 +35,41 @@ vec4 voronoi(in vec2 p, float mode) {
     vec2 gv = fract(p);
     vec2 id = floor(p);
 
-    vec3 m = vec3(8.0);
-    float m_dist = 0.0;
+    float m_corner_dist = 8.0;
+    float m_corner_dist2 = 0.0;
+    float m_id = 0.0;
+    float m_top = 0.0;
 
     for (float y = -2.0; y <= 2.0; y++) {
         for (float x = -2.0; x <= 2.0; x++) {
             vec2 offset = vec2(x, y);
             vec2 coord = id + offset;
             vec2 point = get_point(coord);
-
             vec2 diff = offset + point - gv;
-            vec2 d1 = vec2(sqrt(dot(diff, diff)), 1.0);
+
+            // regular voronoi distance calc
+            vec2 d1 = vec2(length(diff), 1.0);
+            // voronoi cube distance calc
             vec2 d2 = vec2(
                 max(abs(diff.x) * C30 + diff.y * 0.5, -diff.y),
                 step(0.0, 0.5 * abs(diff.x) + C30 * diff.y) * (1.0 + step(0.0, diff.x))
             );
+            // blend the two modes
             vec2 d = mix(d2, d1, fract(mode));
 
-            if (d.x < m.x) {
-                m_dist = m.x;
-                m.x = d.x;
-                m.y = rand(dot(id + offset, vec2(1)));
-                m.z = d.y;
-            } else if (d.x < m_dist) {
-                m_dist = d.x;
+            // update minimums
+            if (d.x < m_corner_dist) {
+                m_corner_dist2 = m_corner_dist;
+                m_corner_dist = d.x;
+                m_id = fract(length(coord));
+                m_top = d.y;
+            } else if (d.x < m_corner_dist2) {
+                m_corner_dist2 = d.x;
             }
         }
     }
 
-    return vec4(m, m_dist - m.x);
+    return vec4(m_corner_dist, m_id, m_top, m_corner_dist2 - m_corner_dist);
 }
 
 void main() {
@@ -71,11 +77,10 @@ void main() {
     st.y *= resolution.y / resolution.x;
     st = st * 0.5 + 0.5;
 
-    float mode = mod(time * 0.2, 3.0);
-    mode = floor(mode) + smoothstep(0.8, 1.0, fract(mode));
+    float mode = 0.0; // sin(time) * 0.5 + 0.5;
 
-    float scale = 10.0;
-    vec4 val = voronoi((24.0 - scale) * st, mode);
+    float scale = 12.0;
+    vec4 val = voronoi(st * scale, mode);
     
     vec3 color = sin(val.y * 2.5 + vec3(2, 1, 0.5));
     color *= sqrt(clamp(1.0 - val.x, 0.0, 1.0));
