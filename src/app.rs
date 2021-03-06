@@ -87,6 +87,7 @@ pub struct Model {
     pub main_window_id: WindowId,
     pub original_height: u32,
     pub original_width: u32,
+    pub paused: bool,
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
     pub ui: Ui,
@@ -98,5 +99,4 @@ pub struct Model {
     pub ui_show_noise: bool,
     pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
-    pub window_focused: bool,
 }

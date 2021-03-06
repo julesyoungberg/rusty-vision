@@ -18,8 +18,8 @@ fn model(app: &App) -> app::Model {
         .new_window()
         .size(1920, 1080)
         .key_pressed(key_pressed)
-        .unfocused(unfocused)
-        .focused(focused)
+        .unfocused(pause)
+        .focused(unpause)
         .resizable(true)
         .resized(resized)
         .mouse_moved(mouse_moved)
@@ -47,6 +47,7 @@ fn model(app: &App) -> app::Model {
         main_window_id,
         original_height: height,
         original_width: width,
+        paused: false,
         program_store,
         show_controls: true,
         ui,
@@ -58,7 +59,6 @@ fn model(app: &App) -> app::Model {
         ui_show_noise: false,
         size,
         vertex_buffer,
-        window_focused: true,
     }
 }
 
@@ -68,7 +68,7 @@ fn model(app: &App) -> app::Model {
 /// This flag is set by the interface and unset by the profram store.
 /// Update order should be: interface, uniforms, shaders
 fn update(app: &App, model: &mut app::Model, _update: Update) {
-    if !model.window_focused {
+    if model.paused {
         return;
     }
 
@@ -91,6 +91,16 @@ fn resize(app: &App, model: &mut app::Model, width: u32, height: u32) {
     window.set_inner_size_pixels(width, height);
 }
 
+fn pause(_app: &App, model: &mut app::Model) {
+    model.paused = true;
+    model.program_store.pause();
+}
+
+fn unpause(_app: &App, model: &mut app::Model) {
+    model.paused = false;
+    model.program_store.unpause();
+}
+
 /// Handle key pressed event
 fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
     match key {
@@ -101,6 +111,13 @@ fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
         Key::Key4 => resize(app, model, 2560, 1440),
         Key::Key5 => resize(app, model, 3840, 2160),
         Key::Key0 => resize(app, model, model.original_width, model.original_height),
+        Key::P => {
+            if model.paused {
+                unpause(app, model);
+            } else {
+                pause(app, model);
+            }
+        }
         _ => (),
     };
 
@@ -129,16 +146,6 @@ fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
         Key::D => camera.rotate(util::rotate_around_axis(camera_up, -theta)),
         _ => (),
     }
-}
-
-fn unfocused(_app: &App, model: &mut app::Model) {
-    model.window_focused = false;
-    model.program_store.pause();
-}
-
-fn focused(_app: &App, model: &mut app::Model) {
-    model.window_focused = true;
-    model.program_store.unpause();
 }
 
 fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
@@ -213,7 +220,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
 
 /// Render app
 fn view(app: &App, model: &app::Model, frame: Frame) {
-    if !model.window_focused {
+    if model.paused {
         thread::sleep(time::Duration::from_millis(500));
         return;
     }
