@@ -49,7 +49,7 @@ float spectrum_strength(float start, float end) {
 float dot_pattern(in vec2 st, float angle, float scale, in vec2 center) {
     float s = sin(angle * TAU);
     float c = cos(angle * TAU);
-    vec2 p = (st - center) * resolution * mat2(c, -s, s, c);
+    vec2 p = (st - center) * resolution * scale * mat2(c, -s, s, c);
     return sin(p.x) * sin(p.y) * 4.0 * (sin(angle * TAU + scale * time * 6.0) * 0.5 + 1.0);
 }
 
@@ -61,7 +61,7 @@ float circle_pattern(in vec2 st, float angle, float scale, in vec2 center) {
 float line_pattern(in vec2 st, float angle, float scale, in vec2 center) {
     float s = sin(angle * TAU * 0.5);
     float c = cos(angle * TAU * 0.5);
-    vec2 p = st * resolution * mat2(c, -s, s, c);
+    vec2 p = st * resolution * scale * mat2(c, -s, s, c);
     return (center.x + sin(p.y + center.y * TAU + time * 12.0)) * 4.0;
 }
 
