@@ -13,7 +13,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
-#define TAO 6.28318530718
+#define TAU 6.28318530718
 
 //@import util/hsv2rgb
 //@import util/noise
@@ -40,8 +40,8 @@ float hex_dist(in vec2 p) {
 vec2 get_point(vec2 coord) {
     vec2 point = rand2(coord);
     return vec2(
-        cos(time * 0.5 + point.x * TAO),
-        sin(time * 0.5 + point.y * TAO)
+        cos(time * 0.5 + point.x * TAU),
+        sin(time * 0.5 + point.y * TAU)
     ) * 0.3;
 }
 
@@ -59,7 +59,7 @@ vec3 voronoi(vec4 coords, vec2 st, float scale) {
     for (float i = 0.0; i <= 6.0; i++) {
         vec2 offset = vec2(0);
         if (i < 6.0) {
-            float angle = i * TAO / 6.0;
+            float angle = i * TAU / 6.0;
             float si = sin(angle);
             float co = cos(angle);
             offset = vec2(1.0, 0.0) * mat2(co, -si, si, co);
@@ -86,7 +86,7 @@ vec3 voronoi(vec4 coords, vec2 st, float scale) {
     for (float i = 0.0; i <= 6.0; i++) {
         vec2 offset = vec2(0);
         if (i < 6.0) {
-            float angle = i * TAO / 6.0;
+            float angle = i * TAU / 6.0;
             float si = sin(angle);
             float co = cos(angle);
             offset = vec2(1.0, 0.0) * mat2(co, -si, si, co);

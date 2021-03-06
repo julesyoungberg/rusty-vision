@@ -13,7 +13,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 // based on: https://editor.isf.video/shaders/5e7a7ff97c113618206de819
 
 #define C30 0.866025 // cos 30
-#define TAO 6.28318530718
+#define TAU 6.28318530718
 
 //@import util/hsv2rgb
 //@import util/rand

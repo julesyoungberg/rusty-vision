@@ -1,5 +1,5 @@
 {
-  "default": "dots",
+  "default": "halftone",
   "programs": {
     "cells": {
       "pipeline": {
@@ -20,6 +20,15 @@
       "uniforms": ["general", "audio_fft", "webcam"],
       "defaults": {
         "audio_fft_smoothing": 0.5
+      }
+    },
+    "halftone": {
+      "pipeline": {
+        "frag": "halftone.frag"
+      },
+      "uniforms": ["general", "audio_fft", "webcam"],
+      "defaults": {
+        "audio_fft_smoothing": 0.6
       }
     },
     "webcam": {

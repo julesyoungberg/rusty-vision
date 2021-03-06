@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 };
 
 #define PI 3.14159265359
-#define TAO 6.28318530718
+#define TAU 6.28318530718
 
 const vec2 s = vec2(1, 1.7320508);
 
@@ -52,7 +52,7 @@ void main() {
         for (float j = 0.0; j <= 6.0; j++) {
             vec2 offset = vec2(0);
             if (j < 6.0) {
-                float angle = j * TAO / 6.0;
+                float angle = j * TAU / 6.0;
                 float si = sin(angle);
                 float co = cos(angle);
                 offset = vec2(1.0, 0.0) * mat2(co, -si, si, co);
