@@ -1,5 +1,5 @@
 {
-  "default": "eye",
+  "default": "mandelbrot",
   "programs": {
     "basic": {
       "pipeline": {
@@ -31,6 +31,12 @@
         "image1": "forest.jpg"
       }
     },
+    "driveHome": {
+      "pipeline": {
+        "frag": "driveHome.frag"
+      },
+      "uniforms": ["general"]
+    },
     "eye": {
       "pipeline": {
         "frag": "eye.frag"
@@ -58,6 +64,12 @@
       },
       "uniforms": ["general"]
     },
+    "heart": {
+      "pipeline": {
+        "frag": "heart.frag"
+      },
+      "uniforms": ["general"]
+    },
     "imageFade": {
       "pipeline": {
         "frag": "imageFade.frag"
@@ -77,6 +89,12 @@
     "lines2": {
       "pipeline": {
         "frag": "lines2.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "mandelbrot": {
+      "pipeline": {
+        "frag": "mandelbrot.frag"
       },
       "uniforms": ["general"]
     },

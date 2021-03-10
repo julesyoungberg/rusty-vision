@@ -1,5 +1,5 @@
 {
-  "default": "voronoiCubes",
+  "default": "universeWithin",
   "programs": {
     "candyWarp": {
       "pipeline": {
@@ -85,6 +85,12 @@
     "truchet2": {
       "pipeline": {
         "frag": "truchet2.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "universeWithin": {
+      "pipeline": {
+        "frag": "universeWithin.frag"
       },
       "uniforms": ["general"]
     },

@@ -12,7 +12,6 @@ float noise_hash3(vec3 p) {
 float noise2(in vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
-
     vec2 u = f * f * (3.0 - 2.0 * f);
 
     return mix(mix(noise_hash2(i + vec2(0.0, 0.0)),

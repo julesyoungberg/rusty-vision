@@ -12,7 +12,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 
 void main() {
     vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    st.x *= resolution.x / resolution.y;
     vec3 color = vec3(st * 0.5 + 0.5, abs(sin(time)));
     float d = distance(st, 2.0 * mouse / resolution.x);
     color += smoothstep(0.01, 0.0, d);
