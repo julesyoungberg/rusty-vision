@@ -1,7 +1,5 @@
-use bytemuck;
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
-use serde_json;
 use serde_json::{json, Value};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -12,7 +10,7 @@ use crate::programs::config;
 use crate::programs::uniforms::audio_source;
 use crate::programs::uniforms::base::Bufferable;
 
-const CONNECTION: &'static str = "ws://127.0.0.1:9002";
+const CONNECTION: &str = "ws://127.0.0.1:9002";
 const NUM_MFCCS: usize = 12;
 
 #[repr(C)]
@@ -163,8 +161,8 @@ impl AudioFeaturesUniforms {
                     "tristimulus",
                 ],
                 "sample_rate": sample_rate,
-                "hop_size": 512 as u32, // happens to be cpal's buffer size
-                "memory": 4 as u32, // rember 4 frames including current
+                "hop_size": 512, // happens to be cpal's buffer size
+                "memory": 4, // rember 4 frames including current
             }
         });
 
@@ -276,7 +274,7 @@ impl AudioFeaturesUniforms {
             }
         }));
 
-        return true;
+        true
     }
 
     pub fn end_session(&mut self) {

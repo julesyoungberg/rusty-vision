@@ -1,6 +1,5 @@
 use nannou::prelude::*;
 use rayon::prelude::*;
-use shaderc;
 use std::collections::HashMap;
 
 use crate::programs::config;

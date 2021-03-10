@@ -29,9 +29,9 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, title: &str, message
 
 pub fn compilation_errors(widget_ids: &app::WidgetIds, ui: &mut UiCell, errors: &ProgramErrors) {
     let mut error_string: String = "".to_owned();
-    for (_key, value) in errors {
+    for value in errors.values() {
         error_string.push_str(value.as_str());
-        error_string.push_str("\n");
+        error_string.push('\n');
     }
 
     update(widget_ids, ui, "Compilation Errors", error_string.as_str());

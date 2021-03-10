@@ -1,4 +1,3 @@
-use bytemuck;
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
 use std::sync::mpsc::{channel, Sender};
@@ -63,20 +62,13 @@ impl AudioUniforms {
     }
 
     pub fn update(&mut self) {
-        match self.audio_consumer.take() {
-            Some(mut c) => {
-                let popped = c.pop();
-                self.audio_consumer = Some(c);
-                match popped {
-                    Some(f) => {
-                        for i in 0..audio_source::FRAME_SIZE {
-                            self.frame[i] = f[i];
-                        }
-                    }
-                    None => (),
-                };
+        if let Some(mut c) = self.audio_consumer.take() {
+            let popped = c.pop();
+            self.audio_consumer = Some(c);
+
+            if let Some(f) = popped {
+                self.frame[..audio_source::FRAME_SIZE].clone_from_slice(&f[..audio_source::FRAME_SIZE]);
             }
-            None => (),
         };
     }
 
@@ -86,9 +78,7 @@ impl AudioUniforms {
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
         let mut frame = [0.0; audio_source::FRAME_SIZE];
-        for i in 0..audio_source::FRAME_SIZE {
-            frame[i] = self.frame[i];
-        }
+        frame[..audio_source::FRAME_SIZE].clone_from_slice(&self.frame[..audio_source::FRAME_SIZE]);
         self.audio_texture
             .upload_data(device, encoder, bytemuck::bytes_of(&frame));
     }

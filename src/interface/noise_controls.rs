@@ -20,7 +20,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut noise::NoiseUniforms) {
     /////////////////////////
     // lacunarity
-    for value in components::slider(uniforms.data.lacunarity, 0.0, 5.0)
+    if let Some(value) = components::slider(uniforms.data.lacunarity, 0.0, 5.0)
         .parent(widget_ids.controls_wrapper)
         .down(10.0)
         .label("Lacunarity")
@@ -31,7 +31,7 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut noise
 
     /////////////////////////
     // gain
-    for value in components::slider(uniforms.data.gain, 0.0, 1.0)
+    if let Some(value) = components::slider(uniforms.data.gain, 0.0, 1.0)
         .parent(widget_ids.controls_wrapper)
         .down(10.0)
         .label("Gain")
@@ -42,7 +42,7 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, uniforms: &mut noise
 
     /////////////////////////
     // speed
-    for value in components::slider(uniforms.data.speed, 0.0, 0.5)
+    if let Some(value) = components::slider(uniforms.data.speed, 0.0, 0.5)
         .parent(widget_ids.controls_wrapper)
         .down(10.0)
         .label("Speed")

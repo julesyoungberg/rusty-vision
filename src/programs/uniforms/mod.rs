@@ -40,7 +40,7 @@ impl UniformBuffer {
         let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
         let mut texture_views = vec![];
 
-        if textures.len() > 0 {
+        if !textures.is_empty() {
             layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
 
             for texture in textures.iter() {
@@ -56,7 +56,7 @@ impl UniformBuffer {
         }
 
         let mut buffer = None;
-        if data.len() > 0 {
+        if !data.is_empty() {
             layout_builder = layout_builder.uniform_buffer(wgpu::ShaderStage::FRAGMENT, false);
             let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
             let buff = device.create_buffer_with_data(data, usage);
@@ -68,7 +68,7 @@ impl UniformBuffer {
         let mut group_builder = wgpu::BindGroupBuilder::new();
         let sampler = wgpu::SamplerBuilder::new().build(device);
 
-        if texture_views.len() > 0 {
+        if !texture_views.is_empty() {
             group_builder = group_builder.sampler(&sampler);
             for texture_view in texture_views.iter() {
                 group_builder = group_builder.texture_view(texture_view);
@@ -123,7 +123,7 @@ pub struct UniformSubscriptions {
 }
 
 /// Build a subscriptions struct from a list of uniform names
-pub fn get_subscriptions(names: &Vec<String>) -> UniformSubscriptions {
+pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
         audio: false,
         audio_features: false,
@@ -256,22 +256,18 @@ impl BufferStore {
             audio_channels.push(self.audio_fft_uniforms.start_session());
         }
 
-        if audio_channels.len() > 0 {
-            if !self
-                .audio_source
-                .start_session(audio_channels, error_channels)
-            {
-                self.end_audio_session();
-            }
+        if !audio_channels.is_empty() && !self
+            .audio_source
+            .start_session(audio_channels, error_channels)
+        {
+            self.end_audio_session();
         }
 
-        if subscriptions.audio_features {
-            if !self
-                .audio_features_uniforms
-                .start_session(self.audio_source.sample_rate)
-            {
-                self.end_audio_session();
-            }
+        if subscriptions.audio_features && !self
+            .audio_features_uniforms
+            .start_session(self.audio_source.sample_rate)
+        {
+            self.end_audio_session();
         }
     }
 

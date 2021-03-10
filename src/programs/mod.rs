@@ -1,6 +1,5 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
-use std::iter::FromIterator;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
@@ -112,15 +111,15 @@ impl ProgramStore {
         // update the current GPU program to use the latest code
         let buffers = &self.buffer_store.buffers;
         // map the current program's uniform list to a list of bind group layouts
-        let bind_group_layout_iter = self
+        let bind_group_layouts = &self
             .current_program
             .config
             .uniforms
             .iter()
-            .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout);
+            .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
+            .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
 
         // update the program with the new shader code and appropriate layout description
-        let bind_group_layouts = &Vec::from_iter(bind_group_layout_iter)[..];
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
         self.current_program
             .compile(app, device, &layout_desc, num_samples);
@@ -238,7 +237,7 @@ impl ProgramStore {
 
     /// Fetch the appropriate bind groups to set positions for the current program.
     /// Call in draw() right before rendering.
-    pub fn get_bind_groups<'a>(&self) -> Vec<&wgpu::BindGroup> {
+    pub fn get_bind_groups(&self) -> Vec<&wgpu::BindGroup> {
         self.current_program
             .config
             .uniforms

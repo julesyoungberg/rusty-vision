@@ -1,7 +1,7 @@
 use nannou::image;
 use nannou::image::GenericImageView;
 use nannou::prelude::*;
-use tinyfiledialogs;
+use tinyfiledialogs::open_file_dialog;
 
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
@@ -74,7 +74,7 @@ impl ImageUniforms {
         let (width, height) = img.dimensions();
         let texture = wgpu::Texture::from_image(app, &img);
 
-        let filename = filepath.split("/").last().unwrap().to_string();
+        let filename = filepath.split('/').last().unwrap().to_string();
         let size = pt2(width as f32, height as f32);
 
         match image_id {
@@ -127,7 +127,7 @@ impl ImageUniforms {
     }
 
     pub fn select_image(&mut self, app: &App, image_id: i32) {
-        let filepath = match tinyfiledialogs::open_file_dialog(
+        let filepath = match open_file_dialog(
             "Load Image",
             "~",
             Some((&["*.jpg", "*.png"], "")),

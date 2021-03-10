@@ -7,15 +7,15 @@ pub fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
         .border(1.0)
 }
 
-pub fn text<'a>(text: &'a str) -> widget::Text<'a> {
+pub fn text(text: &str) -> widget::Text<'_> {
     widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(12)
 }
 
-pub fn text_small<'a>(text: &'a str) -> widget::Text<'a> {
+pub fn text_small(text: &str) -> widget::Text<'_> {
     widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(10)
 }
 
-pub fn label<'a>(txt: &'a str) -> widget::Text<'a> {
+pub fn label(txt: &str) -> widget::Text<'_> {
     text(txt).down(10.0)
 }
 

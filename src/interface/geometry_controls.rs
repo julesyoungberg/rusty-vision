@@ -43,7 +43,7 @@ pub fn update(
 
     /////////////////////////
     // fog control
-    for value in components::slider(uniforms.data.fog_dist, 15.0, 300.0)
+    if let Some(value) = components::slider(uniforms.data.fog_dist, 15.0, 300.0)
         .parent(widget_ids.controls_wrapper)
         .left(-30.0)
         .down(10.0)
@@ -59,19 +59,19 @@ pub fn update(
     components::label("Rotation 1")
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_label, ui);
-    for value in components::x_slider(uniforms.data.rotation1_x, 0.0, twopi)
+    if let Some(value) = components::x_slider(uniforms.data.rotation1_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_x, ui)
     {
         uniforms.data.rotation1_x = value;
     }
-    for value in components::y_slider(uniforms.data.rotation1_y, 0.0, twopi)
+    if let Some(value) = components::y_slider(uniforms.data.rotation1_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_y, ui)
     {
         uniforms.data.rotation1_y = value;
     }
-    for value in components::z_slider(uniforms.data.rotation1_z, 0.0, twopi)
+    if let Some(value) = components::z_slider(uniforms.data.rotation1_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation1_z, ui)
     {
@@ -83,21 +83,21 @@ pub fn update(
     let twopi = 360.0;
     components::label("Rotation 2")
         .parent(widget_ids.controls_wrapper)
-        .left(85.0 as f64)
+        .left(85.0_f64)
         .set(widget_ids.rotation2_label, ui);
-    for value in components::x_slider(uniforms.data.rotation2_x, 0.0, twopi)
+    if let Some(value) = components::x_slider(uniforms.data.rotation2_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_x, ui)
     {
         uniforms.data.rotation2_x = value;
     }
-    for value in components::y_slider(uniforms.data.rotation2_y, 0.0, twopi)
+    if let Some(value) = components::y_slider(uniforms.data.rotation2_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_y, ui)
     {
         uniforms.data.rotation2_y = value;
     }
-    for value in components::z_slider(uniforms.data.rotation2_z, 0.0, twopi)
+    if let Some(value) = components::z_slider(uniforms.data.rotation2_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.rotation2_z, ui)
     {
@@ -109,21 +109,21 @@ pub fn update(
     let offset_max = 10.0;
     components::label("Offset 1")
         .parent(widget_ids.controls_wrapper)
-        .left(100.0 as f64)
+        .left(100.0_f64)
         .set(widget_ids.offset1_label, ui);
-    for value in components::x_slider(uniforms.data.offset1_x, 0.0, offset_max)
+    if let Some(value) = components::x_slider(uniforms.data.offset1_x, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_x, ui)
     {
         uniforms.data.offset1_x = value;
     }
-    for value in components::y_slider(uniforms.data.offset1_y, 0.0, offset_max)
+    if let Some(value) = components::y_slider(uniforms.data.offset1_y, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_y, ui)
     {
         uniforms.data.offset1_y = value;
     }
-    for value in components::z_slider(uniforms.data.offset1_z, 0.0, offset_max)
+    if let Some(value) = components::z_slider(uniforms.data.offset1_z, 0.0, offset_max)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.offset1_z, ui)
     {
@@ -135,21 +135,21 @@ pub fn update(
     let twopi = 360.0;
     components::label("Shape Rotation")
         .parent(widget_ids.controls_wrapper)
-        .left(55.0 as f64)
+        .left(55.0_f64)
         .set(widget_ids.shape_rotation_label, ui);
-    for value in components::x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
+    if let Some(value) = components::x_slider(uniforms.data.shape_rotation_x, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_x, ui)
     {
         uniforms.data.shape_rotation_x = value;
     }
-    for value in components::y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
+    if let Some(value) = components::y_slider(uniforms.data.shape_rotation_y, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_y, ui)
     {
         uniforms.data.shape_rotation_y = value;
     }
-    for value in components::z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
+    if let Some(value) = components::z_slider(uniforms.data.shape_rotation_z, 0.0, twopi)
         .parent(widget_ids.controls_wrapper)
         .set(widget_ids.shape_rotation_z, ui)
     {

@@ -68,7 +68,7 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
 
     /////////////////////////
     // hint
-    components::text_small(&format!("Press 'h' to hide"))
+    components::text_small(&"Press 'h' to hide".to_string())
         .parent(model.widget_ids.controls_wrapper)
         .top_left_with_margin(10.0)
         .set(model.widget_ids.toggle_controls_hint, ui);
@@ -84,7 +84,7 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>();
-    for selected in components::drop_down(&folder_names[..], model.program_store.folder_index)
+    if let Some(selected) = components::drop_down(&folder_names[..], model.program_store.folder_index)
         .parent(model.widget_ids.controls_wrapper)
         .down(5.0)
         .set(model.widget_ids.current_folder, ui)
@@ -103,7 +103,7 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>();
-    for selected in components::drop_down(&program_names[..], model.program_store.program_index)
+    if let Some(selected) = components::drop_down(&program_names[..], model.program_store.program_index)
         .parent(model.widget_ids.controls_wrapper)
         .down(5.0)
         .set(model.widget_ids.current_program, ui)

@@ -99,12 +99,12 @@ impl WebcamUniforms {
                 .format(wgpu::TextureFormat::Rgba8Uint)
                 .build(device),
         );
-        self.frame_data = vec![0 as u8; (width * height * 3.0) as usize];
+        self.frame_data = vec![0; (width * height * 3.0) as usize];
 
         let video_ring_buffer = RingBuffer::<Vec<u8>>::new(2);
         let (mut video_producer, video_consumer) = video_ring_buffer.split();
         video_producer
-            .push(vec![0 as u8; (width * height * 3.0) as usize])
+            .push(vec![0; (width * height * 3.0) as usize])
             .unwrap();
         self.video_consumer = Some(video_consumer);
 
@@ -132,7 +132,7 @@ impl WebcamUniforms {
                 .iter()
                 .map(|row| {
                     row.iter()
-                        .map(|pixel| pixel.iter().map(|v| *v).collect::<Vec<u8>>())
+                        .map(|pixel| pixel.iter().copied().collect::<Vec<u8>>())
                         .flatten()
                         .collect::<Vec<u8>>()
                 })
@@ -151,9 +151,8 @@ impl WebcamUniforms {
                     Message::Pause(()) => {
                         // the stream has been paused, block it is unpaused
                         for message in message_channel_rx.iter() {
-                            match message {
-                                Message::Unpause(()) => break, // break from this inner loop
-                                _ => (),                       // continue waiting
+                            if let Message::Unpause(()) = message {
+                                break;
                             }
                         }
                     }
@@ -166,7 +165,7 @@ impl WebcamUniforms {
 
         self.updated = true;
 
-        return true;
+        true
     }
 
     pub fn end_session(&mut self) {
@@ -197,17 +196,13 @@ impl WebcamUniforms {
             return;
         }
 
-        match self.video_consumer.take() {
-            Some(mut c) => {
-                let popped = c.pop();
-                self.video_consumer = Some(c);
-                match popped {
-                    Some(d) => self.frame_data = d,
-                    None => (),
-                };
+        if let Some(mut c) = self.video_consumer.take() {
+            let popped = c.pop();
+            self.video_consumer = Some(c);
+            if let Some(d) = popped {
+                self.frame_data = d;
             }
-            None => (),
-        };
+        }
     }
 
     pub fn update_texture(

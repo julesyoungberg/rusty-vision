@@ -100,9 +100,9 @@ impl CameraUniforms {
     pub fn set_dir(&mut self, next_dir: Vector3) {
         let len = util::vector_length(self.forward());
         let next_forward = pt3(next_dir.x * len, next_dir.y * len, next_dir.z * len);
-        self.data.camera_target_x = self.data.camera_pos_x + next_forward.x;
-        self.data.camera_target_y = self.data.camera_pos_y + next_forward.y;
-        self.data.camera_target_z = self.data.camera_pos_z + next_forward.z;
+        self.data.camera_target_x += next_forward.x;
+        self.data.camera_target_y += next_forward.y;
+        self.data.camera_target_z += next_forward.z;
     }
 
     pub fn set_up(&mut self, next_dir: Vector3) {
@@ -112,12 +112,12 @@ impl CameraUniforms {
     }
 
     pub fn translate(&mut self, translation: Vector3) {
-        self.data.camera_pos_x = self.data.camera_pos_x + translation.x;
-        self.data.camera_pos_y = self.data.camera_pos_y + translation.y;
-        self.data.camera_pos_z = self.data.camera_pos_z + translation.z;
-        self.data.camera_target_x = self.data.camera_target_x + translation.x;
-        self.data.camera_target_y = self.data.camera_target_y + translation.y;
-        self.data.camera_target_z = self.data.camera_target_z + translation.z;
+        self.data.camera_pos_x += translation.x;
+        self.data.camera_pos_y += translation.y;
+        self.data.camera_pos_z += translation.z;
+        self.data.camera_target_x += translation.x;
+        self.data.camera_target_y += translation.y;
+        self.data.camera_target_z += translation.z;
     }
 
     pub fn rotate(&mut self, rotation: Matrix4<f32>) {

@@ -64,9 +64,9 @@ pub fn get_config(app: &App) -> Config {
         .into_string()
         .unwrap();
     let root_json_string = fs::read_to_string(root_path.clone())
-        .expect(format!("Error reading '{:?}'", root_path).as_str());
+        .unwrap_or_else(|_| { panic!("Error reading '{:?}'", root_path) });
     let root_config: RootConfig = serde_json::from_str(root_json_string.as_str())
-        .expect(format!("Error parsing '{:?}'", root_path).as_str());
+        .unwrap_or_else(|_| { panic!("Error parsing '{:?}'", root_path) });
 
     let mut config = Config {
         default: root_config.default,
@@ -82,9 +82,9 @@ pub fn get_config(app: &App) -> Config {
             .unwrap();
 
         let json_string =
-            fs::read_to_string(path.clone()).expect(format!("Error reading '{:?}'", path).as_str());
+            fs::read_to_string(path.clone()).unwrap_or_else(|_| { panic!("Error reading '{:?}'", path) });
         let folder_config: FolderConfig = serde_json::from_str(json_string.as_str())
-            .expect(format!("Error parsing '{:?}'", path).as_str());
+            .unwrap_or_else(|_| { panic!("Error parsing '{:?}'", path) });
 
         config.folders.insert(folder.clone(), folder_config);
     });

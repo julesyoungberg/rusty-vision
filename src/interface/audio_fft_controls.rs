@@ -22,7 +22,7 @@ pub fn update(
     ui: &mut UiCell,
     uniforms: &mut audio_fft::AudioFftUniforms,
 ) {
-    for value in components::slider(uniforms.smoothing, 0.0, 0.999999)
+    if let Some(value) = components::slider(uniforms.smoothing, 0.0, 0.999999)
         .parent(widget_ids.controls_wrapper)
         .down(10.0)
         .label("Smoothing")

@@ -1,6 +1,5 @@
 use nannou::prelude::*;
 use regex::Regex;
-use shaderc;
 use std::fs;
 use std::path::PathBuf;
 
@@ -31,7 +30,7 @@ impl Shader {
         device: &wgpu::Device,
         compiler: &mut shaderc::Compiler,
     ) {
-        let split = self.filename.split(".").collect::<Vec<&str>>();
+        let split = self.filename.split('.').collect::<Vec<&str>>();
         let ext = split[1];
         let mut kind = shaderc::ShaderKind::Fragment;
         if ext == "vert" {
@@ -39,14 +38,13 @@ impl Shader {
         }
 
         let filename = shaders_path
-            .clone()
             .join(self.filename.clone())
             .into_os_string()
             .into_string()
             .unwrap();
         println!("reading: {}", filename);
         let src_string = fs::read_to_string(util::universal_path(filename.clone()))
-            .expect(format!("Error reading shader: {}", filename).as_str());
+            .unwrap_or_else(|_| { panic!("Error reading shader: {}", filename) });
         let src = src_string.as_str();
 
         // load shader dependencies ([^\r]*) deals with \r on windows
@@ -66,11 +64,12 @@ impl Shader {
                     filename, import, import_path
                 );
 
+                // TODO: don't crash when importing fails
                 let mut import_src = "\n".to_owned();
                 let import_src_string =
-                    fs::read_to_string(import_path).expect(import_error.as_str());
+                    fs::read_to_string(import_path).unwrap_or_else(|_| { panic!(import_error) });
                 import_src.push_str(import_src_string.as_str());
-                return import_src;
+                import_src
             })
             .to_string();
 

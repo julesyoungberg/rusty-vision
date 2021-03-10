@@ -1,4 +1,3 @@
-use bytemuck;
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
 use rustfft::{num_complex::Complex, FftPlanner};
@@ -128,22 +127,16 @@ impl AudioFftUniforms {
     }
 
     pub fn update(&mut self) {
-        match self.spectrum_consumer.take() {
-            Some(mut c) => {
-                let popped = c.pop();
-                self.spectrum_consumer = Some(c);
-                match popped {
-                    Some(f) => {
-                        for i in 0..SPECTRUM_SIZE {
-                            self.spectrum[i] =
-                                audio_source::lerp(self.spectrum[i], f[i], self.smoothing);
-                        }
-                    }
-                    None => (),
-                };
+        if let Some(mut c) = self.spectrum_consumer.take() {
+            let popped = c.pop();
+            self.spectrum_consumer = Some(c);
+
+            if let Some(f) = popped {
+                for (i, &sample) in f.iter().enumerate().take(SPECTRUM_SIZE) {
+                    self.spectrum[i] = audio_source::lerp(self.spectrum[i], sample, self.smoothing);
+                }
             }
-            None => (),
-        };
+        }
     }
 
     pub fn update_texture(
@@ -152,9 +145,7 @@ impl AudioFftUniforms {
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
         let mut spectrum = [0.0; SPECTRUM_SIZE];
-        for i in 0..SPECTRUM_SIZE {
-            spectrum[i] = self.spectrum[i];
-        }
+        spectrum[..SPECTRUM_SIZE].clone_from_slice(&self.spectrum[..SPECTRUM_SIZE]);
         self.spectrum_texture
             .upload_data(device, encoder, bytemuck::bytes_of(&spectrum));
     }

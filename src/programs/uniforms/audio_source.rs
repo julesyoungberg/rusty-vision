@@ -1,4 +1,3 @@
-use cpal;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
@@ -68,8 +67,8 @@ impl AudioSource {
         let cpal::SampleRate(sample_rate) = audio_config.sample_rate();
         self.sample_rate = sample_rate as f32;
 
-        self.audio_channels = audio_channels.iter().map(|c| c.clone()).collect();
-        self.error_channels = error_channels.iter().map(|c| c.clone()).collect();
+        self.audio_channels = audio_channels.to_vec();
+        self.error_channels = error_channels.to_vec();
 
         let (error_channel_tx, error_channel_rx) = channel();
         self.error_channel_rx = Some(error_channel_rx);
@@ -111,7 +110,7 @@ impl AudioSource {
 
         self.stream = Some(stream);
 
-        return true;
+        true
     }
 
     pub fn end_session(&mut self) {
@@ -119,9 +118,7 @@ impl AudioSource {
 
         // stop the stream
         if let Some(stream) = self.stream.as_ref() {
-            match stream.pause() {
-                _ => (),
-            };
+            stream.pause().ok();
         }
 
         self.audio_channels.iter().for_each(|c| {
