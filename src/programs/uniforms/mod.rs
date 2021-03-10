@@ -256,16 +256,18 @@ impl BufferStore {
             audio_channels.push(self.audio_fft_uniforms.start_session());
         }
 
-        if !audio_channels.is_empty() && !self
-            .audio_source
-            .start_session(audio_channels, error_channels)
+        if !audio_channels.is_empty()
+            && !self
+                .audio_source
+                .start_session(audio_channels, error_channels)
         {
             self.end_audio_session();
         }
 
-        if subscriptions.audio_features && !self
-            .audio_features_uniforms
-            .start_session(self.audio_source.sample_rate)
+        if subscriptions.audio_features
+            && !self
+                .audio_features_uniforms
+                .start_session(self.audio_source.sample_rate)
         {
             self.end_audio_session();
         }

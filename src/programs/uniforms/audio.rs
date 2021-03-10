@@ -67,7 +67,8 @@ impl AudioUniforms {
             self.audio_consumer = Some(c);
 
             if let Some(f) = popped {
-                self.frame[..audio_source::FRAME_SIZE].clone_from_slice(&f[..audio_source::FRAME_SIZE]);
+                self.frame[..audio_source::FRAME_SIZE]
+                    .clone_from_slice(&f[..audio_source::FRAME_SIZE]);
             }
         };
     }

@@ -44,7 +44,7 @@ impl Shader {
             .unwrap();
         println!("reading: {}", filename);
         let src_string = fs::read_to_string(util::universal_path(filename.clone()))
-            .unwrap_or_else(|_| { panic!("Error reading shader: {}", filename) });
+            .unwrap_or_else(|_| panic!("Error reading shader: {}", filename));
         let src = src_string.as_str();
 
         // load shader dependencies ([^\r]*) deals with \r on windows
@@ -67,7 +67,7 @@ impl Shader {
                 // TODO: don't crash when importing fails
                 let mut import_src = "\n".to_owned();
                 let import_src_string =
-                    fs::read_to_string(import_path).unwrap_or_else(|_| { panic!(import_error) });
+                    fs::read_to_string(import_path).unwrap_or_else(|_| panic!(import_error));
                 import_src.push_str(import_src_string.as_str());
                 import_src
             })

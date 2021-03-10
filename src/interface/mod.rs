@@ -84,10 +84,11 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>();
-    if let Some(selected) = components::drop_down(&folder_names[..], model.program_store.folder_index)
-        .parent(model.widget_ids.controls_wrapper)
-        .down(5.0)
-        .set(model.widget_ids.current_folder, ui)
+    if let Some(selected) =
+        components::drop_down(&folder_names[..], model.program_store.folder_index)
+            .parent(model.widget_ids.controls_wrapper)
+            .down(5.0)
+            .set(model.widget_ids.current_folder, ui)
     {
         model.program_store.select_folder(app, device, selected);
     }
@@ -103,10 +104,11 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>();
-    if let Some(selected) = components::drop_down(&program_names[..], model.program_store.program_index)
-        .parent(model.widget_ids.controls_wrapper)
-        .down(5.0)
-        .set(model.widget_ids.current_program, ui)
+    if let Some(selected) =
+        components::drop_down(&program_names[..], model.program_store.program_index)
+            .parent(model.widget_ids.controls_wrapper)
+            .down(5.0)
+            .set(model.widget_ids.current_program, ui)
     {
         model
             .program_store

@@ -127,11 +127,7 @@ impl ImageUniforms {
     }
 
     pub fn select_image(&mut self, app: &App, image_id: i32) {
-        let filepath = match open_file_dialog(
-            "Load Image",
-            "~",
-            Some((&["*.jpg", "*.png"], "")),
-        ) {
+        let filepath = match open_file_dialog("Load Image", "~", Some((&["*.jpg", "*.png"], ""))) {
             Some(filepath) => filepath,
             None => return,
         };
