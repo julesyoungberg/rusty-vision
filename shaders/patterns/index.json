@@ -92,7 +92,10 @@
       "pipeline": {
         "frag": "universeWithin.frag"
       },
-      "uniforms": ["general"]
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "voronoiCubes": {
       "pipeline": {
