@@ -94,7 +94,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_fft_smoothing": 0.9
+        "audio_fft_smoothing": 0.5
       }
     },
     "voronoiCubes": {

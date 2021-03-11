@@ -10,6 +10,9 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
+// based on Square Kaleidoscope by domorin
+// https://www.shadertoy.com/view/3t2XRG
+
 #define PI 3.14159265359
 
 float sdBox(in vec2 p, in vec2 b) {
@@ -35,7 +38,6 @@ float square(in vec2 st, in float size) {
 	return sdBox(st, vec2(size));
 }
 
-// based on https://www.shadertoy.com/view/3t2XRG
 void main() {
     vec2 st = uv * resolution / resolution.y;
     st *= 6.0;

@@ -11,6 +11,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 };
 
 // from the art of code
+// https://www.youtube.com/watch?v=dXyPOLf2MbU&ab_channel=TheArtofCode
 #define HEART_COLOR vec3(1.0, 0.05, 0.05)
 
 //@import util/smoothmax

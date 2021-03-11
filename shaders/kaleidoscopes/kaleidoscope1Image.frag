@@ -20,7 +20,8 @@ layout(set = 1, binding = 2) uniform ImageUniforms {
 
 #define PI 3.14159265359
 
-// based on https://www.shadertoy.com/view/llGcRK
+// based on Kaleidoscope Illusion by tiff
+// https://www.shadertoy.com/view/llGcRK
 void main() {
     vec2 st = uv * resolution / resolution.y;
     // st *= cos(time * 0.5) + 1.5;

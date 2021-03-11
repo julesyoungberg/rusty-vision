@@ -16,7 +16,8 @@ layout(set = 1, binding = 1) uniform texture2D spectrum;
 #define PI 3.14159265359
 #define ITERATIONS 10
 
-// based on https://www.shadertoy.com/view/llGcRK
+// based on Kaleidoscope Illusion by tiff
+// https://www.shadertoy.com/view/llGcRK
 void main() {
     vec2 st = uv * resolution / resolution.y;
     st *= 0.5;

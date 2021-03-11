@@ -17,6 +17,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 vec4 rand14(float t);
 float rand(float n);
 
+// The Drive Home by BigWings
+// https://www.shadertoy.com/view/MdfBRX
 // from The Art of Code
 struct ray {
     vec3 origin;

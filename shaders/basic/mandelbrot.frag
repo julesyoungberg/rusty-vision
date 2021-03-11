@@ -13,6 +13,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 #define ITERATIONS 100.0
 
 // from the Art of Code
+// https://www.youtube.com/watch?v=6IWXkV82oyY&ab_channel=TheArtofCode
 void main() {
     vec2 st = uv;
     st.x *= resolution.x / resolution.y;

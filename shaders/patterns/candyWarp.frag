@@ -10,7 +10,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
-// based on: http://glslsandbox.com/e#38710.0 & https://editor.isf.video/shaders/5e7a802d7c113618206dec38
+// based on CandyWrap by mojovideotech
+// https://editor.isf.video/shaders/5e7a802d7c113618206dec38
 void main() {
     vec2 st = uv;
     st *= resolution * 0.5;

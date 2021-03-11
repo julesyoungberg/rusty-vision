@@ -19,6 +19,9 @@ layout(set = 2, binding = 2) uniform WebcamUniforms {
     vec2 video_size;
 };
 
+// based on ImageGlitcher by airtight
+// https://www.shadertoy.com/view/MtXBDs
+
 #define SPECTRUM_SIZE 32
 
 //@import util/rand
@@ -38,7 +41,6 @@ float spectrum_strength(float start, float end) {
     return sum / (end - start);
 }
 
-// based on https://www.shadertoy.com/view/MtXBDs
 void main() {
     vec2 st = uv * 0.5 + 0.5;
 

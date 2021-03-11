@@ -10,7 +10,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
-// based on: https://editor.isf.video/shaders/5e7a7ff97c113618206de819
+// based on VoronoiCubes  by mojovideotech
+// https://editor.isf.video/shaders/5e7a7ff97c113618206de819
 
 #define C30 0.866025 // cos 30
 #define TAU 6.28318530718

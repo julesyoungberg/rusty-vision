@@ -19,6 +19,9 @@ layout(set = 2, binding = 2) uniform WebcamUniforms {
     vec2 video_size;
 };
 
+// based on Halftone Effect by VIDVOX
+// https://editor.isf.video/shaders/5e7a801e7c113618206deafc
+
 #define SPECTRUM_SIZE 32
 #define TAU 6.28318530718
 #define SPECTRUM_SIZE 32
@@ -92,7 +95,6 @@ int arg_max(float array[SPECTRUM_SIZE]) {
     return ix;
 }
 
-// based on https://editor.isf.video/shaders/5e7a801e7c113618206deafc
 void main() {
     vec2 st = uv * 0.5 + 0.5;
 
