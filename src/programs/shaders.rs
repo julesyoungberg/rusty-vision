@@ -1,7 +1,6 @@
 use nannou::prelude::*;
 use regex::Regex;
 use std::fs;
-use std::panic;
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::thread;
@@ -46,8 +45,13 @@ impl Shader {
             .into_string()
             .unwrap();
         println!("reading: {}", filename);
-        let src_string = fs::read_to_string(util::universal_path(filename.clone()))
-            .unwrap_or_else(|_| panic!("Error reading shader: {}", filename));
+        let src_string = match fs::read_to_string(util::universal_path(filename.clone())) {
+            Ok(s) => s,
+            Err(_) => {
+                self.error = Some(format!("Error reading shader: {}", filename));
+                return;
+            }
+        };
 
         let (tx, rx) = channel();
 

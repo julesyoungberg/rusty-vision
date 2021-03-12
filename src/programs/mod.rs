@@ -38,6 +38,7 @@ pub struct ProgramStore {
     shader_watcher: notify::ReadDirectoryChangesWatcher,
 }
 
+// TODO: handle errors better
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
         let config = config::get_config(app);
