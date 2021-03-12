@@ -14,9 +14,11 @@ layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
 //@import util/hsv2rgb
+//@import util/line_dist
 //@import util/rand
 
 vec3 hsv2rgb(vec3 c);
+float line_dist(vec2 p, vec2 a, vec2 b);
 float rand(float n);
 float rand21(vec2 p);
 vec2 rand2(vec2 p);
@@ -24,13 +26,6 @@ vec2 rand2(vec2 p);
 // based on The Universe Within by BigWings
 // https://www.shadertoy.com/view/lscczl
 // from the Art of Code
-
-float line_dist(vec2 p, vec2 a, vec2 b) {
-    vec2 pa = p - a;
-    vec2 ba = b - a;
-    float t = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-    return length(pa - ba * t);
-}
 
 float line(vec2 p, vec2 a, vec2 b, float strength) {
     float d = line_dist(p, a, b);

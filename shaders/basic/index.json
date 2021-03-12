@@ -1,5 +1,5 @@
 {
-  "default": "mandelbrot",
+  "default": "lights",
   "programs": {
     "basic": {
       "pipeline": {
@@ -80,6 +80,12 @@
         "image2": "fractal2.png"
       }
     },
+    "lights": {
+      "pipeline": {
+        "frag": "lights.frag"
+      },
+      "uniforms": ["general"]
+    },
     "lines1": {
       "pipeline": {
         "frag": "lines1.frag"
@@ -89,12 +95,6 @@
     "lines2": {
       "pipeline": {
         "frag": "lines2.frag"
-      },
-      "uniforms": ["general"]
-    },
-    "mandelbrot": {
-      "pipeline": {
-        "frag": "mandelbrot.frag"
       },
       "uniforms": ["general"]
     },

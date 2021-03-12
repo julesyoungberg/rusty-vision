@@ -16,12 +16,11 @@ layout(set = 1, binding = 1) uniform texture2D spectrum;
 #define AUDIO_REACTIVE 1
 
 //@import util/hsv2rgb
+//@import util/above_line
 
 vec3 hsv2rgb(vec3 c);
 
-bool is_above_line(vec2 r, vec2 q, vec2 p) {
-    return dot(vec2(q.y - r.y, r.x - q.x), q - p) > 0.0;
-}
+bool above_line(vec2 r, vec2 q, vec2 p);
 
 float hex_dist(in vec2 p) {
     p = abs(p);
@@ -61,9 +60,9 @@ void main() {
     vec2 left = vec2(-sqrt(3.0) * 0.5, 0.5);
     vec2 bottom = vec2(0.0, -1.0);
 
-    bool cr = is_above_line(center, right, gv);
-    bool cl = is_above_line(center, left, gv);
-    bool cb = is_above_line(center, bottom, gv);
+    bool cr = above_line(center, right, gv);
+    bool cl = above_line(center, left, gv);
+    bool cb = above_line(center, bottom, gv);
 
     float hue = 0.0;
     if (cr && !cl) { // top

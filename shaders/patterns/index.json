@@ -1,5 +1,5 @@
 {
-  "default": "universeWithin",
+  "default": "voronoiNested",
   "programs": {
     "candyWarp": {
       "pipeline": {
@@ -94,7 +94,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_fft_smoothing": 0.5
+        "audio_fft_smoothing": 0.6
       }
     },
     "voronoiCubes": {
@@ -102,6 +102,15 @@
         "frag": "voronoiCubes.frag"
       },
       "uniforms": ["general"]
+    },
+    "voronoiNested": {
+      "pipeline": {
+        "frag": "voronoiNested.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.97
+      }
     }
   }
 }
