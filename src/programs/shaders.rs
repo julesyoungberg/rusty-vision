@@ -1,7 +1,10 @@
 use nannou::prelude::*;
 use regex::Regex;
 use std::fs;
+use std::panic;
 use std::path::PathBuf;
+use std::sync::mpsc::channel;
+use std::thread;
 
 use crate::util;
 
@@ -9,7 +12,7 @@ use crate::util;
 /// and manages the compiling of a shader.
 #[derive(Debug)]
 pub struct Shader {
-    pub error: Option<shaderc::Error>,
+    pub error: Option<String>,
     pub filename: String,
     pub module: Option<wgpu::ShaderModule>,
 }
@@ -45,33 +48,59 @@ impl Shader {
         println!("reading: {}", filename);
         let src_string = fs::read_to_string(util::universal_path(filename.clone()))
             .unwrap_or_else(|_| panic!("Error reading shader: {}", filename));
-        let src = src_string.as_str();
+
+        let (tx, rx) = channel();
 
         // load shader dependencies ([^\r]*) deals with \r on windows
         let re = Regex::new(r"//@import ([^\r\n]*)").unwrap();
-        let complete_src = re
-            .replace_all(src, |captures: &regex::Captures| {
-                let import = &captures[1];
-                let import_path = shaders_path
-                    .clone()
-                    .join(format!("{}.glsl", import))
-                    .into_os_string()
-                    .into_string()
-                    .unwrap();
+        let flnm = filename.clone();
+        thread::spawn(move || {
+            let complete = re
+                .replace_all(src_string.as_str(), |captures: &regex::Captures| {
+                    let import = &captures[1];
+                    let import_path = match shaders_path
+                        .clone()
+                        .join(format!("{}.glsl", import))
+                        .into_os_string()
+                        .into_string()
+                    {
+                        Ok(s) => s,
+                        Err(_) => {
+                            tx.send(Err(format!(
+                                "Error building path for {} from {}",
+                                import, flnm
+                            )))
+                            .unwrap();
+                            return "".to_string();
+                        }
+                    };
 
-                let import_error = format!(
-                    "Error reading shader '{}' import '{}': {}",
-                    filename, import, import_path
-                );
+                    let mut import_src = "\n".to_owned();
+                    let import_src_string = match fs::read_to_string(import_path.clone()) {
+                        Ok(s) => s,
+                        Err(_) => {
+                            tx.send(Err(format!(
+                                "Error importing {} from {}",
+                                import_path, flnm
+                            )))
+                            .unwrap();
+                            return "".to_string();
+                        }
+                    };
+                    import_src.push_str(import_src_string.as_str());
+                    import_src
+                })
+                .to_string();
+            tx.send(Ok(complete)).unwrap();
+        });
 
-                // TODO: don't crash when importing fails
-                let mut import_src = "\n".to_owned();
-                let import_src_string =
-                    fs::read_to_string(import_path).unwrap_or_else(|_| panic!(import_error));
-                import_src.push_str(import_src_string.as_str());
-                import_src
-            })
-            .to_string();
+        let complete_src = match rx.recv().unwrap() {
+            Ok(s) => s,
+            Err(err) => {
+                self.error = Some(err);
+                return;
+            }
+        };
 
         // compile shader
         match compiler.compile_into_spirv(
@@ -89,8 +118,7 @@ impl Shader {
                 self.error = None;
             }
             Err(e) => {
-                self.error = Some(e);
-                self.module = None;
+                self.error = Some(e.to_string());
             }
         }
     }

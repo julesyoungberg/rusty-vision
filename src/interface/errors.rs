@@ -1,20 +1,29 @@
+use nannou::prelude::*;
 use nannou::ui::prelude::*;
 
 use crate::app;
 use crate::interface::components;
 use crate::programs::program::ProgramErrors;
 
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, title: &str, message: &str) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    title: &str,
+    message: &str,
+    size: Vector2,
+) {
     let container_id = widget_ids.errors_wrapper;
-    components::container([1200.0, 600.0])
+    let padding = 40.0;
+    components::container([(size[0] - padding) as f64, (size[1] - padding) as f64])
         .no_parent()
         .rgba(0.2, 0.2, 0.2, 1.0)
         .x_y(0.0, 0.0)
+        .scroll_kids()
         .set(container_id, ui);
 
     components::text(title)
         .parent(container_id)
-        .top_left_with_margin(50.0)
+        .top_left_with_margin(20.0)
         .font_size(36)
         .rgb(1.0, 0.3, 0.3)
         .set(widget_ids.errors_title, ui);
@@ -27,12 +36,23 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, title: &str, message
         .set(widget_ids.errors_message, ui);
 }
 
-pub fn compilation_errors(widget_ids: &app::WidgetIds, ui: &mut UiCell, errors: &ProgramErrors) {
+pub fn compilation_errors(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    errors: &ProgramErrors,
+    size: Vector2,
+) {
     let mut error_string: String = "".to_owned();
     for value in errors.values() {
         error_string.push_str(value.as_str());
         error_string.push('\n');
     }
 
-    update(widget_ids, ui, "Compilation Errors", error_string.as_str());
+    update(
+        widget_ids,
+        ui,
+        "Compilation Errors",
+        error_string.as_str(),
+        size,
+    );
 }
