@@ -21,13 +21,13 @@ vec2 rand2(vec2 p);
 
 vec2 get_point(vec2 coord) {
     vec2 point = rand2(coord);
-    point = sin(6.2831 * point) * 0.5 + 0.5;
+    point = sin(6.2831 * point + time * 0.2) * 0.5 + 0.5;
     return point;
 }
 
 vec4 voronoi(vec2 p, float scale) {
     vec2 i_st = floor(p);
-    vec2 f_st = fract(p) - 0.5;
+    vec2 f_st = fract(p);
 
     float m_dist = scale;
     vec2 m_point;
@@ -89,44 +89,56 @@ void main() {
 
     vec3 color = vec3(0.0);
 
+    float density = 1.0;
+    float r = length(st);
+    float a = atan(st.y, st.x);
+    if (r < 0.2) {
+        density = 0.3;
+    } else if (r < 0.25) {
+        density = mix(0.3, 0.9, smoothstep(0.2, 0.25, r));
+    } else if (r < 0.35) {
+        density = mix(0.9, 0.5, smoothstep(0.25, 0.35, r));
+    } else {
+        density = 0.5;
+        st = mix(st, st * 0.5, smoothstep(0.35, 1.5, r));
+    }
+
     // Scale
-    float scale = 2.0;
+    float scale = 8.0 * density;
     st *= scale;
 
     vec4 val = voronoi(st, scale);
-    vec2 m_point = val.xy;
-    float m_dist = val.z;
-    float m_edge_dist = val.w;
+    vec2 point = val.xy;
+    float dist = val.z;
+    float edge_dist = val.w;
 
-    vec2 gv = fract(st) - 0.5;
+    vec2 gv = fract(st);
     vec2 id = floor(st);
-    vec2 relative_point = m_point - id;
+    vec2 relative_point = point - id;
     vec2 cell_uv = gv - relative_point;
 
-    // color.rg = cell_uv;
+    cell_uv = mix(cell_uv, cell_uv * pow(sin(a * 8.0) * 0.5 + 0.5, 2.0) * 3.0, smoothstep(0.35, 0.4, r));
 
-    scale = 2.0;
-    vec4 inner_val = voronoi(cell_uv * scale, scale);
+    scale = 5.0 * density;
+    cell_uv *= scale;
+    vec2 inner_gv = fract(cell_uv);
+    vec4 inner_val = voronoi(cell_uv, scale);
     vec2 inner_point = inner_val.xy;
     float inner_dist = inner_val.z;
     float inner_edge_dist = inner_val.w;
 
-    color += inner_edge_dist;
-
-    // map point to 1d value between 0 and 1
-    // float point_val = dot(m_point, m_point) * 0.5;
-    // float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(point_val, 0)).x;
-
-    // vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
-    // color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
-
-    color += smoothstep(0.02, 0.0, m_edge_dist);
+    float strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x;
+    color += smoothstep(0.01, 0.02, edge_dist);
+    float edge_scale = mix(0.5, 5.0, smoothstep(0.0, 0.5, strength));
+    color -= smoothstep(0.02 * edge_scale, 0.01 * edge_scale, inner_edge_dist);
 
     // Draw cell center
-    color += 1.-step(.02, m_dist);
+    // color += 1.0 - step(0.02, dist);
+    // color += 1.0 - step(0.02, inner_dist);
 
     // Draw grid
-    color.r += step(.48, gv.x) + step(.48, gv.y);
+    // color.r += step(.48, gv.x) + step(.48, gv.y);
+    // color.r += step(0.98, inner_gv.x) + step(0.98, inner_gv.y);
 
     frag_color = vec4(color, 1.0);
 }

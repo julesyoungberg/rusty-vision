@@ -109,7 +109,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_fft_smoothing": 0.97
+        "audio_fft_smoothing": 0.4
       }
     }
   }
