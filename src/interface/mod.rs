@@ -121,7 +121,15 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
     // Error Display
     //////////////////////////////////////////////////
     let compile_errors = model.program_store.errors();
-    if !compile_errors.is_none() && compile_errors.unwrap().keys().len() > 0 {
+    if let Some(config_error) = &model.program_store.error {
+        errors::update(
+            &model.widget_ids,
+            ui,
+            "Config Error",
+            config_error.as_str(),
+            model.size,
+        );
+    } else if !compile_errors.is_none() && compile_errors.unwrap().keys().len() > 0 {
         errors::compilation_errors(&model.widget_ids, ui, &compile_errors.unwrap(), model.size);
     } else if let Some(audio_error) = &model.program_store.buffer_store.audio_source.error {
         errors::update(

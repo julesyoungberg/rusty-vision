@@ -22,6 +22,7 @@ pub mod uniforms;
 pub struct ProgramStore {
     pub buffer_store: uniforms::BufferStore,
     pub current_subscriptions: Option<uniforms::UniformSubscriptions>,
+    pub error: Option<String>,
     pub folder_index: usize,
     pub folder_names: Vec<String>,
     pub program_names: Option<Vec<String>>,
@@ -43,7 +44,7 @@ impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
         let config = config::get_config(app);
 
-        let mut buffer_store = uniforms::BufferStore::new(device, size);
+        let buffer_store = uniforms::BufferStore::new(device, size);
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
@@ -58,52 +59,92 @@ impl ProgramStore {
         for (name, _) in config.folders.iter() {
             folder_names.push(name.clone());
         }
-
         folder_names.sort();
-        let folder_index = folder_names
-            .iter()
-            .position(|n| *n == config.default)
-            .unwrap();
 
-        let folder_name = &folder_names[folder_index];
-        let folder_config = config.folders.get(folder_name).unwrap();
+        // build default store
+        let mut this = Self {
+            buffer_store,
+            changes_channel,
+            config,
+            current_program: None,
+            current_subscriptions: None,
+            error: None,
+            folder_index: 0,
+            folder_names,
+            program_index: 0,
+            program_names: None,
+            shader_watcher,
+        };
+
+        let folder_index = match this
+            .folder_names
+            .iter()
+            .position(|n| *n == this.config.default)
+        {
+            Some(i) => i,
+            None => {
+                this.error = Some(String::from(format!(
+                    "Invalid default folder '{}'",
+                    this.config.default
+                )));
+                return this;
+            }
+        };
+
+        this.folder_index = folder_index;
+        let folder_name = &this.folder_names[folder_index];
+
+        let folder_config = match this.config.folders.get(folder_name) {
+            Some(c) => c,
+            None => {
+                this.error = Some(String::from(format!(
+                    "Missing default folder '{}'",
+                    this.config.default
+                )));
+                return this;
+            }
+        };
 
         // get program configuration
         let mut program_names = vec![];
         for (name, _) in folder_config.programs.iter() {
             program_names.push(name.clone());
         }
-
         program_names.sort();
-        let program_index = program_names
+
+        let program_index = match program_names
             .iter()
             .position(|n| *n == folder_config.default)
-            .unwrap();
+        {
+            Some(i) => i,
+            None => {
+                this.error = Some(String::from(format!(
+                    "Invalid default program '{}'",
+                    folder_config.default
+                )));
+                return this;
+            }
+        };
 
         let program_name = &program_names[program_index];
         let program_config = folder_config.programs.get(program_name).unwrap();
         let current_program = program::Program::new(program_config.clone(), folder_name.clone());
 
+        this.program_names = Some(program_names);
+        this.program_index = program_index;
+        this.current_program = Some(current_program);
+
         let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
-        buffer_store.set_program_defaults(
+        this.buffer_store.set_program_defaults(
             app,
             device,
             &current_subscriptions,
             &program_config.defaults,
         );
 
-        Self {
-            buffer_store,
-            changes_channel,
-            config,
-            current_program: Some(current_program),
-            current_subscriptions: Some(current_subscriptions),
-            folder_index,
-            folder_names,
-            program_index,
-            program_names: Some(program_names),
-            shader_watcher,
-        }
+        this.current_subscriptions = Some(current_subscriptions);
+
+        this
     }
 
     /// Compile current program with latest shader code.
@@ -183,7 +224,7 @@ impl ProgramStore {
         selected: usize,
         force: bool,
     ) {
-        if !force && selected == self.program_index {
+        if self.error.is_none() && !force && selected == self.program_index {
             return;
         }
 
@@ -205,11 +246,20 @@ impl ProgramStore {
         self.program_index = selected;
         let folder_name = &self.folder_names[self.folder_index];
         let folder_config = self.config.folders.get(folder_name).unwrap();
-        let program_config = folder_config.programs.get(name).unwrap();
+
+        let program_config = match folder_config.programs.get(name) {
+            Some(c) => c,
+            None => {
+                self.error = Some(String::from(format!("Invalid default program '{}'", name)));
+                return;
+            }
+        };
+
         self.current_program = Some(program::Program::new(
             program_config.clone(),
             folder_name.clone(),
         ));
+
         let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
         self.buffer_store.set_program_defaults(
             app,
@@ -217,29 +267,45 @@ impl ProgramStore {
             &current_subscriptions,
             &program_config.defaults,
         );
+
         self.current_subscriptions = Some(current_subscriptions);
     }
 
     /// Selects the current shader folder
     pub fn select_folder(&mut self, app: &App, device: &wgpu::Device, selected: usize) {
-        if selected == self.folder_index {
+        if self.error.is_none() && selected == self.folder_index {
             return;
         }
 
         self.folder_index = selected;
         let name = &self.folder_names[selected];
-        let folder_config = self.config.folders.get(name).unwrap();
+        let folder_config = match self.config.folders.get(name) {
+            Some(c) => c,
+            None => {
+                self.error = Some(String::from(format!("Missing folder '{}'", name)));
+                return;
+            }
+        };
 
         let mut program_names = vec![];
         for (name, _) in folder_config.programs.iter() {
             program_names.push(name.clone());
         }
-
         program_names.sort();
-        let program_index = program_names
+
+        let program_index = match program_names
             .iter()
             .position(|n| *n == folder_config.default)
-            .unwrap();
+        {
+            Some(i) => i,
+            None => {
+                self.error = Some(String::from(format!(
+                    "Invalid default program '{}'",
+                    folder_config.default
+                )));
+                return;
+            }
+        };
 
         self.program_names = Some(program_names);
         self.select_program(app, device, program_index, true);

@@ -81,10 +81,14 @@ pub fn get_config(app: &App) -> Config {
             .into_string()
             .unwrap();
 
-        let json_string = fs::read_to_string(path.clone())
-            .unwrap_or_else(|_| panic!("Error reading '{:?}'", path));
-        let folder_config: FolderConfig = serde_json::from_str(json_string.as_str())
-            .unwrap_or_else(|_| panic!("Error parsing '{:?}'", path));
+        let json_string = match fs::read_to_string(path.clone()) {
+            Ok(s) => s,
+            Err(_) => return,
+        };
+        let folder_config: FolderConfig = match serde_json::from_str(json_string.as_str()) {
+            Ok(c) => c,
+            Err(_) => return,
+        };
 
         config.folders.insert(folder.clone(), folder_config);
     });
