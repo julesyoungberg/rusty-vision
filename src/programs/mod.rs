@@ -29,7 +29,7 @@ pub struct ProgramStore {
     pub program_index: usize,
 
     changes_channel: Receiver<DebouncedEvent>,
-    config: config::Config,
+    config: Option<config::Config>,
     current_program: Option<program::Program>,
     #[cfg(target_os = "macos")]
     shader_watcher: notify::FsEventWatcher,
@@ -39,7 +39,6 @@ pub struct ProgramStore {
     shader_watcher: notify::ReadDirectoryChangesWatcher,
 }
 
-// TODO: handle errors better
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
         let config = config::get_config(app).unwrap();
@@ -58,7 +57,7 @@ impl ProgramStore {
         let mut this = Self {
             buffer_store,
             changes_channel,
-            config,
+            config: Some(config.clone()),
             current_program: None,
             current_subscriptions: None,
             error: None,
@@ -71,18 +70,18 @@ impl ProgramStore {
 
         // get folder configuration
         let mut folder_names = vec![];
-        for (name, _) in this.config.folders.iter() {
+        for (name, _) in config.folders.iter() {
             folder_names.push(name.clone());
         }
         folder_names.sort();
         this.folder_names = Some(folder_names.clone());
 
-        let folder_index = match folder_names.iter().position(|n| *n == this.config.default) {
+        let folder_index = match folder_names.iter().position(|n| *n == config.default) {
             Some(i) => i,
             None => {
                 this.error = Some(String::from(format!(
                     "Invalid default folder '{}'",
-                    this.config.default
+                    config.default
                 )));
                 return this;
             }
@@ -91,12 +90,12 @@ impl ProgramStore {
         this.folder_index = folder_index;
         let folder_name = &folder_names[folder_index];
 
-        let folder_config = match this.config.folders.get(folder_name) {
+        let folder_config = match config.folders.get(folder_name) {
             Some(c) => c,
             None => {
                 this.error = Some(String::from(format!(
                     "Missing default folder '{}'",
-                    this.config.default
+                    config.default
                 )));
                 return this;
             }
@@ -220,16 +219,12 @@ impl ProgramStore {
         device: &wgpu::Device,
         selected: usize,
         force: bool,
-    ) {
+    ) -> Option<bool> {
         if self.error.is_none() && !force && selected == self.program_index {
-            return;
+            return None;
         }
 
-        let program_names = match &self.program_names {
-            Some(n) => n,
-            None => return,
-        };
-
+        let program_names = &self.program_names.as_ref()?;
         let name = &program_names[selected];
 
         // first, clear the current program
@@ -242,19 +237,17 @@ impl ProgramStore {
         println!("program selected: {}", name);
         self.program_index = selected;
 
-        let folder_names = match &self.folder_names {
-            Some(n) => n,
-            None => return,
-        };
-
+        let folder_names = &self.folder_names.as_ref()?;
         let folder_name = &folder_names[self.folder_index];
-        let folder_config = self.config.folders.get(folder_name).unwrap();
+
+        let config = &self.config.as_ref()?;
+        let folder_config = config.folders.get(folder_name).unwrap();
 
         let program_config = match folder_config.programs.get(name) {
             Some(c) => c,
             None => {
                 self.error = Some(String::from(format!("Invalid default program '{}'", name)));
-                return;
+                return None;
             }
         };
 
@@ -272,26 +265,30 @@ impl ProgramStore {
         );
 
         self.current_subscriptions = Some(current_subscriptions);
+
+        return Some(true);
     }
 
     /// Selects the current shader folder
-    pub fn select_folder(&mut self, app: &App, device: &wgpu::Device, selected: usize) {
+    pub fn select_folder(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        selected: usize,
+    ) -> Option<bool> {
         if self.error.is_none() && selected == self.folder_index {
-            return;
+            return None;
         }
 
         self.folder_index = selected;
-        let folder_names = match &self.folder_names {
-            Some(n) => n,
-            None => return,
-        };
-
+        let folder_names = &self.folder_names.as_ref()?;
         let name = &folder_names[selected];
-        let folder_config = match self.config.folders.get(name) {
+        let config = &self.config.as_ref()?;
+        let folder_config = match config.folders.get(name) {
             Some(c) => c,
             None => {
                 self.error = Some(String::from(format!("Missing folder '{}'", name)));
-                return;
+                return None;
             }
         };
 
@@ -311,12 +308,12 @@ impl ProgramStore {
                     "Invalid default program '{}'",
                     folder_config.default
                 )));
-                return;
+                return None;
             }
         };
 
         self.program_names = Some(program_names);
-        self.select_program(app, device, program_index, true);
+        self.select_program(app, device, program_index, true)
     }
 
     /// Update GPU uniform buffers with current data.
