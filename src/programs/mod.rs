@@ -76,28 +76,6 @@ impl ProgramStore {
         Some(program_names[self.program_index.clone()].clone())
     }
 
-    fn get_default_folder_index(
-        &self,
-        folder_names: &Vec<String>,
-        name: &String,
-    ) -> Result<usize, String> {
-        match folder_names.iter().position(|n| *n == *name) {
-            Some(i) => Ok(i),
-            None => Err(format!("Invalid default folder '{}'", name)),
-        }
-    }
-
-    fn get_default_program_index(
-        &self,
-        program_names: &Vec<String>,
-        name: &String,
-    ) -> Result<usize, String> {
-        match program_names.iter().position(|n| *n == *name) {
-            Some(i) => Ok(i),
-            None => Err(format!("Invalid default program '{}'", name)),
-        }
-    }
-
     /// Compile current program with latest shader code.
     /// Call once after initialization.
     fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
@@ -159,7 +137,7 @@ impl ProgramStore {
 
         // if that didn't work read the default folder
         if folder_name_opt.is_none() {
-            let folder_index = match self.get_default_folder_index(&folder_names, &config.default) {
+            let folder_index = match config.get_default_folder_index(&folder_names) {
                 Ok(i) => i,
                 Err(e) => {
                     self.error = Some(e);
@@ -186,14 +164,13 @@ impl ProgramStore {
                 }
 
                 // maybe the config updated, get the new default index
-                let folder_index =
-                    match self.get_default_folder_index(&folder_names, &config.default) {
-                        Ok(i) => i,
-                        Err(e) => {
-                            self.error = Some(e);
-                            return;
-                        }
-                    };
+                let folder_index = match config.get_default_folder_index(&folder_names) {
+                    Ok(i) => i,
+                    Err(e) => {
+                        self.error = Some(e);
+                        return;
+                    }
+                };
 
                 self.folder_index = folder_index;
                 folder_name = folder_names[folder_index].clone();
@@ -231,15 +208,14 @@ impl ProgramStore {
 
         // fallback on the default program
         if program_name_opt.is_none() {
-            let program_index = match self
-                .get_default_program_index(&program_names.clone(), &folder_config.default)
-            {
-                Ok(i) => i,
-                Err(e) => {
-                    self.error = Some(e);
-                    return;
-                }
-            };
+            let program_index =
+                match folder_config.get_default_program_index(&program_names.clone()) {
+                    Ok(i) => i,
+                    Err(e) => {
+                        self.error = Some(e);
+                        return;
+                    }
+                };
 
             self.program_index = program_index;
             program_name_opt = Some(folder_config.default.clone());
@@ -260,15 +236,14 @@ impl ProgramStore {
                 }
 
                 // maybe the config updated, get the new default index
-                let program_index = match self
-                    .get_default_program_index(&program_names.clone(), &folder_config.default)
-                {
-                    Ok(i) => i,
-                    Err(e) => {
-                        self.error = Some(e);
-                        return;
-                    }
-                };
+                let program_index =
+                    match folder_config.get_default_program_index(&program_names.clone()) {
+                        Ok(i) => i,
+                        Err(e) => {
+                            self.error = Some(e);
+                            return;
+                        }
+                    };
 
                 self.program_index = program_index;
                 program_name = program_names[program_index].clone();

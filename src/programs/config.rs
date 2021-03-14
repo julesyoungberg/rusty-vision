@@ -54,6 +54,13 @@ impl FolderConfig {
         program_names.sort();
         program_names
     }
+
+    pub fn get_default_program_index(&self, program_names: &Vec<String>) -> Result<usize, String> {
+        match program_names.iter().position(|n| *n == self.default) {
+            Some(i) => Ok(i),
+            None => Err(format!("Invalid default program '{}'", self.default)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,5 +129,12 @@ impl Config {
         }
         folder_names.sort();
         folder_names
+    }
+
+    pub fn get_default_folder_index(&self, folder_names: &Vec<String>) -> Result<usize, String> {
+        match folder_names.iter().position(|n| *n == self.default) {
+            Some(i) => Ok(i),
+            None => Err(format!("Invalid default folder '{}'", self.default)),
+        }
     }
 }
