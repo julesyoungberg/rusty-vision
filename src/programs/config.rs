@@ -45,6 +45,17 @@ pub struct FolderConfig {
     pub programs: HashMap<String, ProgramConfig>,
 }
 
+impl FolderConfig {
+    pub fn get_program_names(&self) -> Vec<String> {
+        let mut program_names = vec![];
+        for (name, _) in self.programs.iter() {
+            program_names.push(name.clone());
+        }
+        program_names.sort();
+        program_names
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RootConfig {
     pub default: String,
@@ -63,10 +74,16 @@ pub fn get_config(app: &App) -> Result<Config, String> {
         .into_os_string()
         .into_string()
         .unwrap();
-    let root_json_string = fs::read_to_string(root_path.clone())
-        .unwrap_or_else(|_| panic!("Error reading '{:?}'", root_path));
-    let root_config: RootConfig = serde_json::from_str(root_json_string.as_str())
-        .unwrap_or_else(|_| panic!("Error parsing '{:?}'", root_path));
+
+    let root_json_string = match fs::read_to_string(root_path.clone()) {
+        Ok(s) => s,
+        Err(e) => return Err(format!("Reading {}: {}", root_path, e.to_string())),
+    };
+
+    let root_config: RootConfig = match serde_json::from_str(root_json_string.as_str()) {
+        Ok(c) => c,
+        Err(e) => return Err(format!("Parsing {}: {}", root_path, e.to_string())),
+    };
 
     let mut config = Config {
         default: root_config.default,
@@ -83,19 +100,27 @@ pub fn get_config(app: &App) -> Result<Config, String> {
 
         let json_string = match fs::read_to_string(path.clone()) {
             Ok(s) => s,
-            Err(e) => {
-                return Err(e.to_string());
-            }
+            Err(e) => return Err(format!("Reading {}: {}", path, e.to_string())),
         };
+
         let folder_config: FolderConfig = match serde_json::from_str(json_string.as_str()) {
             Ok(c) => c,
-            Err(e) => {
-                return Err(e.to_string());
-            }
+            Err(e) => return Err(format!("Parsing {}: {}", path, e.to_string())),
         };
 
         config.folders.insert(folder.clone(), folder_config);
     }
 
     Ok(config)
+}
+
+impl Config {
+    pub fn get_folder_names(&self) -> Vec<String> {
+        let mut folder_names = vec![];
+        for (name, _) in self.folders.iter() {
+            folder_names.push(name.clone());
+        }
+        folder_names.sort();
+        folder_names
+    }
 }

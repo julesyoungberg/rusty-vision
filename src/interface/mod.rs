@@ -116,10 +116,179 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         }
     }
 
+    if let Some(subscriptions) = &model.program_store.current_subscriptions {
+        let mut left = -200.0;
+
+        //////////////////////////////////////////////////
+        // Color Controls
+        //////////////////////////////////////////////////
+        if subscriptions.color {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .label("Color")
+                .set(model.widget_ids.general_folder, ui)
+            {
+                println!("toggle general controls");
+                model.ui_show_color = !model.ui_show_color;
+            }
+
+            if model.ui_show_color {
+                color_controls::update(
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.color_uniforms,
+                );
+                left = -60.0;
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Geometry Controls
+        //////////////////////////////////////////////////
+        if subscriptions.geometry {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .left(left as f64)
+                .label("Geometry")
+                .set(model.widget_ids.geometry_folder, ui)
+            {
+                println!("toggle geometry controls");
+                model.ui_show_geometry = !model.ui_show_geometry;
+            }
+
+            left = 0.0;
+
+            if model.ui_show_geometry {
+                geometry_controls::update(
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.geometry_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Audio Features Controls
+        //////////////////////////////////////////////////
+        if subscriptions.audio_features {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .left(left as f64)
+                .label("Audio Features")
+                .set(model.widget_ids.audio_features_folder, ui)
+            {
+                println!("toggle audio features controls");
+                model.ui_show_audio_features = !model.ui_show_audio_features;
+            }
+
+            if model.ui_show_audio_features {
+                audio_features_controls::update(
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.audio_features_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Audio FFT Controls
+        //////////////////////////////////////////////////
+        if subscriptions.audio_fft {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .label("Audio FFT")
+                .set(model.widget_ids.audio_fft_folder, ui)
+            {
+                println!("toggle audio fft controls");
+                model.ui_show_audio_fft = !model.ui_show_audio_fft;
+            }
+
+            if model.ui_show_audio_fft {
+                audio_fft_controls::update(
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.audio_fft_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Noise Controls
+        //////////////////////////////////////////////////
+        if subscriptions.noise {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .label("Noise")
+                .set(model.widget_ids.noise_folder, ui)
+            {
+                println!("toggle noise controls");
+                model.ui_show_noise = !model.ui_show_noise;
+            }
+
+            if model.ui_show_noise {
+                noise_controls::update(
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.noise_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Image Controls
+        //////////////////////////////////////////////////
+        if subscriptions.image {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .label("Image")
+                .set(model.widget_ids.image_folder, ui)
+            {
+                println!("toggle image controls");
+                model.ui_show_image = !model.ui_show_image;
+            }
+
+            if model.ui_show_image {
+                image_controls::update(
+                    app,
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.image_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Other UI
+        //////////////////////////////////////////////////
+        if subscriptions.camera {
+            camera_info::update(
+                &model.widget_ids,
+                ui,
+                &mut model.program_store.buffer_store.camera_uniforms,
+            );
+        }
+    }
+
+    components::container([80.0, 35.0])
+        .no_parent()
+        .bottom_right_with_margin(10.0)
+        .set(model.widget_ids.fps_container, ui);
+
+    components::text(&format!("FPS: {:.2}", app.fps()))
+        .parent(model.widget_ids.fps_container)
+        .top_left_with_margin(10.0)
+        .set(model.widget_ids.fps, ui);
+
     //////////////////////////////////////////////////
     // Error Display
     //////////////////////////////////////////////////
-    let compile_errors = model.program_store.errors();
+    let compile_errors = model.program_store.get_program_errors();
     if let Some(config_error) = &model.program_store.error {
         errors::update(
             &model.widget_ids,
@@ -152,178 +321,6 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
             model.size,
         );
     }
-
-    let subscriptions = match &model.program_store.current_subscriptions {
-        Some(s) => s,
-        None => return,
-    };
-
-    let mut left = -200.0;
-
-    //////////////////////////////////////////////////
-    // Color Controls
-    //////////////////////////////////////////////////
-    if subscriptions.color {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .label("Color")
-            .set(model.widget_ids.general_folder, ui)
-        {
-            println!("toggle general controls");
-            model.ui_show_color = !model.ui_show_color;
-        }
-
-        if model.ui_show_color {
-            color_controls::update(
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.color_uniforms,
-            );
-            left = -60.0;
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Geometry Controls
-    //////////////////////////////////////////////////
-    if subscriptions.geometry {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .left(left as f64)
-            .label("Geometry")
-            .set(model.widget_ids.geometry_folder, ui)
-        {
-            println!("toggle geometry controls");
-            model.ui_show_geometry = !model.ui_show_geometry;
-        }
-
-        left = 0.0;
-
-        if model.ui_show_geometry {
-            geometry_controls::update(
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.geometry_uniforms,
-            );
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Audio Features Controls
-    //////////////////////////////////////////////////
-    if subscriptions.audio_features {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .left(left as f64)
-            .label("Audio Features")
-            .set(model.widget_ids.audio_features_folder, ui)
-        {
-            println!("toggle audio features controls");
-            model.ui_show_audio_features = !model.ui_show_audio_features;
-        }
-
-        if model.ui_show_audio_features {
-            audio_features_controls::update(
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.audio_features_uniforms,
-            );
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Audio FFT Controls
-    //////////////////////////////////////////////////
-    if subscriptions.audio_fft {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .label("Audio FFT")
-            .set(model.widget_ids.audio_fft_folder, ui)
-        {
-            println!("toggle audio fft controls");
-            model.ui_show_audio_fft = !model.ui_show_audio_fft;
-        }
-
-        if model.ui_show_audio_fft {
-            audio_fft_controls::update(
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.audio_fft_uniforms,
-            );
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Noise Controls
-    //////////////////////////////////////////////////
-    if subscriptions.noise {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .label("Noise")
-            .set(model.widget_ids.noise_folder, ui)
-        {
-            println!("toggle noise controls");
-            model.ui_show_noise = !model.ui_show_noise;
-        }
-
-        if model.ui_show_noise {
-            noise_controls::update(
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.noise_uniforms,
-            );
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Image Controls
-    //////////////////////////////////////////////////
-    if subscriptions.image {
-        for _click in components::button_big()
-            .parent(model.widget_ids.controls_wrapper)
-            .down(20.0)
-            .label("Image")
-            .set(model.widget_ids.image_folder, ui)
-        {
-            println!("toggle image controls");
-            model.ui_show_image = !model.ui_show_image;
-        }
-
-        if model.ui_show_image {
-            image_controls::update(
-                app,
-                &model.widget_ids,
-                ui,
-                &mut model.program_store.buffer_store.image_uniforms,
-            );
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Other UI
-    //////////////////////////////////////////////////
-    if subscriptions.camera {
-        camera_info::update(
-            &model.widget_ids,
-            ui,
-            &mut model.program_store.buffer_store.camera_uniforms,
-        );
-    }
-
-    components::container([80.0, 35.0])
-        .no_parent()
-        .bottom_right_with_margin(10.0)
-        .set(model.widget_ids.fps_container, ui);
-
-    components::text(&format!("FPS: {:.2}", app.fps()))
-        .parent(model.widget_ids.fps_container)
-        .top_left_with_margin(10.0)
-        .set(model.widget_ids.fps, ui);
 }
 
 /// Draw the state of the `Ui` to the frame.

@@ -41,8 +41,6 @@ pub struct ProgramStore {
 
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
-        let config = config::get_config(app).unwrap();
-
         let buffer_store = uniforms::BufferStore::new(device, size);
 
         // setup shader watcher
@@ -57,7 +55,7 @@ impl ProgramStore {
         let mut this = Self {
             buffer_store,
             changes_channel,
-            config: Some(config.clone()),
+            config: None,
             current_program: None,
             current_subscriptions: None,
             error: None,
@@ -68,21 +66,22 @@ impl ProgramStore {
             shader_watcher,
         };
 
-        // get folder configuration
-        let mut folder_names = vec![];
-        for (name, _) in config.folders.iter() {
-            folder_names.push(name.clone());
-        }
-        folder_names.sort();
+        let config = match config::get_config(app) {
+            Ok(c) => c,
+            Err(e) => {
+                this.error = Some(e);
+                return this;
+            }
+        };
+        this.config = Some(config.clone());
+
+        let folder_names = config.get_folder_names();
         this.folder_names = Some(folder_names.clone());
 
-        let folder_index = match folder_names.iter().position(|n| *n == config.default) {
-            Some(i) => i,
-            None => {
-                this.error = Some(String::from(format!(
-                    "Invalid default folder '{}'",
-                    config.default
-                )));
+        let folder_index = match this.get_default_folder_index(&folder_names, &config.default) {
+            Ok(i) => i,
+            Err(e) => {
+                this.error = Some(e);
                 return this;
             }
         };
@@ -93,37 +92,34 @@ impl ProgramStore {
         let folder_config = match config.folders.get(folder_name) {
             Some(c) => c,
             None => {
-                this.error = Some(String::from(format!(
-                    "Missing default folder '{}'",
+                this.error = Some(format!(
+                    "Missing default folder config '{}'",
                     config.default
-                )));
+                ));
                 return this;
             }
         };
 
-        // get program configuration
-        let mut program_names = vec![];
-        for (name, _) in folder_config.programs.iter() {
-            program_names.push(name.clone());
-        }
-        program_names.sort();
-
-        let program_index = match program_names
-            .iter()
-            .position(|n| *n == folder_config.default)
-        {
-            Some(i) => i,
-            None => {
-                this.error = Some(String::from(format!(
-                    "Invalid default program '{}'",
-                    folder_config.default
-                )));
-                return this;
-            }
-        };
+        let program_names = folder_config.get_program_names();
+        let program_index =
+            match this.get_default_program_index(&program_names, &folder_config.default) {
+                Ok(i) => i,
+                Err(e) => {
+                    this.error = Some(e);
+                    return this;
+                }
+            };
 
         let program_name = &program_names[program_index];
-        let program_config = folder_config.programs.get(program_name).unwrap();
+
+        let program_config = match folder_config.programs.get(program_name) {
+            Some(c) => c,
+            None => {
+                this.error = Some(format!("Missing program config '{}'", program_name));
+                return this;
+            }
+        };
+
         let current_program = program::Program::new(program_config.clone(), folder_name.clone());
 
         this.program_names = Some(program_names);
@@ -141,6 +137,38 @@ impl ProgramStore {
         this.current_subscriptions = Some(current_subscriptions);
 
         this
+    }
+
+    fn get_folder_name(&self) -> Option<String> {
+        let folder_names = &self.folder_names.as_ref()?;
+        Some(folder_names[self.folder_index.clone()].clone())
+    }
+
+    fn get_program_name(&self) -> Option<String> {
+        let program_names = &self.program_names.as_ref()?;
+        Some(program_names[self.program_index.clone()].clone())
+    }
+
+    fn get_default_folder_index(
+        &self,
+        folder_names: &Vec<String>,
+        name: &String,
+    ) -> Result<usize, String> {
+        match folder_names.iter().position(|n| *n == *name) {
+            Some(i) => Ok(i),
+            None => Err(format!("Invalid default folder '{}'", name)),
+        }
+    }
+
+    fn get_default_program_index(
+        &self,
+        program_names: &Vec<String>,
+        name: &String,
+    ) -> Result<usize, String> {
+        match program_names.iter().position(|n| *n == *name) {
+            Some(i) => Ok(i),
+            None => Err(format!("Invalid default program '{}'", name)),
+        }
     }
 
     /// Compile current program with latest shader code.
@@ -168,6 +196,185 @@ impl ProgramStore {
         current_program.compile(app, device, &layout_desc, num_samples);
     }
 
+    /// Read fresh config and recompile
+    pub fn configure(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+        // first, clear the current program
+        if let Some(current_program) = &mut self.current_program {
+            current_program.clear();
+        }
+
+        let config = match config::get_config(app) {
+            Ok(c) => c,
+            Err(e) => {
+                self.error = Some(e);
+                return;
+            }
+        };
+
+        self.config = Some(config.clone());
+        let folder_names = config.get_folder_names();
+
+        let old_folder_name_opt = self.get_folder_name();
+
+        self.folder_names = Some(folder_names.clone());
+        let new_folder_name_opt = self.get_folder_name();
+
+        let mut folder_name_opt: Option<String> = None;
+        let mut using_defaults = false;
+
+        // if the name matches with new config and old then use the old folder name
+        if old_folder_name_opt.is_some() && new_folder_name_opt.is_some() {
+            let old_folder_name = old_folder_name_opt.unwrap();
+            if old_folder_name == new_folder_name_opt.unwrap() {
+                folder_name_opt = Some(old_folder_name);
+            }
+        }
+
+        // if that didn't work read the default folder
+        if folder_name_opt.is_none() {
+            let folder_index = match self.get_default_folder_index(&folder_names, &config.default) {
+                Ok(i) => i,
+                Err(e) => {
+                    self.error = Some(e);
+                    return;
+                }
+            };
+            self.folder_index = folder_index;
+            folder_name_opt = Some(folder_names[folder_index].clone());
+            using_defaults = true;
+        }
+
+        let mut folder_name = folder_name_opt.unwrap();
+
+        let missing_folder = format!("Missing default folder config '{}'", config.default);
+
+        // read the folder config, try the default folder on failure
+        let folder_config = match config.folders.get(&folder_name) {
+            Some(c) => c,
+            None => {
+                // we already tried the new config, abort
+                if using_defaults {
+                    self.error = Some(missing_folder);
+                    return;
+                }
+
+                // maybe the config updated, get the new default index
+                let folder_index =
+                    match self.get_default_folder_index(&folder_names, &config.default) {
+                        Ok(i) => i,
+                        Err(e) => {
+                            self.error = Some(e);
+                            return;
+                        }
+                    };
+
+                self.folder_index = folder_index;
+                folder_name = folder_names[folder_index].clone();
+                using_defaults = true;
+
+                // retry
+                match config.folders.get(&folder_name) {
+                    Some(c) => c,
+                    None => {
+                        self.error = Some(missing_folder);
+                        return;
+                    }
+                }
+            }
+        };
+
+        let program_names = folder_config.get_program_names();
+        let mut program_name_opt: Option<String> = None;
+
+        // try to use the old program if it is still valid
+        if !using_defaults {
+            let old_program_name_opt = self.get_program_name();
+            self.program_names = Some(program_names.clone());
+            let new_program_name_opt = self.get_program_name();
+
+            if old_program_name_opt.is_some() && new_program_name_opt.is_some() {
+                let old_program_name = old_program_name_opt.unwrap();
+                if old_program_name == new_program_name_opt.unwrap() {
+                    program_name_opt = Some(old_program_name);
+                }
+            }
+        } else {
+            self.program_names = Some(program_names.clone());
+        }
+
+        // fallback on the default program
+        if program_name_opt.is_none() {
+            let program_index = match self
+                .get_default_program_index(&program_names.clone(), &folder_config.default)
+            {
+                Ok(i) => i,
+                Err(e) => {
+                    self.error = Some(e);
+                    return;
+                }
+            };
+
+            self.program_index = program_index;
+            program_name_opt = Some(folder_config.default.clone());
+            using_defaults = true;
+        }
+
+        let mut program_name = program_name_opt.unwrap();
+        let missing_program = format!("Missing default program config '{}'", folder_config.default);
+
+        // read the program config, falling back on the default on failure
+        let program_config = match folder_config.programs.get(&program_name) {
+            Some(c) => c,
+            None => {
+                // already using defaults, abort
+                if using_defaults {
+                    self.error = Some(missing_program);
+                    return;
+                }
+
+                // maybe the config updated, get the new default index
+                let program_index = match self
+                    .get_default_program_index(&program_names.clone(), &folder_config.default)
+                {
+                    Ok(i) => i,
+                    Err(e) => {
+                        self.error = Some(e);
+                        return;
+                    }
+                };
+
+                self.program_index = program_index;
+                program_name = program_names[program_index].clone();
+
+                // retry
+                match folder_config.programs.get(&program_name) {
+                    Some(c) => c,
+                    None => {
+                        self.error = Some(missing_program);
+                        return;
+                    }
+                }
+            }
+        };
+
+        // create current program
+        let current_program = program::Program::new(program_config.clone(), folder_name.clone());
+        self.current_program = Some(current_program);
+
+        // get subscriptions and initialize
+        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
+        self.buffer_store.set_program_defaults(
+            app,
+            device,
+            &current_subscriptions,
+            &program_config.defaults,
+        );
+
+        self.current_subscriptions = Some(current_subscriptions);
+        self.compile_current(app, device, num_samples);
+        self.error = None;
+    }
+
     /// Check if changes have been made to shaders and recompile if needed.
     /// Call every timestep.
     pub fn update_shaders(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
@@ -176,7 +383,12 @@ impl ProgramStore {
             if let DebouncedEvent::Write(path) = event {
                 let path_str = path.into_os_string().into_string().unwrap();
                 println!("changes written to: {}", path_str);
-                self.compile_current(app, device, num_samples);
+
+                if path_str.ends_with(".json") {
+                    self.configure(app, device, num_samples);
+                } else {
+                    self.compile_current(app, device, num_samples);
+                }
             }
         }
 
@@ -237,16 +449,14 @@ impl ProgramStore {
         println!("program selected: {}", name);
         self.program_index = selected;
 
-        let folder_names = &self.folder_names.as_ref()?;
-        let folder_name = &folder_names[self.folder_index];
-
+        let folder_name = self.get_folder_name()?;
         let config = &self.config.as_ref()?;
-        let folder_config = config.folders.get(folder_name).unwrap();
+        let folder_config = config.folders.get(&folder_name).unwrap();
 
         let program_config = match folder_config.programs.get(name) {
             Some(c) => c,
             None => {
-                self.error = Some(String::from(format!("Invalid default program '{}'", name)));
+                self.error = Some(format!("Missing program config '{}'", name));
                 return None;
             }
         };
@@ -265,6 +475,7 @@ impl ProgramStore {
         );
 
         self.current_subscriptions = Some(current_subscriptions);
+        self.error = None;
 
         return Some(true);
     }
@@ -287,7 +498,7 @@ impl ProgramStore {
         let folder_config = match config.folders.get(name) {
             Some(c) => c,
             None => {
-                self.error = Some(String::from(format!("Missing folder '{}'", name)));
+                self.error = Some(format!("Missing folder config '{}'", name));
                 return None;
             }
         };
@@ -304,10 +515,10 @@ impl ProgramStore {
         {
             Some(i) => i,
             None => {
-                self.error = Some(String::from(format!(
+                self.error = Some(format!(
                     "Invalid default program '{}'",
                     folder_config.default
-                )));
+                ));
                 return None;
             }
         };
@@ -343,7 +554,7 @@ impl ProgramStore {
         )
     }
 
-    pub fn errors(&self) -> Option<&program::ProgramErrors> {
+    pub fn get_program_errors(&self) -> Option<&program::ProgramErrors> {
         let current_program = &self.current_program.as_ref()?;
         Some(&current_program.errors)
     }
