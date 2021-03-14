@@ -57,7 +57,7 @@ pub struct Config {
     pub folders: HashMap<String, FolderConfig>,
 }
 
-pub fn get_config(app: &App) -> Config {
+pub fn get_config(app: &App) -> Result<Config, String> {
     let root_path = util::shaders_path(app)
         .join("index.json")
         .into_os_string()
@@ -73,7 +73,7 @@ pub fn get_config(app: &App) -> Config {
         folders: HashMap::new(),
     };
 
-    root_config.folders.iter().for_each(|folder| {
+    for folder in root_config.folders.iter() {
         let path = util::shaders_path(app)
             .join(folder)
             .join("index.json")
@@ -83,15 +83,19 @@ pub fn get_config(app: &App) -> Config {
 
         let json_string = match fs::read_to_string(path.clone()) {
             Ok(s) => s,
-            Err(_) => return,
+            Err(e) => {
+                return Err(e.to_string());
+            }
         };
         let folder_config: FolderConfig = match serde_json::from_str(json_string.as_str()) {
             Ok(c) => c,
-            Err(_) => return,
+            Err(e) => {
+                return Err(e.to_string());
+            }
         };
 
         config.folders.insert(folder.clone(), folder_config);
-    });
+    }
 
-    config
+    Ok(config)
 }

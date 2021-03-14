@@ -42,7 +42,7 @@ pub struct ProgramStore {
 // TODO: handle errors better
 impl ProgramStore {
     pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
-        let config = config::get_config(app);
+        let config = config::get_config(app).unwrap();
 
         let buffer_store = uniforms::BufferStore::new(device, size);
 
@@ -54,13 +54,6 @@ impl ProgramStore {
             .watch(shader_path.as_str(), RecursiveMode::Recursive)
             .unwrap();
 
-        // get folder configuration
-        let mut folder_names = vec![];
-        for (name, _) in config.folders.iter() {
-            folder_names.push(name.clone());
-        }
-        folder_names.sort();
-
         // build default store
         let mut this = Self {
             buffer_store,
@@ -70,11 +63,19 @@ impl ProgramStore {
             current_subscriptions: None,
             error: None,
             folder_index: 0,
-            folder_names: Some(folder_names.clone()),
+            folder_names: None,
             program_index: 0,
             program_names: None,
             shader_watcher,
         };
+
+        // get folder configuration
+        let mut folder_names = vec![];
+        for (name, _) in this.config.folders.iter() {
+            folder_names.push(name.clone());
+        }
+        folder_names.sort();
+        this.folder_names = Some(folder_names.clone());
 
         let folder_index = match folder_names.iter().position(|n| *n == this.config.default) {
             Some(i) => i,
