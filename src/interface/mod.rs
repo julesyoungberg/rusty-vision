@@ -98,24 +98,23 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
 
     /////////////////////////
     // current program select
-    components::label("Shader")
-        .parent(model.widget_ids.controls_wrapper)
-        .set(model.widget_ids.current_program_label, ui);
-    let program_names = model
-        .program_store
-        .program_names
-        .iter()
-        .map(|s| s.as_str())
-        .collect::<Vec<&str>>();
-    if let Some(selected) =
-        components::drop_down(&program_names[..], model.program_store.program_index)
+    if let Some(program_names) = &model.program_store.program_names {
+        components::label("Shader")
+            .parent(model.widget_ids.controls_wrapper)
+            .set(model.widget_ids.current_program_label, ui);
+        let names = program_names
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>();
+        if let Some(selected) = components::drop_down(&names[..], model.program_store.program_index)
             .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.current_program, ui)
-    {
-        model
-            .program_store
-            .select_program(app, device, selected, false);
+        {
+            model
+                .program_store
+                .select_program(app, device, selected, false);
+        }
     }
 
     //////////////////////////////////////////////////

@@ -24,7 +24,7 @@ pub struct ProgramStore {
     pub current_subscriptions: Option<uniforms::UniformSubscriptions>,
     pub folder_index: usize,
     pub folder_names: Vec<String>,
-    pub program_names: Vec<String>,
+    pub program_names: Option<Vec<String>>,
     pub program_index: usize,
 
     changes_channel: Receiver<DebouncedEvent>,
@@ -101,7 +101,7 @@ impl ProgramStore {
             folder_index,
             folder_names,
             program_index,
-            program_names,
+            program_names: Some(program_names),
             shader_watcher,
         }
     }
@@ -187,7 +187,12 @@ impl ProgramStore {
             return;
         }
 
-        let name = &self.program_names[selected];
+        let program_names = match &self.program_names {
+            Some(n) => n,
+            None => return,
+        };
+
+        let name = &program_names[selected];
 
         // first, clear the current program
         if let Some(current_program) = &mut self.current_program {
@@ -225,18 +230,18 @@ impl ProgramStore {
         let name = &self.folder_names[selected];
         let folder_config = self.config.folders.get(name).unwrap();
 
-        self.program_names = vec![];
+        let mut program_names = vec![];
         for (name, _) in folder_config.programs.iter() {
-            self.program_names.push(name.clone());
+            program_names.push(name.clone());
         }
 
-        self.program_names.sort();
-        let program_index = self
-            .program_names
+        program_names.sort();
+        let program_index = program_names
             .iter()
             .position(|n| *n == folder_config.default)
             .unwrap();
 
+        self.program_names = Some(program_names);
         self.select_program(app, device, program_index, true);
     }
 
