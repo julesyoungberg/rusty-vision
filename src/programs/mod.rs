@@ -51,8 +51,7 @@ impl ProgramStore {
             .watch(shader_path.as_str(), RecursiveMode::Recursive)
             .unwrap();
 
-        // build default store
-        let mut this = Self {
+        Self {
             buffer_store,
             changes_channel,
             config: None,
@@ -64,79 +63,7 @@ impl ProgramStore {
             program_index: 0,
             program_names: None,
             shader_watcher,
-        };
-
-        let config = match config::get_config(app) {
-            Ok(c) => c,
-            Err(e) => {
-                this.error = Some(e);
-                return this;
-            }
-        };
-        this.config = Some(config.clone());
-
-        let folder_names = config.get_folder_names();
-        this.folder_names = Some(folder_names.clone());
-
-        let folder_index = match this.get_default_folder_index(&folder_names, &config.default) {
-            Ok(i) => i,
-            Err(e) => {
-                this.error = Some(e);
-                return this;
-            }
-        };
-
-        this.folder_index = folder_index;
-        let folder_name = &folder_names[folder_index];
-
-        let folder_config = match config.folders.get(folder_name) {
-            Some(c) => c,
-            None => {
-                this.error = Some(format!(
-                    "Missing default folder config '{}'",
-                    config.default
-                ));
-                return this;
-            }
-        };
-
-        let program_names = folder_config.get_program_names();
-        let program_index =
-            match this.get_default_program_index(&program_names, &folder_config.default) {
-                Ok(i) => i,
-                Err(e) => {
-                    this.error = Some(e);
-                    return this;
-                }
-            };
-
-        let program_name = &program_names[program_index];
-
-        let program_config = match folder_config.programs.get(program_name) {
-            Some(c) => c,
-            None => {
-                this.error = Some(format!("Missing program config '{}'", program_name));
-                return this;
-            }
-        };
-
-        let current_program = program::Program::new(program_config.clone(), folder_name.clone());
-
-        this.program_names = Some(program_names);
-        this.program_index = program_index;
-        this.current_program = Some(current_program);
-
-        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
-        this.buffer_store.set_program_defaults(
-            app,
-            device,
-            &current_subscriptions,
-            &program_config.defaults,
-        );
-
-        this.current_subscriptions = Some(current_subscriptions);
-
-        this
+        }
     }
 
     fn get_folder_name(&self) -> Option<String> {
@@ -173,7 +100,7 @@ impl ProgramStore {
 
     /// Compile current program with latest shader code.
     /// Call once after initialization.
-    pub fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
         let current_program = match &mut self.current_program {
             Some(p) => p,
             None => {

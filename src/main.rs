@@ -35,7 +35,7 @@ fn model(app: &App) -> app::Model {
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
-    program_store.compile_current(app, device, msaa_samples);
+    program_store.configure(app, device, msaa_samples);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
     // create UI
