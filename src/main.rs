@@ -121,9 +121,13 @@ fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
         _ => (),
     };
 
-    if !model.program_store.current_subscriptions.camera {
-        // currently no uniforms other than camera use keys
-        return;
+    match &model.program_store.current_subscriptions {
+        Some(current_subscriptions) => {
+            if !current_subscriptions.camera {
+                return;
+            }
+        }
+        None => return,
     }
 
     let scale = 0.2;

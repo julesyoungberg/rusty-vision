@@ -21,7 +21,7 @@ pub mod uniforms;
 #[allow(dead_code)] // needed for shader_watcher
 pub struct ProgramStore {
     pub buffer_store: uniforms::BufferStore,
-    pub current_subscriptions: uniforms::UniformSubscriptions,
+    pub current_subscriptions: Option<uniforms::UniformSubscriptions>,
     pub folder_index: usize,
     pub folder_names: Vec<String>,
     pub program_names: Vec<String>,
@@ -97,7 +97,7 @@ impl ProgramStore {
             changes_channel,
             config,
             current_program: Some(current_program),
-            current_subscriptions,
+            current_subscriptions: Some(current_subscriptions),
             folder_index,
             folder_names,
             program_index,
@@ -164,8 +164,9 @@ impl ProgramStore {
     /// Update uniform data.
     /// Call every timestep.
     pub fn update_uniforms(&mut self, device: &wgpu::Device) {
-        self.buffer_store
-            .update(device, &self.current_subscriptions);
+        if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
+            self.buffer_store.update(device, current_subscriptions);
+        }
     }
 
     /// Fetch current GPU program.
@@ -204,13 +205,14 @@ impl ProgramStore {
             program_config.clone(),
             folder_name.clone(),
         ));
-        self.current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
+        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
         self.buffer_store.set_program_defaults(
             app,
             device,
-            &self.current_subscriptions,
+            &current_subscriptions,
             &program_config.defaults,
         );
+        self.current_subscriptions = Some(current_subscriptions);
     }
 
     /// Selects the current shader folder
@@ -245,8 +247,10 @@ impl ProgramStore {
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {
-        self.buffer_store
-            .update_buffers(device, encoder, &self.current_subscriptions);
+        if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
+            self.buffer_store
+                .update_buffers(device, encoder, current_subscriptions);
+        }
     }
 
     /// Fetch the appropriate bind groups to set positions for the current program.
@@ -269,10 +273,14 @@ impl ProgramStore {
     }
 
     pub fn pause(&mut self) {
-        self.buffer_store.pause(&self.current_subscriptions);
+        if let Some(current_subscriptions) = &self.current_subscriptions {
+            self.buffer_store.pause(current_subscriptions);
+        }
     }
 
     pub fn unpause(&mut self) {
-        self.buffer_store.unpause(&self.current_subscriptions);
+        if let Some(current_subscriptions) = &self.current_subscriptions {
+            self.buffer_store.unpause(current_subscriptions);
+        }
     }
 }
