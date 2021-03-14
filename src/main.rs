@@ -206,7 +206,10 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
 
     // attach appropriate bind groups for the current program
-    let bind_groups = model.program_store.get_bind_groups();
+    let bind_groups = match model.program_store.get_bind_groups() {
+        Some(g) => g,
+        None => return false,
+    };
     for (set, bind_group) in bind_groups.iter().enumerate() {
         render_pass.set_bind_group(set as u32, bind_group, &[]);
     }
