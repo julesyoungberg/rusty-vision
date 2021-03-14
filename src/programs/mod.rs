@@ -24,7 +24,7 @@ pub struct ProgramStore {
     pub current_subscriptions: Option<uniforms::UniformSubscriptions>,
     pub error: Option<String>,
     pub folder_index: usize,
-    pub folder_names: Vec<String>,
+    pub folder_names: Option<Vec<String>>,
     pub program_names: Option<Vec<String>>,
     pub program_index: usize,
 
@@ -70,17 +70,13 @@ impl ProgramStore {
             current_subscriptions: None,
             error: None,
             folder_index: 0,
-            folder_names,
+            folder_names: Some(folder_names.clone()),
             program_index: 0,
             program_names: None,
             shader_watcher,
         };
 
-        let folder_index = match this
-            .folder_names
-            .iter()
-            .position(|n| *n == this.config.default)
-        {
+        let folder_index = match folder_names.iter().position(|n| *n == this.config.default) {
             Some(i) => i,
             None => {
                 this.error = Some(String::from(format!(
@@ -92,7 +88,7 @@ impl ProgramStore {
         };
 
         this.folder_index = folder_index;
-        let folder_name = &this.folder_names[folder_index];
+        let folder_name = &folder_names[folder_index];
 
         let folder_config = match this.config.folders.get(folder_name) {
             Some(c) => c,
@@ -244,7 +240,13 @@ impl ProgramStore {
         // it will be compiled in the next update()
         println!("program selected: {}", name);
         self.program_index = selected;
-        let folder_name = &self.folder_names[self.folder_index];
+
+        let folder_names = match &self.folder_names {
+            Some(n) => n,
+            None => return,
+        };
+
+        let folder_name = &folder_names[self.folder_index];
         let folder_config = self.config.folders.get(folder_name).unwrap();
 
         let program_config = match folder_config.programs.get(name) {
@@ -278,7 +280,12 @@ impl ProgramStore {
         }
 
         self.folder_index = selected;
-        let name = &self.folder_names[selected];
+        let folder_names = match &self.folder_names {
+            Some(n) => n,
+            None => return,
+        };
+
+        let name = &folder_names[selected];
         let folder_config = match self.config.folders.get(name) {
             Some(c) => c,
             None => {

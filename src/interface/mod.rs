@@ -78,22 +78,21 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
 
     /////////////////////////
     // current folder select
-    components::label("Folder")
-        .parent(model.widget_ids.controls_wrapper)
-        .set(model.widget_ids.current_folder_label, ui);
-    let folder_names = model
-        .program_store
-        .folder_names
-        .iter()
-        .map(|s| s.as_str())
-        .collect::<Vec<&str>>();
-    if let Some(selected) =
-        components::drop_down(&folder_names[..], model.program_store.folder_index)
+    if let Some(folder_names) = &model.program_store.folder_names {
+        components::label("Folder")
+            .parent(model.widget_ids.controls_wrapper)
+            .set(model.widget_ids.current_folder_label, ui);
+        let names = folder_names
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>();
+        if let Some(selected) = components::drop_down(&names[..], model.program_store.folder_index)
             .parent(model.widget_ids.controls_wrapper)
             .down(5.0)
             .set(model.widget_ids.current_folder, ui)
-    {
-        model.program_store.select_folder(app, device, selected);
+        {
+            model.program_store.select_folder(app, device, selected);
+        }
     }
 
     /////////////////////////
