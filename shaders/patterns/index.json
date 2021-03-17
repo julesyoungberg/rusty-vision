@@ -1,5 +1,5 @@
 {
-  "default": "voronoiNested",
+  "default": "triangles",
   "programs": {
     "candyWarp": {
       "pipeline": {
@@ -73,6 +73,12 @@
     "spaceHex": {
       "pipeline": {
         "frag": "spaceHex.frag"
+      },
+      "uniforms": ["general"]
+    },
+    "triangles": {
+      "pipeline": {
+        "frag": "triangles.frag"
       },
       "uniforms": ["general"]
     },
