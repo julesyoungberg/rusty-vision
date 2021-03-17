@@ -1,6 +1,15 @@
 {
-  "default": "mandelbrot",
+  "default": "kaliset",
   "programs": {
+    "kaliset": {
+      "pipeline": {
+        "frag": "kaliset.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
     "mandelbox": {
       "pipeline": {
         "frag": "mandelbox.frag"

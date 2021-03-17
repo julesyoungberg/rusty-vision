@@ -16,6 +16,8 @@ pub struct Data {
 pub struct GeneralUniforms {
     pub clock: SystemTime,
     pub data: Data,
+
+    reset_at: f32,
 }
 
 impl Bufferable<Data> for GeneralUniforms {
@@ -35,12 +37,13 @@ impl GeneralUniforms {
                 time: 0.0,
                 mouse_down: 0,
             },
+            reset_at: 0.0,
         }
     }
 
     pub fn update(&mut self) {
         let elapsed = self.clock.elapsed().unwrap();
-        self.data.time = elapsed.as_millis() as f32 / 1000.0;
+        self.data.time = elapsed.as_millis() as f32 / 1000.0 - self.reset_at;
     }
 
     pub fn set_size(&mut self, size: Vector2) {
@@ -49,5 +52,9 @@ impl GeneralUniforms {
 
     pub fn set_mouse(&mut self, mouse: Vector2) {
         self.data.mouse = mouse;
+    }
+
+    pub fn reset(&mut self) {
+        self.reset_at = self.data.time;
     }
 }

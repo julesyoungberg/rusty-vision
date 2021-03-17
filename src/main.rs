@@ -118,6 +118,9 @@ fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
                 pause(app, model);
             }
         }
+        Key::R => {
+            model.program_store.buffer_store.general_uniforms.reset();
+        }
         _ => (),
     };
 
