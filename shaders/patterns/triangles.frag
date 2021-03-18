@@ -135,7 +135,7 @@ void main() {
     // shimmer
     float dist = length(tri_coord) * 4.0;
     float t = dist - time * 6.0 + (tri_coord.x + tri_coord.y) * 2.0;
-    float shine = mix(1.0, 2.5, pulse(3.0, 2.0, mod(t, 17.5)));
+    float shine = mix(1.0, 2.0, pulse(3.0, 2.0, mod(t, 16.8)));
     color *= shine;
 
     // randomly darkened tiles

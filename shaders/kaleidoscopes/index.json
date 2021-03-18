@@ -1,5 +1,5 @@
 {
-  "default": "kaleidoscope1",
+  "default": "koch",
   "programs": {
     "kaleidoImage": {
       "pipeline": {
@@ -54,6 +54,12 @@
       "defaults": {
         "image1": "forest.jpg"
       }
+    },
+    "koch": {
+      "pipeline": {
+        "frag": "koch.frag"
+      },
+      "uniforms": ["general"]
     }
   }
 }
