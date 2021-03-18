@@ -10,16 +10,25 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
+layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 1, binding = 1) uniform texture2D spectrum;
+
+#define AUDIO_REACTIVE 1
 #define TAU 6.28318530718
 
 const vec2 s = vec2(1, 1.7320508);
 
 //@import util/above_line
 //@import util/line_dist
+//@import util/power_curve
+//@import util/pulse
 //@import util/rand
 
 bool above_line(vec2 r, vec2 q, vec2 p);
 float line_dist(vec2 p, vec2 a, vec2 b);
+float power_curve(float x, float a, float b);
+float pulse(float c, float w, float x);
+float rand(float n);
 float rand21(vec2 co);
 vec2 rand2(vec2 p);
 
@@ -47,7 +56,7 @@ void main() {
 
     vec3 color = vec3(0);
 
-    const float scale = 15.0;
+    const float scale = 17.0;
     st *= scale;
 
     vec4 hex_coords = get_hex(st);
@@ -58,8 +67,6 @@ void main() {
 
     vec2 points[7];
     vec2 coords[7];
-
-    float t = time;
 
     // collect neighboring points
     for (int i = 0; i <= 6; i++) {
@@ -119,22 +126,35 @@ void main() {
     vec2 tri_coord = (id + c1 + c2) / 3.0;
     tri_coord /= scale;
 
+    // color gradient
     float d1 = 1.0 - length(tri_coord - vec2(0.33, 0.5)) * 2.0;
     color = mix(vec3(0.0), vec3(0.19, 0.25, 0.43), d1 * step(0.01, d1));
-
     float d2 = 1.0 - length(tri_coord - vec2(0.85, 0.25)) * 2.0;
     color = mix(color, vec3(0.35, 0.06, 0.28), d2 * step(0.01, d2));
 
-    float dist = length(tri_coord) * 0.1;
-    float shine = mix(1.0, 5.0, pow(max(0.0, sin(dist - time * 3.0 + dot(tri_coord, tri_coord) * 6.0)), 2.0));
+    // shimmer
+    float dist = length(tri_coord) * 4.0;
+    float t = dist - time * 6.0 + (tri_coord.x + tri_coord.y) * 2.0;
+    float shine = mix(1.0, 2.5, pulse(3.0, 2.0, mod(t, 17.5)));
     color *= shine;
 
-    // float dist = length(tri_coord) * 4.0;
-    // float shine = mix(1.0, 5.0, pow(max(0.0, sin(dist - time * 2.0)), 5.0));
-    // color *= shine;
-
+    // randomly darkened tiles
     float darkness = rand21(tri_coord) * 0.5 + 0.5;
     color *= darkness;
+
+    // randomly sparkling tiles
+    vec2 rnd = rand2(tri_coord);
+    float ti = rand(dot(rnd, rnd) * 0.1);
+    float sparkle = 1.0;
+    if (AUDIO_REACTIVE == 1) {
+        float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(fract(ti), 0)).x;
+        sparkle = intensity + 1.0;
+    } else {
+        float loop = 30.0;
+        float t2 = time * 0.5 + ti * loop;
+        sparkle = mix(1.0, 5.0, max(0.0, power_curve(mod(t2, loop), 2.0, 1.0)));
+    }
+    color *= sparkle;
 
     // draw lines
     for (int i = 0; i < 6; i++) {
