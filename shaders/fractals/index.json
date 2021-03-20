@@ -1,9 +1,27 @@
 {
-  "default": "kaliset",
+  "default": "flame",
   "programs": {
+    "flame": {
+      "pipeline": {
+        "frag": "flame.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.93
+      }
+    },
     "kaliset": {
       "pipeline": {
         "frag": "kaliset.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "kalisetCircuits": {
+      "pipeline": {
+        "frag": "kalisetCircuits.frag"
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {

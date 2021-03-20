@@ -57,7 +57,8 @@ void main() {
     vec2 r = res.xy;
     float d = res.w;
 
-    vec3 color = palette(d,
+    vec3 color = palette(
+        d,
         vec3(0.5, 0.5, 0.5), 
         vec3(0.5, 0.5, 0.5),
         vec3(1.0, 1.0, 1.0),
