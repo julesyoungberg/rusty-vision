@@ -1,9 +1,18 @@
 {
-  "default": "flame",
+  "default": "flame2",
   "programs": {
     "flame": {
       "pipeline": {
         "frag": "flame.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.93
+      }
+    },
+    "flame2": {
+      "pipeline": {
+        "frag": "flame2.frag"
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
