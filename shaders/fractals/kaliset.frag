@@ -30,15 +30,14 @@ vec4 kaliset(in vec3 z) {
     float t = time * 0.1;
 
     for (float i = 0.0; i < 32.0; i++) {
-        z = abs(z);
-        float mag = dot(z, z);
-        z /= mag;
+        z = abs(z) / dot(z, z);
         z += vec3(
             -0.6 + sin(t) * 0.3,
             -0.4 + sin(t * 2.7 + 2.1) * 0.3,
             -1.5 + sin(t * 0.7 + 1.3) * 0.01
         );
 
+        float mag = dot(z, z);
         float w = exp(-i / 7.0);
         accum += w * exp(-strength * pow(abs(mag - prev), power));
         tw += w;

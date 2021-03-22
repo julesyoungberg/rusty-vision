@@ -28,6 +28,15 @@
         "audio_fft_smoothing": 0.9
       }
     },
+    "kaliset2": {
+      "pipeline": {
+        "frag": "kaliset2.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
     "kalisetCircuits": {
       "pipeline": {
         "frag": "kalisetCircuits.frag"

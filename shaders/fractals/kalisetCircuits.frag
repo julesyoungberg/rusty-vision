@@ -63,7 +63,7 @@ vec4 kaliset(in vec2 st, float c) {
     // circ is used here to birghten it up, as the minimum.
     float shape = max(pow(max(0.0, width - min_comp) / width, 0.25), circ);
 
-    float t = time * 0.05;
+    float t = time * 0.1;
     vec3 color = vec3(rand2(z), c);
 
     // carve out the pattern
@@ -88,7 +88,7 @@ void main() {
     float zoom = 0.2;
     st *= zoom;
     
-    float t = time * 0.005;
+    float t = time * 0.01;
 
     // move 'camera'
     float a = t;
