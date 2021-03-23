@@ -17,6 +17,8 @@ pub struct GeneralUniforms {
     pub clock: SystemTime,
     pub data: Data,
 
+    paused_at: f32,
+    paused_time: f32,
     reset_at: f32,
 }
 
@@ -37,13 +39,19 @@ impl GeneralUniforms {
                 time: 0.0,
                 mouse_down: 0,
             },
+            paused_at: 0.0,
+            paused_time: 0.0,
             reset_at: 0.0,
         }
     }
 
-    pub fn update(&mut self) {
+    fn get_time(&self) -> f32 {
         let elapsed = self.clock.elapsed().unwrap();
-        self.data.time = elapsed.as_millis() as f32 / 1000.0 - self.reset_at;
+        elapsed.as_millis() as f32 / 1000.0 - self.reset_at - self.paused_time
+    }
+
+    pub fn update(&mut self) {
+        self.data.time = self.get_time();
     }
 
     pub fn set_size(&mut self, size: Vector2) {
@@ -56,5 +64,13 @@ impl GeneralUniforms {
 
     pub fn reset(&mut self) {
         self.reset_at = self.data.time;
+    }
+
+    pub fn pause(&mut self) {
+        self.paused_at = self.data.time;
+    }
+
+    pub fn unpause(&mut self) {
+        self.paused_time += self.get_time() - self.paused_at;
     }
 }

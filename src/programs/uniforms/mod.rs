@@ -438,6 +438,8 @@ impl BufferStore {
             self.end_audio_session();
         }
 
+        self.general_uniforms.pause();
+
         if subscriptions.webcam {
             self.webcam_uniforms.pause();
         }
@@ -447,6 +449,8 @@ impl BufferStore {
         if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
             self.start_audio_session(subscriptions);
         }
+
+        self.general_uniforms.unpause();
 
         if subscriptions.webcam {
             self.webcam_uniforms.unpause();
