@@ -1,5 +1,5 @@
 {
-  "default": "flame2",
+  "default": "kaliset3",
   "programs": {
     "flame": {
       "pipeline": {
@@ -31,6 +31,15 @@
     "kaliset2": {
       "pipeline": {
         "frag": "kaliset2.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "kaliset3": {
+      "pipeline": {
+        "frag": "kaliset3.frag"
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {

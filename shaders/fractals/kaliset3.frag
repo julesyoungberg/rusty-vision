@@ -13,31 +13,27 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
+const vec3 LIGHT_POS = vec3(0.0, 0.0, -1.0);
+
+//@import util/complex_inv
+//@import util/complex_mult
 //@import util/palette
-//@import util/rand
 
+vec2 complex_inv(in vec2 z);
+vec2 complex_mult(in vec2 a, in vec2 b);
 vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
-vec2 rand2(vec2 p);
 
-vec2 complex_inv(in vec2 z) {
-    vec2 conjugate = vec2(z.x, -z.y);
-    float denominator = dot(conjugate, conjugate);
-    return conjugate / denominator;
-}
-
-vec2 complex_mult(in vec2 a, in vec2 b) {
-    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
-
-vec3 formula(in vec2 st, in vec2 c) {
+// Based on Alien Tech by Kali
+// https://www.shadertoy.com/view/XtX3zj
+vec2 formula(in vec2 st) {
     vec2 z = st;
-    float last_stable = 0.0;
-    float expsmo = 0.0;
-    float l = 0.0;
 
-    // orbit traps
-    float min_comp = 1000.0;
-    float min_mag = min_comp;
+    vec2 c = vec2(-0.6);
+    c = vec2(-0.32 + sin(time / 11.0) * 0.05, 0.87);
+
+    float expsmo = 0.0;
+    float len = 0.0;
+    float orbit_trap = 0.0;
 
     float angle = time * 0.05;
 
@@ -61,7 +57,7 @@ vec3 formula(in vec2 st, in vec2 c) {
         z.x = -abs(z.x);
         // z = complex_mult(z, c) + 1.0 + complex_inv(complex_mult(z, c) + 1.0);
         // z = abs(complex_mult(z, c) + 1.0) + complex_inv(abs(complex_mult(z, c) + 1.0));
-        vec2 cone = vec2(1.0, 0.0);
+        const vec2 cone = vec2(1.0, 0.0);
         vec2 temp = abs(complex_mult(z, c) + cone);
         z = temp + complex_mult(cone, complex_inv(temp));
 
@@ -69,61 +65,38 @@ vec3 formula(in vec2 st, in vec2 c) {
 
         // exponential smoothing
         if (mod(i, 2.0) < 1.0) {
-            float pl = l;
-            l = mag;
-            expsmo += exp(-1.0 / abs(l - pl));
+            float prev_len = len;
+            len = mag;
+            expsmo += exp(-1.0 / abs(len - prev_len));
+            orbit_trap = min(orbit_trap, len);
         }
-
-        // orbit traps
-        float w = 0.1;
-        // get minimum component
-        float m_comp = clamp(abs(min(z.x, z.y)), w - mag, abs(mag - w));
-        // update overall minimum component
-        min_comp = min(m_comp, min_comp);
-        // update minimum magnitude
-        min_mag = min(mag, min_mag);
-        // m is 0 unless minimum == min_comp
-        // catches the lasst i where z is stable
-        last_stable = max(last_stable, i * (1.0 - abs(sign(min_comp - m_comp))));
     }
 
-    float k = clamp(expsmo * 0.06, 0.8, 1.4);
+    return vec2(expsmo, orbit_trap);
+}
 
-    // return vec3(expsmo * 0.1);
-    last_stable += 1.0;
+vec3 light(vec2 p, vec3 color) {
+    // calculate normals based on horizontal and vertical vectors being z the formula result
+    const vec2 d = vec2(0.0, 0.003);
+    float d1 = formula(p - d.xy).x - formula(p + d.xy).x;
+    float d2 = formula(p - d.yx).x - formula(p + d.yx).x;
+    vec3 n1 = vec3(0.0, d.y * 2.0, -d1 * 0.05);
+    vec3 n2 = vec3(d.y * 2.0, 0.0, -d2 * 0.05);
+    vec3 n = normalize(cross(n1, n2));
 
-    float intensity = 0.01;
-    float width = intensity * last_stable * 2.0;
-
-    float circ = pow(max(0.0, width - min_mag * 0.1) / width, 6.0);
-    float shape = max(pow(max(0.0, width - min_comp) / width, 0.25), circ);
-
-    float t = time * 0.1;
-    // vec3 color = vec3(rand2(z), c);
-    vec3 color = palette(
-        fract(expsmo * 0.05), // last_stable / iterations,
-        vec3(0.5, 0.5, 0.5), 
-        vec3(0.5, 0.5, 0.5),
-        vec3(1.0, 1.0, 1.0),
-        vec3(0.0, 0.1, 0.2)
-    );
-    return color;
-
-    // carve out the pattern
-    color *= 0.4 + mod(last_stable / iterations + min_mag * 0.2 - t, 1.0) * 1.6;
-
-    // add some flare
-    // circ filters out most of this addition but adds some nice highlights
-    // float unstable_iterations = iterations - last_stable;
-    // color += vec3(1.0, 0.7, 0.3) * circ * unstable_iterations * 3.0;
-
-    return color * shape;
+    // lighting
+    vec3 light_dir = normalize(vec3(p, 0.0) + LIGHT_POS);
+    float diff = pow(max(0.0, dot(light_dir, n)), 2.0) + 0.2; // lambertian diffuse + ambient
+	vec3 r = reflect(vec3(0.0, 0.0, 1.0), light_dir); // half vector
+	float spec = pow(max(0.0, dot(r, n)), 30.0); // specular
+  	return diff * color + spec * 0.1;
 }
 
 void main() {
     vec2 st = uv;
-    st.x *= resolution.x / resolution.y;
-    st *= 1.0;
+    float aspect_ratio = resolution.x / resolution.y;
+    st.x *= aspect_ratio;
+    st *= 2.0;
     
     vec3 color = vec3(0);
 
@@ -131,14 +104,43 @@ void main() {
     // float scale = 1.0 + 0.5 * sin(t / 17.0);
     // st *= scale;
 
-    vec2 c = vec2(-0.6);
-    c = vec2(-0.355 + sin(time / 11.0) * 0.05, 0.87);
-    // c += vec2(sin(t / 11.0), sin(t / 13.0)) * 0.5;
+    vec2 pix_size = 0.25 / resolution;
+    pix_size.x *= aspect_ratio;
+    const float aa_samples = 1.0;
+    const float aa_sqrt = sqrt(aa_samples);
+    float little_lights = 0.0;
 
-    float a = abs(atan(st.x, st.y));
-    float r = length(st);
+    vec2 m = 2.0 * mouse / resolution.y;
+    m = m * 0.5 + 0.5;
 
-    color = formula(st, c);
+    for (float aa = 0.0; aa < aa_samples; aa++) {
+        vec2 aa_coord = floor(vec2(aa / aa_sqrt, mod(aa, aa_sqrt)));
+        vec2 p = st + aa_coord * pix_size;
+
+        vec2 result = formula(p);
+        float k = clamp(result.x * 0.06, 0.8, 1.4);
+        vec3 col = palette(
+            fract(result.x * 0.05), // last_stable / iterations,
+            vec3(0.5, 0.5, 0.5), 
+            vec3(0.5, 0.5, 0.5),
+            vec3(1.0, 1.0, 1.0),
+            vec3(0.0, 0.1, 0.2)
+        );
+
+        color += light(p, col);
+        little_lights += max(0.0, 2.0 - result.y) / 2.0;
+    }
+
+    color /= aa_samples;
+
+    // uv shift by light coords
+    vec2 luv = st + LIGHT_POS.xy;
+
+    // min amb light + spotlight with falloff * varying intensity
+    color *= 0.07 + pow(max(0.0, 2.0 - length(luv) * 0.5), 2.0);
+
+    // yellow lights
+    // color += pow(little_lights * 0.12, 15.0) * vec3(1.0, 0.9, 0.3) * (0.8 + sin(time * 5.0 - st.y * 10.0) * 0.6);
 
     frag_color = vec4(color, 1);
 }

@@ -21,6 +21,8 @@ vec2 complex_inv(in vec2 z);
 vec2 complex_mult(in vec2 a, in vec2 b);
 vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
 
+// based on Circuits by Kali
+// https://www.shadertoy.com/view/XlX3Rj
 vec3 formula(in vec2 st, in vec2 c) {
     vec2 z = st;
     float last_stable = 0.0;
@@ -110,9 +112,6 @@ void main() {
 
     vec2 c = vec2(-0.6);
     c += vec2(sin(t / 11.0), sin(t / 13.0)) * 0.5;
-
-    float a = abs(atan(st.x, st.y));
-    float r = length(st);
 
     color = formula(st, c);
 
