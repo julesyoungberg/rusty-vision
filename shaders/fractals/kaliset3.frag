@@ -16,15 +16,21 @@ layout(set = 1, binding = 1) uniform texture2D spectrum;
 const vec3 LIGHT_POS = vec3(0.0, 0.0, -1.0);
 
 //@import util/complex_inv
+//@import util/complex_log
 //@import util/complex_mult
+//@import util/noise
 //@import util/palette
 
 vec2 complex_inv(in vec2 z);
+vec2 complex_log(in vec2 z);
 vec2 complex_mult(in vec2 a, in vec2 b);
+float noise2(in vec2 p);
 vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
 
 // Based on Alien Tech by Kali
 // https://www.shadertoy.com/view/XtX3zj
+// formulas from 
+// http://www.fractalforums.com/new-theories-and-research/very-simple-formula-for-fractal-patterns
 vec2 formula(in vec2 st) {
     vec2 z = st;
 
@@ -40,7 +46,7 @@ vec2 formula(in vec2 st) {
     const float iterations = 40;
     for (float i = 0.0; i < iterations; i++) {
         // rotation
-        //z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+        // z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
 
         // original kali equation
         // z = abs(z) / dot(z, z) + c;
@@ -48,16 +54,20 @@ vec2 formula(in vec2 st) {
         // kali variations
         // z = abs(z) / (z.x * z.y) + c;
         // z = abs(complex_inv(z)) + c;
+        // z = complex_inv(abs(z)) + c;
+        // z = complex_log(abs(complex_inv(z)) + c);
         // z = complex_mult(abs(z), complex_inv(abs(c))) + c;
+        // z = complex_mult(abs(z), complex_inv(c)) + c;
         // z = abs(complex_mult(z, complex_inv(c))) + c;
         // z = abs(complex_mult(z, z)) + c;
-        // z = complex_inv(complex_mult(complex_mult(z, z), z)) + c;
+        // z = abs(complex_inv(complex_mult(complex_mult(z, z), z))) + c;
+        // z = complex_inv(complex_mult(complex_mult(abs(z), abs(z)), abs(z))) + c;
 
         // softology variations
         z.x = -abs(z.x);
-        // z = complex_mult(z, c) + 1.0 + complex_inv(complex_mult(z, c) + 1.0);
-        // z = abs(complex_mult(z, c) + 1.0) + complex_inv(abs(complex_mult(z, c) + 1.0));
         const vec2 cone = vec2(1.0, 0.0);
+        // z = complex_mult(z, c) + cone + complex_inv(complex_mult(z, c) + cone);
+        // z = abs(complex_mult(z, c) + cone) + complex_inv(abs(complex_mult(z, c) + cone));
         vec2 temp = abs(complex_mult(z, c) + cone);
         z = temp + complex_mult(cone, complex_inv(temp));
 
@@ -77,7 +87,7 @@ vec2 formula(in vec2 st) {
 
 vec3 light(vec2 p, vec3 color) {
     // calculate normals based on horizontal and vertical vectors being z the formula result
-    const vec2 d = vec2(0.0, 0.003);
+    const vec2 d = vec2(0.0, 0.01);
     float d1 = formula(p - d.xy).x - formula(p + d.xy).x;
     float d2 = formula(p - d.yx).x - formula(p + d.yx).x;
     vec3 n1 = vec3(0.0, d.y * 2.0, -d1 * 0.05);
@@ -96,7 +106,7 @@ void main() {
     vec2 st = uv;
     float aspect_ratio = resolution.x / resolution.y;
     st.x *= aspect_ratio;
-    st *= 2.0;
+    st *= 1.0;
     
     vec3 color = vec3(0);
 
@@ -120,12 +130,14 @@ void main() {
         vec2 result = formula(p);
         float k = clamp(result.x * 0.06, 0.8, 1.4);
         vec3 col = palette(
-            fract(result.x * 0.05), // last_stable / iterations,
+            result.x * 0.1,
             vec3(0.5, 0.5, 0.5), 
             vec3(0.5, 0.5, 0.5),
-            vec3(1.0, 1.0, 1.0),
-            vec3(0.0, 0.1, 0.2)
+            vec3(0.9, 1.0, 1.0),
+            vec3(m, 1.0)
         );
+        col *= 0.4;
+        // col = 1.0 - col;
 
         color += light(p, col);
         little_lights += max(0.0, 2.0 - result.y) / 2.0;

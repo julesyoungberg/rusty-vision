@@ -19,6 +19,12 @@
         "audio_fft_smoothing": 0.93
       }
     },
+    "hexFractal": {
+      "pipeline": {
+        "frag": "hexFractal.frag"
+      },
+      "uniforms": ["general"]
+    },
     "kaliset": {
       "pipeline": {
         "frag": "kaliset.frag"

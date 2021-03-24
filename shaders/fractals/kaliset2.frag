@@ -35,27 +35,8 @@ vec3 formula(in vec2 st, in vec2 c) {
 
     const float iterations = 9;
     for (float i = 0.0; i < iterations; i++) {
-        // rotation
         z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-
-        // original kali equation
-        // z = abs(z) / dot(z, z) + c;
-
-        // kali variations
-        // z = abs(z) / (z.x * z.y) + c;
         z = abs(complex_inv(z)) + c;
-        // z = complex_mult(abs(z), complex_inv(abs(c))) + c;
-        // z = abs(complex_mult(z, complex_inv(c))) + c;
-        // z = abs(complex_mult(z, z)) + c;
-        // z = complex_inv(complex_mult(complex_mult(z, z), z)) + c;
-
-        // softology variations
-        // z.x = -abs(z.x);
-        // z = complex_mult(z, c) + 1.0 + complex_inv(complex_mult(z, c) + 1.0);
-        // z = abs(complex_mult(z, c) + 1.0) + complex_inv(abs(complex_mult(z, c) + 1.0));
-        // vec2 cone = vec2(1.0, 0.0);
-        // vec2 temp = abs(complex_mult(z, c) + cone);
-        // z = temp + complex_mult(cone, complex_inv(temp));
 
         float mag = length(z);
 
