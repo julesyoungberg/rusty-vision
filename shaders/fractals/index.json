@@ -23,7 +23,10 @@
       "pipeline": {
         "frag": "hexFractal.frag"
       },
-      "uniforms": ["general"]
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "kaliset": {
       "pipeline": {

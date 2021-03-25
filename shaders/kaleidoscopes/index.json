@@ -1,5 +1,5 @@
 {
-  "default": "koch",
+  "default": "kaleidoscope2",
   "programs": {
     "kaleidoImage": {
       "pipeline": {
@@ -26,6 +26,15 @@
       "uniforms": ["general", "image"],
       "defaults": {
         "image1": "forest.jpg"
+      }
+    },
+    "kaleidoscope2": {
+      "pipeline": {
+        "frag": "kaleidoscope2.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
       }
     },
     "kifs": {
