@@ -452,19 +452,6 @@ impl ProgramStore {
         }
     }
 
-    /// Update GPU uniform buffers with current data.
-    /// Call in draw() before rendering.
-    pub fn update_uniform_buffers_mut(
-        &mut self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-    ) {
-        if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
-            self.buffer_store
-                .update_buffers(device, encoder, current_subscriptions);
-        }
-    }
-
     /// Fetch the appropriate bind groups to set positions for the current program.
     /// Call in draw() right before rendering.
     pub fn get_bind_groups(&self) -> Option<Vec<&wgpu::BindGroup>> {

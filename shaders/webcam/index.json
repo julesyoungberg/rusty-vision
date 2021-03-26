@@ -1,5 +1,5 @@
 {
-  "default": "halftone",
+  "default": "multipass",
   "programs": {
     "cells": {
       "pipeline": {
@@ -29,6 +29,16 @@
       "uniforms": ["general", "audio_fft", "webcam"],
       "defaults": {
         "audio_fft_smoothing": 0.95
+      }
+    },
+    "multipass": {
+      "pipeline": {
+        "frag": "halftone.frag"
+      },
+      "uniforms": ["general", "audio_fft", "webcam", "multipass"],
+      "defaults": {
+        "audio_fft_smoothing": 0.95,
+        "passes": 2
       }
     },
     "webcam": {

@@ -195,7 +195,14 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         None => false,
     };
 
-    if multipass {
+    let pass_textures = model
+        .program_store
+        .buffer_store
+        .multipass_uniforms
+        .textures()
+        .len();
+
+    if multipass && pass_textures > 0 {
         // setup environment
         let desc = wgpu::CommandEncoderDescriptor {
             label: Some("nannou_isf_pipeline_update"),
@@ -278,6 +285,21 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     let vertex_range = 0..quad_2d::VERTICES.len() as u32;
     let instance_range = 0..1;
     render_pass.draw(vertex_range, instance_range);
+
+    let multipass = match &model.program_store.current_subscriptions {
+        Some(s) => s.multipass,
+        None => false,
+    };
+
+    if multipass {
+        model
+            .program_store
+            .buffer_store
+            .multipass_uniforms
+            .textures()[(model.program_store.buffer_store.multipass_uniforms.passes - 1) as usize]
+            .clone_from(&frame.texture());
+    }
+
     true
 }
 

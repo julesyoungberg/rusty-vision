@@ -19,6 +19,13 @@ layout(set = 2, binding = 2) uniform WebcamUniforms {
     vec2 video_size;
 };
 
+layout(set = 3, binding = 0) uniform sampler multipass_sampler;
+layout(set = 3, binding = 1) uniform texture2D pass1;
+layout(set = 3, binding = 2) uniform texture2D pass2;
+layout(set = 3, binding = 3) uniform MultipassUniforms {
+    uint pass;
+};
+
 // based on Halftone Effect by VIDVOX
 // https://editor.isf.video/shaders/5e7a801e7c113618206deafc
 
@@ -142,10 +149,56 @@ void halftone() {
 	frag_color = color;
 }
 
+vec3 pass1_color(in vec2 p) {
+    return texture(sampler2D(pass1, multipass_sampler), p).rgb;
+}
+
+void glitch() {
+    vec2 st = uv * 0.5 + 0.5;
+
+    vec3 color = pass1_color(st);
+
+    float t = floor(time * 0.5 * 60.0);
+
+    // offset slices horizontally according to treble
+    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 2.0;
+    for (float i = 0.0; i < max_offset * 20.0; i++) {
+        // get random start and end y coords
+        float slice_y = rand21(vec2(t, 3679.0 + i));
+        float slice_h = rand21(vec2(t, 4582.0 + i)) * 0.25;
+        // if we are inside the range shift the slice
+        if (step(slice_y, st.y) - step(fract(slice_y + slice_h), st.y) == 1.0) {
+            // get random horizontal shift
+            float offset = rand_range(vec2(t, 6824.0 + i), -max_offset, max_offset);
+            color = pass1_color(fract(vec2(st.x + offset, st.y)));
+        }
+    }
+
+    // calculate color shift according to bass
+    float max_color_offset = spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02;
+    vec2 color_offset = vec2(
+        rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
+        rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset)
+    );
+    vec3 shifted_color = pass1_color(st + color_offset);
+
+    // shift a random channel
+    float rnd = rand21(vec2(t, 8379.0));
+    if (rnd < 0.33) {
+        color.r = shifted_color.r;
+    } else if (rnd < 0.66) {
+        color.g = shifted_color.g;
+    } else {
+        color.b = shifted_color.b;
+    }
+    
+	frag_color = vec4(color, 1.0);
+}
+
 void main() {
     if (pass == 0) {
         halftone();
     } else {
-
+        glitch();
     }
 }

@@ -54,11 +54,15 @@ impl MultipassUniforms {
             None => return,
         };
 
-        for _ in 0..self.passes - 1 {
+        for _ in 0..self.passes {
             let texture = wgpu::TextureBuilder::new()
                 .size([size[0] as u32, size[1] as u32])
                 .format(wgpu::TextureFormat::Rgba32Float)
-                .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
+                .usage(
+                    wgpu::TextureUsage::COPY_DST
+                        | wgpu::TextureUsage::SAMPLED
+                        | wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+                )
                 .build(device);
             self.textures.push(texture);
         }
