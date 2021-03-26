@@ -19,14 +19,9 @@ layout(set = 1, binding = 1) uniform texture2D spectrum;
 // based on Kaleidoscope Illusion by tiff
 // https://www.shadertoy.com/view/llGcRK
 void main() {
-    vec2 st = uv * resolution / resolution.y;
+    vec2 st = uv * resolution / resolution.x;
     st *= 0.5;
-    // st *= cos(time * 0.5) + 1.5;
-
-    float angle = time * 0.3;
-    float c = cos(angle);
-    float s = sin(angle);
-    st *= mat2(c, -s, s, c);
+    st *= cos(time * 0.5) + 1.5;
 
     vec3 color = vec3(0.0);
 
@@ -34,31 +29,30 @@ void main() {
     float m = 0.5;
 
     for (float i = 0.0; i < ITERATIONS; i += 1.0) {
-        float angle = time * i * 0.01 + length(st) * PI * (sin(time * 0.05) * 0.3 - 0.4);
+        float angle = i + sin(time * 0.1) + 1.5;
         float c = cos(angle);
         float s = sin(angle);
         st *= mat2(c, -s, s, c);
 
         float theta = atan(st.x, st.y) + PI;
+        // round theta off to scale pieces
         theta = (floor(theta / scale) + 0.5) * scale;
 
         vec2 dir = vec2(sin(theta), cos(theta));
         vec2 codir = dir.yx * vec2(-1, 1);
 
         st = vec2(dot(dir, st), dot(codir, st));
-        st += vec2(time * 0.1, time * 0.15) * 0.035 * i;
-        // st = abs(fract(st + 0.5) * 2.0 - 1.0) * 0.7;
-        st = fract(st);
+        st += vec2(sin(time * 0.1), cos(time * 0.15)) * 0.035 * angle;
+        st = abs(fract(st + 0.5) * 2.0 - 1.0) * 0.7;
+        // st = fract(st);
 
         float spec1 = texture(sampler2D(spectrum, spectrum_sampler), vec2(((i * 3)) / (ITERATIONS * 3), 0)).x;
         float spec2 = texture(sampler2D(spectrum, spectrum_sampler), vec2(((i * 3) + 1) / (ITERATIONS * 3), 0)).x;
         float spec3 = texture(sampler2D(spectrum, spectrum_sampler), vec2(((i * 3) + 2) / (ITERATIONS * 3), 0)).x;
-        vec3 p = vec3(spec1, spec2, spec3) * exp(i) * 0.001 * vec3(1, 5, 9);
-        color += exp(-min(st.x, st.y) * 16.0) * (cos(p * i + time * 0.5) * 0.5 + 0.5) * m;
-        m *= 0.9;
+        vec3 p = vec3(spec1, spec2, spec3) * vec3(1.1, 1.7, 2.3) * 0.5;
+        color += exp(-min(st.x, st.y) * 16.0) * (cos(p + i + time * 0.5) * 0.5 + 0.5) * m;
+        m *= 0.7;
     }
 
-    color.rgb *= 1.2;
-
-	frag_color = vec4(color, 1.0);
+	frag_color = vec4(color * color, 1.0);
 }
