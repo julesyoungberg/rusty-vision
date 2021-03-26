@@ -102,7 +102,7 @@ impl ProgramStore {
     }
 
     /// Read fresh config and recompile
-    pub fn configure(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    pub fn configure(&mut self, app: &App, device: &wgpu::Device, num_samples: u32, size: Point2) {
         // first, clear the current program
         if let Some(current_program) = &mut self.current_program {
             current_program.clear();
@@ -270,6 +270,7 @@ impl ProgramStore {
             device,
             &current_subscriptions,
             &program_config.defaults,
+            size,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -279,7 +280,13 @@ impl ProgramStore {
 
     /// Check if changes have been made to shaders and recompile if needed.
     /// Call every timestep.
-    pub fn update_shaders(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    pub fn update_shaders(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        num_samples: u32,
+        size: Point2,
+    ) {
         // check for changes
         if let Ok(event) = self.changes_channel.try_recv() {
             if let DebouncedEvent::Write(path) = event {
@@ -287,7 +294,7 @@ impl ProgramStore {
                 println!("changes written to: {}", path_str);
 
                 if path_str.ends_with(".json") {
-                    self.configure(app, device, num_samples);
+                    self.configure(app, device, num_samples, size);
                 } else {
                     self.compile_current(app, device, num_samples);
                 }
@@ -333,6 +340,7 @@ impl ProgramStore {
         device: &wgpu::Device,
         selected: usize,
         force: bool,
+        size: Point2,
     ) -> Option<bool> {
         if self.error.is_none() && !force && selected == self.program_index {
             return None;
@@ -374,6 +382,7 @@ impl ProgramStore {
             device,
             &current_subscriptions,
             &program_config.defaults,
+            size,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -388,6 +397,7 @@ impl ProgramStore {
         app: &App,
         device: &wgpu::Device,
         selected: usize,
+        size: Point2,
     ) -> Option<bool> {
         if self.error.is_none() && selected == self.folder_index {
             return None;
@@ -426,13 +436,26 @@ impl ProgramStore {
         };
 
         self.program_names = Some(program_names);
-        self.select_program(app, device, program_index, true)
+        self.select_program(app, device, program_index, true, size)
     }
 
     /// Update GPU uniform buffers with current data.
     /// Call in draw() before rendering.
     pub fn update_uniform_buffers(
         &self,
+        device: &wgpu::Device,
+        encoder: &mut nannou::wgpu::CommandEncoder,
+    ) {
+        if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
+            self.buffer_store
+                .update_buffers(device, encoder, current_subscriptions);
+        }
+    }
+
+    /// Update GPU uniform buffers with current data.
+    /// Call in draw() before rendering.
+    pub fn update_uniform_buffers_mut(
+        &mut self,
         device: &wgpu::Device,
         encoder: &mut nannou::wgpu::CommandEncoder,
     ) {

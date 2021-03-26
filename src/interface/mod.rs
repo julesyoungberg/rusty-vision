@@ -91,7 +91,9 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
             .down(5.0)
             .set(model.widget_ids.current_folder, ui)
         {
-            model.program_store.select_folder(app, device, selected);
+            model
+                .program_store
+                .select_folder(app, device, selected, model.size);
         }
     }
 
@@ -112,7 +114,7 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model) {
         {
             model
                 .program_store
-                .select_program(app, device, selected, false);
+                .select_program(app, device, selected, false, model.size);
         }
     }
 

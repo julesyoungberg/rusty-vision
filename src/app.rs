@@ -2,6 +2,7 @@ use nannou::prelude::*;
 use nannou::ui::prelude::*;
 
 use crate::programs;
+use crate::quad_2d;
 
 widget_ids! {
     /// UI widget ids
@@ -99,4 +100,36 @@ pub struct Model {
     pub ui_show_noise: bool,
     pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
+}
+
+impl Model {
+    pub fn encode_render_pass(
+        &self,
+        texture_view: wgpu::TextureView,
+        encoder: &mut wgpu::CommandEncoder,
+        pipeline: &wgpu::RenderPipeline,
+    ) -> bool {
+        // configure pipeline
+        let mut render_pass = wgpu::RenderPassBuilder::new()
+            .color_attachment(&texture_view, |color| color)
+            .begin(encoder);
+
+        render_pass.set_pipeline(pipeline);
+        render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
+
+        // attach appropriate bind groups for the current program
+        let bind_groups = match self.program_store.get_bind_groups() {
+            Some(g) => g,
+            None => return false,
+        };
+        for (set, bind_group) in bind_groups.iter().enumerate() {
+            render_pass.set_bind_group(set as u32, bind_group, &[]);
+        }
+
+        // render quad
+        let vertex_range = 0..quad_2d::VERTICES.len() as u32;
+        let instance_range = 0..1;
+        render_pass.draw(vertex_range, instance_range);
+        true
+    }
 }

@@ -30,6 +30,7 @@ pub struct ProgramDefaults {
     pub noise_scale_by_prev: Option<i32>,
     pub noise_sharpen: Option<i32>,
     pub noise_speed: Option<f32>,
+    pub passes: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

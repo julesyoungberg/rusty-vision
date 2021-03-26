@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use programs::uniforms::base::Bufferable;
 use std::{thread, time};
 
 mod app;
@@ -35,7 +36,7 @@ fn model(app: &App) -> app::Model {
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
-    program_store.configure(app, device, msaa_samples);
+    program_store.configure(app, device, msaa_samples, size);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
     // create UI
@@ -60,30 +61,6 @@ fn model(app: &App) -> app::Model {
         size,
         vertex_buffer,
     }
-}
-
-/// Update app state.
-/// WARNING: order is very important here.
-/// The image uniforms use an update flag so other parts of the app know to update.
-/// This flag is set by the interface and unset by the profram store.
-/// Update order should be: interface, uniforms, shaders
-fn update(app: &App, model: &mut app::Model, _update: Update) {
-    if model.paused {
-        return;
-    }
-
-    let window = app.window(model.main_window_id).unwrap();
-    let device = window.swap_chain_device();
-
-    if model.show_controls {
-        interface::update(app, device, model);
-    }
-
-    model.program_store.update_uniforms(device);
-
-    model
-        .program_store
-        .update_shaders(app, device, window.msaa_samples());
 }
 
 fn resize(app: &App, model: &mut app::Model, width: u32, height: u32) {
@@ -188,6 +165,82 @@ fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseBut
         .general_uniforms
         .data
         .mouse_down = 0;
+}
+
+/// Update app state.
+/// WARNING: order is very important here.
+/// The image uniforms use an update flag so other parts of the app know to update.
+/// This flag is set by the interface and unset by the profram store.
+/// Update order should be: interface, uniforms, shaders
+fn update(app: &App, model: &mut app::Model, _update: Update) {
+    if model.paused {
+        return;
+    }
+
+    let window = app.window(model.main_window_id).unwrap();
+    let device = window.swap_chain_device();
+
+    if model.show_controls {
+        interface::update(app, device, model);
+    }
+
+    model.program_store.update_uniforms(device);
+
+    model
+        .program_store
+        .update_shaders(app, device, window.msaa_samples(), model.size);
+
+    let multipass = match &model.program_store.current_subscriptions {
+        Some(s) => s.multipass,
+        None => false,
+    };
+
+    if multipass {
+        // setup environment
+        let desc = wgpu::CommandEncoderDescriptor {
+            label: Some("nannou_isf_pipeline_update"),
+        };
+        let mut encoder = device.create_command_encoder(&desc);
+
+        // send new uniform data to the GPU buffers
+        model
+            .program_store
+            .update_uniform_buffers(device, &mut encoder);
+        model
+            .program_store
+            .buffer_store
+            .multipass_uniforms
+            .data
+            .pass = 0;
+        let passes = model
+            .program_store
+            .buffer_store
+            .multipass_uniforms
+            .passes
+            .clone();
+        // encode a render pass for each pass of the shader
+        for i in 0..passes - 1 {
+            let texture_view = model
+                .program_store
+                .buffer_store
+                .multipass_uniforms
+                .get_texture_view(i);
+            let render_pipeline = match model.program_store.current_pipeline() {
+                Some(pipeline) => pipeline,
+                None => return,
+            };
+            model.encode_render_pass(texture_view, &mut encoder, render_pipeline);
+            model
+                .program_store
+                .buffer_store
+                .multipass_uniforms
+                .data
+                .pass += 1;
+            model
+                .program_store
+                .update_uniform_buffers(device, &mut encoder);
+        }
+    }
 }
 
 /// Draw the state of the app to the frame
