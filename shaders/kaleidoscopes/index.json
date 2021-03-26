@@ -16,7 +16,7 @@
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
-        "audio_fft_smoothing": 0.99
+        "audio_fft_smoothing": 0.9
       }
     },
     "kaleidoscope1Image": {
@@ -31,6 +31,15 @@
     "kaleidoscope2": {
       "pipeline": {
         "frag": "kaleidoscope2.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "defaults": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "kaleidoscope3": {
+      "pipeline": {
+        "frag": "kaleidoscope3.frag"
       },
       "uniforms": ["general", "audio_fft"],
       "defaults": {
