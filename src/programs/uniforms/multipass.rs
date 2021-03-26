@@ -6,7 +6,7 @@ use crate::programs::uniforms::base::Bufferable;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub pass: u32,
+    pub pass_index: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -30,7 +30,7 @@ impl Bufferable<Data> for MultipassUniforms {
 impl MultipassUniforms {
     pub fn new() -> Self {
         Self {
-            data: Data { pass: 0 },
+            data: Data { pass_index: 0 },
             passes: 0,
             textures: vec![],
         }
@@ -42,7 +42,7 @@ impl MultipassUniforms {
         device: &wgpu::Device,
         size: Point2,
     ) {
-        self.data.pass = 0;
+        self.data.pass_index = 0;
         self.passes = 0;
         self.textures = vec![];
 
@@ -66,9 +66,5 @@ impl MultipassUniforms {
                 .build(device);
             self.textures.push(texture);
         }
-    }
-
-    pub fn get_texture_view(&self, pass: u32) -> wgpu::TextureView {
-        self.textures[pass as usize].view().build()
     }
 }

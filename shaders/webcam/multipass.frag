@@ -23,7 +23,7 @@ layout(set = 3, binding = 0) uniform sampler multipass_sampler;
 layout(set = 3, binding = 1) uniform texture2D pass1;
 layout(set = 3, binding = 2) uniform texture2D pass2;
 layout(set = 3, binding = 3) uniform MultipassUniforms {
-    uint pass;
+    int pass_index;
 };
 
 // based on Halftone Effect by VIDVOX
@@ -196,7 +196,7 @@ void glitch() {
 }
 
 void main() {
-    if (pass == 0) {
+    if (pass_index == 0) {
         halftone();
     } else {
         glitch();

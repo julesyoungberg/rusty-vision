@@ -33,7 +33,7 @@
     },
     "multipass": {
       "pipeline": {
-        "frag": "halftone.frag"
+        "frag": "multipass.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam", "multipass"],
       "defaults": {

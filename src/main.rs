@@ -202,7 +202,8 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         .textures()
         .len();
 
-    if multipass && pass_textures > 0 {
+    // if there is only 1 pass it is all done in draw
+    if multipass && pass_textures > 1 {
         // setup environment
         let desc = wgpu::CommandEncoderDescriptor {
             label: Some("nannou_isf_pipeline_update"),
@@ -213,12 +214,14 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         model
             .program_store
             .update_uniform_buffers(device, &mut encoder);
+        // reset pass index
         model
             .program_store
             .buffer_store
             .multipass_uniforms
             .data
-            .pass = 0;
+            .pass_index = 0;
+        // get number of passes
         let passes = model
             .program_store
             .buffer_store
@@ -227,26 +230,42 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
             .clone();
         // encode a render pass for each pass of the shader
         for i in 0..passes - 1 {
-            let texture_view = model
+            // get texture view to draw to
+            let texture = model
                 .program_store
                 .buffer_store
                 .multipass_uniforms
-                .get_texture_view(i);
+                .textures()[i as usize]
+                .clone();
+            let texture_view = texture.view().build();
+            // get render pipeline for current pass
             let render_pipeline = match model.program_store.current_pipeline() {
                 Some(pipeline) => pipeline,
-                None => return,
+                None => break,
             };
+            // draw
             model.encode_render_pass(texture_view, &mut encoder, render_pipeline);
+            // copy image back into pass texture
+            model
+                .program_store
+                .buffer_store
+                .multipass_uniforms
+                .textures()[i as usize]
+                .clone_from(&&texture);
+            // increment pass index
             model
                 .program_store
                 .buffer_store
                 .multipass_uniforms
                 .data
-                .pass += 1;
+                .pass_index += 1;
+            // update GPU data
             model
                 .program_store
                 .update_uniform_buffers(device, &mut encoder);
         }
+
+        window.swap_chain_queue().submit(&[encoder.finish()]);
     }
 }
 
@@ -292,6 +311,7 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
     };
 
     if multipass {
+        // copy final image into pass texture
         model
             .program_store
             .buffer_store
