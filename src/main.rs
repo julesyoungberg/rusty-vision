@@ -179,16 +179,19 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 
     let window = app.window(model.main_window_id).unwrap();
     let device = window.swap_chain_device();
+    let num_samples = window.msaa_samples();
 
     if model.show_controls {
-        interface::update(app, device, model);
+        interface::update(app, device, model, num_samples);
     }
-
-    model.program_store.update_uniforms(device);
 
     model
         .program_store
-        .update_shaders(app, device, window.msaa_samples(), model.size);
+        .update_uniforms(device, model.size, num_samples);
+
+    model
+        .program_store
+        .update_shaders(app, device, num_samples, model.size);
 
     let multipass = match &model.program_store.current_subscriptions {
         Some(s) => s.multipass,
@@ -204,16 +207,6 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 
     // if there is only 1 pass it is all done in draw
     if multipass && pass_textures > 1 {
-        // setup environment
-        let desc = wgpu::CommandEncoderDescriptor {
-            label: Some("nannou_isf_pipeline_update"),
-        };
-        let mut encoder = device.create_command_encoder(&desc);
-
-        // send new uniform data to the GPU buffers
-        model
-            .program_store
-            .update_uniform_buffers(device, &mut encoder);
         // reset pass index
         model
             .program_store
@@ -230,6 +223,11 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
             .clone();
         // encode a render pass for each pass of the shader
         for i in 0..passes - 1 {
+            // setup environment
+            let desc = wgpu::CommandEncoderDescriptor {
+                label: Some("nannou_isf_pipeline_update"),
+            };
+            let mut encoder = device.create_command_encoder(&desc);
             // get texture view to draw to
             let texture = model
                 .program_store
@@ -243,6 +241,10 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
                 Some(pipeline) => pipeline,
                 None => break,
             };
+            // update GPU data
+            model
+                .program_store
+                .update_uniform_buffers(device, &mut encoder);
             // draw
             model.encode_render_pass(texture_view, &mut encoder, render_pipeline);
             // copy image back into pass texture
@@ -259,13 +261,8 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
                 .multipass_uniforms
                 .data
                 .pass_index += 1;
-            // update GPU data
-            model
-                .program_store
-                .update_uniform_buffers(device, &mut encoder);
+            window.swap_chain_queue().submit(&[encoder.finish()]);
         }
-
-        window.swap_chain_queue().submit(&[encoder.finish()]);
     }
 }
 

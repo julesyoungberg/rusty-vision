@@ -205,7 +205,7 @@ impl BufferStore {
         let image_uniforms = image::ImageUniforms::new(device);
         let image_uniform_buffer = UniformBuffer::new(device, &image_uniforms);
 
-        let multipass_uniforms = multipass::MultipassUniforms::new();
+        let multipass_uniforms = multipass::MultipassUniforms::new(size);
         let multipass_uniform_buffer = UniformBuffer::new(device, &multipass_uniforms);
 
         let noise_uniforms = noise::NoiseUniforms::new();
@@ -299,6 +299,7 @@ impl BufferStore {
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
         size: Point2,
+        num_samples: u32,
     ) {
         self.end_audio_session();
         self.audio_features_uniforms.set_defaults(defaults);
@@ -311,7 +312,8 @@ impl BufferStore {
 
         self.image_uniforms.set_defaults(app, defaults);
 
-        self.multipass_uniforms.set_defaults(defaults, device, size);
+        self.multipass_uniforms
+            .set_defaults(defaults, device, size, num_samples);
 
         self.noise_uniforms.set_defaults(defaults);
 
@@ -329,7 +331,13 @@ impl BufferStore {
 
     /// Update uniform data.
     /// Call every timestep.
-    pub fn update(&mut self, device: &wgpu::Device, subscriptions: &UniformSubscriptions) {
+    pub fn update(
+        &mut self,
+        device: &wgpu::Device,
+        subscriptions: &UniformSubscriptions,
+        size: Point2,
+        num_samples: u32,
+    ) {
         if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
             self.audio_source.update();
         }
@@ -348,6 +356,10 @@ impl BufferStore {
 
         if subscriptions.general {
             self.general_uniforms.update();
+        }
+
+        if subscriptions.multipass {
+            self.multipass_uniforms.update(device, size, num_samples);
         }
 
         if subscriptions.image && self.image_uniforms.updated {

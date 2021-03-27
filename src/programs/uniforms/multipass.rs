@@ -14,6 +14,7 @@ pub struct MultipassUniforms {
     pub data: Data,
     pub passes: u32,
 
+    size: Point2,
     textures: Vec<wgpu::Texture>,
 }
 
@@ -28,11 +29,32 @@ impl Bufferable<Data> for MultipassUniforms {
 }
 
 impl MultipassUniforms {
-    pub fn new() -> Self {
+    pub fn new(size: Point2) -> Self {
         Self {
             data: Data { pass_index: 0 },
             passes: 0,
+            size,
             textures: vec![],
+        }
+    }
+
+    fn configure(&mut self, device: &wgpu::Device, size: Point2, num_samples: u32) {
+        self.size = size;
+        self.data.pass_index = 0;
+        self.textures = vec![];
+
+        for _ in 0..self.passes {
+            let texture = wgpu::TextureBuilder::new()
+                .size([size[0] as u32, size[1] as u32])
+                .sample_count(num_samples)
+                .format(Frame::TEXTURE_FORMAT)
+                .usage(
+                    wgpu::TextureUsage::COPY_DST
+                        | wgpu::TextureUsage::SAMPLED
+                        | wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+                )
+                .build(device);
+            self.textures.push(texture);
         }
     }
 
@@ -41,11 +63,8 @@ impl MultipassUniforms {
         defaults: &Option<config::ProgramDefaults>,
         device: &wgpu::Device,
         size: Point2,
+        num_samples: u32,
     ) {
-        self.data.pass_index = 0;
-        self.passes = 0;
-        self.textures = vec![];
-
         self.passes = match defaults {
             Some(cnfg) => match cnfg.passes {
                 Some(p) => p,
@@ -54,17 +73,12 @@ impl MultipassUniforms {
             None => return,
         };
 
-        for _ in 0..self.passes {
-            let texture = wgpu::TextureBuilder::new()
-                .size([size[0] as u32, size[1] as u32])
-                .format(wgpu::TextureFormat::Rgba32Float)
-                .usage(
-                    wgpu::TextureUsage::COPY_DST
-                        | wgpu::TextureUsage::SAMPLED
-                        | wgpu::TextureUsage::OUTPUT_ATTACHMENT,
-                )
-                .build(device);
-            self.textures.push(texture);
+        self.configure(device, size, num_samples);
+    }
+
+    pub fn update(&mut self, device: &wgpu::Device, size: Point2, num_samples: u32) {
+        if self.size != size {
+            self.configure(device, size, num_samples);
         }
     }
 }

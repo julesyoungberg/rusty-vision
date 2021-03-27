@@ -95,7 +95,6 @@ impl ProgramStore {
             .iter()
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
-
         // update the program with the new shader code and appropriate layout description
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
         current_program.compile(app, device, &layout_desc, num_samples);
@@ -271,6 +270,7 @@ impl ProgramStore {
             &current_subscriptions,
             &program_config.defaults,
             size,
+            num_samples,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -321,9 +321,10 @@ impl ProgramStore {
 
     /// Update uniform data.
     /// Call every timestep.
-    pub fn update_uniforms(&mut self, device: &wgpu::Device) {
+    pub fn update_uniforms(&mut self, device: &wgpu::Device, size: Point2, num_samples: u32) {
         if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
-            self.buffer_store.update(device, current_subscriptions);
+            self.buffer_store
+                .update(device, current_subscriptions, size, num_samples);
         }
     }
 
@@ -341,6 +342,7 @@ impl ProgramStore {
         selected: usize,
         force: bool,
         size: Point2,
+        num_samples: u32,
     ) -> Option<bool> {
         if self.error.is_none() && !force && selected == self.program_index {
             return None;
@@ -383,6 +385,7 @@ impl ProgramStore {
             &current_subscriptions,
             &program_config.defaults,
             size,
+            num_samples,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -398,6 +401,7 @@ impl ProgramStore {
         device: &wgpu::Device,
         selected: usize,
         size: Point2,
+        num_samples: u32,
     ) -> Option<bool> {
         if self.error.is_none() && selected == self.folder_index {
             return None;
@@ -436,7 +440,7 @@ impl ProgramStore {
         };
 
         self.program_names = Some(program_names);
-        self.select_program(app, device, program_index, true, size)
+        self.select_program(app, device, program_index, true, size, num_samples)
     }
 
     /// Update GPU uniform buffers with current data.

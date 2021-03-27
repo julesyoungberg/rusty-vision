@@ -85,10 +85,8 @@ impl Program {
             .collect::<Vec<&wgpu::ShaderModule>>();
 
         // create the render pipeline and clear errors
-        println!("creating pipeline");
         let pipeline =
             util::create_pipeline(device, layout_desc, modules[0], modules[1], num_samples);
-        println!("pipeline created");
         self.pipeline = Some(pipeline);
         self.errors = HashMap::new();
     }
