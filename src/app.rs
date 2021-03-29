@@ -1,6 +1,8 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
+use std::cell::Ref;
 
+use crate::interface;
 use crate::programs;
 use crate::quad_2d;
 
@@ -103,6 +105,31 @@ pub struct Model {
 }
 
 impl Model {
+    pub fn encode_update(
+        &mut self,
+        app: &App,
+        window: &Ref<'_, Window>,
+        device: &wgpu::Device,
+        num_samples: u32,
+    ) {
+        let desc = wgpu::CommandEncoderDescriptor {
+            label: Some("nannou_isf_pipeline_update"),
+        };
+        let mut encoder = device.create_command_encoder(&desc);
+
+        if self.show_controls {
+            interface::update(app, device, &mut encoder, self, num_samples);
+        }
+
+        self.program_store
+            .update_uniforms(device, &mut encoder, self.size, num_samples);
+
+        self.program_store
+            .update_shaders(app, device, &mut encoder, num_samples, self.size);
+
+        window.swap_chain_queue().submit(&[encoder.finish()]);
+    }
+
     pub fn encode_render_pass(
         &self,
         texture_view: wgpu::TextureView,

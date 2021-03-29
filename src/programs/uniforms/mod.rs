@@ -296,6 +296,7 @@ impl BufferStore {
         &mut self,
         app: &App,
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
         defaults: &Option<config::ProgramDefaults>,
         size: Point2,
@@ -313,7 +314,7 @@ impl BufferStore {
         self.image_uniforms.set_defaults(app, defaults);
 
         self.multipass_uniforms
-            .set_defaults(defaults, device, size, num_samples);
+            .set_defaults(defaults, device, encoder, size, num_samples);
 
         self.noise_uniforms.set_defaults(defaults);
 
@@ -334,6 +335,7 @@ impl BufferStore {
     pub fn update(
         &mut self,
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
         size: Point2,
         num_samples: u32,
@@ -359,7 +361,8 @@ impl BufferStore {
         }
 
         if subscriptions.multipass {
-            self.multipass_uniforms.update(device, size, num_samples);
+            self.multipass_uniforms
+                .update(device, encoder, size, num_samples);
         }
 
         if subscriptions.image && self.image_uniforms.updated {

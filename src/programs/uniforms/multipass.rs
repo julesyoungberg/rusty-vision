@@ -38,7 +38,13 @@ impl MultipassUniforms {
         }
     }
 
-    fn configure(&mut self, device: &wgpu::Device, size: Point2, num_samples: u32) {
+    fn configure(
+        &mut self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        size: Point2,
+        num_samples: u32,
+    ) {
         self.size = size;
         self.data.pass_index = 0;
         self.textures = vec![];
@@ -48,12 +54,10 @@ impl MultipassUniforms {
                 .size([size[0] as u32, size[1] as u32])
                 .sample_count(num_samples)
                 .format(Frame::TEXTURE_FORMAT)
-                .usage(
-                    wgpu::TextureUsage::COPY_DST
-                        | wgpu::TextureUsage::SAMPLED
-                        | wgpu::TextureUsage::OUTPUT_ATTACHMENT,
-                )
+                .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
                 .build(device);
+            let data = vec![0u8; texture.size_bytes()];
+            texture.upload_data(device, encoder, &data);
             self.textures.push(texture);
         }
     }
@@ -62,6 +66,7 @@ impl MultipassUniforms {
         &mut self,
         defaults: &Option<config::ProgramDefaults>,
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
         size: Point2,
         num_samples: u32,
     ) {
@@ -73,12 +78,18 @@ impl MultipassUniforms {
             None => return,
         };
 
-        self.configure(device, size, num_samples);
+        self.configure(device, encoder, size, num_samples);
     }
 
-    pub fn update(&mut self, device: &wgpu::Device, size: Point2, num_samples: u32) {
+    pub fn update(
+        &mut self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        size: Point2,
+        num_samples: u32,
+    ) {
         if self.size != size {
-            self.configure(device, size, num_samples);
+            self.configure(device, encoder, size, num_samples);
         }
     }
 }

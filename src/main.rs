@@ -33,11 +33,18 @@ fn model(app: &App) -> app::Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
+    let desc = wgpu::CommandEncoderDescriptor {
+        label: Some("nannou_isf_pipeline_new"),
+    };
+    let mut encoder = device.create_command_encoder(&desc);
+
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
-    program_store.configure(app, device, msaa_samples, size);
+    program_store.configure(app, device, &mut encoder, msaa_samples, size);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
+
+    window.swap_chain_queue().submit(&[encoder.finish()]);
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
@@ -181,17 +188,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
     let device = window.swap_chain_device();
     let num_samples = window.msaa_samples();
 
-    if model.show_controls {
-        interface::update(app, device, model, num_samples);
-    }
-
-    model
-        .program_store
-        .update_uniforms(device, model.size, num_samples);
-
-    model
-        .program_store
-        .update_shaders(app, device, num_samples, model.size);
+    model.encode_update(app, &window, device, num_samples);
 
     let multipass = match &model.program_store.current_subscriptions {
         Some(s) => s.multipass,

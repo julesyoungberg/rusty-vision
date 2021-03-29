@@ -49,7 +49,13 @@ fn controls_height(model: &mut app::Model) -> f32 {
 }
 
 /// Main UI logic / layout
-pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model, num_samples: u32) {
+pub fn update(
+    app: &App,
+    device: &wgpu::Device,
+    encoder: &mut wgpu::CommandEncoder,
+    model: &mut app::Model,
+    num_samples: u32,
+) {
     let mut height = controls_height(model);
     let border = 40.0;
     let scroll = height > model.size[1] - border;
@@ -91,9 +97,14 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model, num_samp
             .down(5.0)
             .set(model.widget_ids.current_folder, ui)
         {
-            model
-                .program_store
-                .select_folder(app, device, selected, model.size, num_samples);
+            model.program_store.select_folder(
+                app,
+                device,
+                encoder,
+                selected,
+                model.size,
+                num_samples,
+            );
         }
     }
 
@@ -115,6 +126,7 @@ pub fn update(app: &App, device: &wgpu::Device, model: &mut app::Model, num_samp
             model.program_store.select_program(
                 app,
                 device,
+                encoder,
                 selected,
                 false,
                 model.size,
