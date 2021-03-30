@@ -95,14 +95,21 @@ impl ProgramStore {
             .iter()
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
-
+        println!("bind group layouts: {:?}", bind_group_layouts);
         // update the program with the new shader code and appropriate layout description
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
         current_program.compile(app, device, &layout_desc, num_samples);
     }
 
     /// Read fresh config and recompile
-    pub fn configure(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    pub fn configure(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        num_samples: u32,
+        size: Point2,
+    ) {
         // first, clear the current program
         if let Some(current_program) = &mut self.current_program {
             current_program.clear();
@@ -268,8 +275,11 @@ impl ProgramStore {
         self.buffer_store.set_program_defaults(
             app,
             device,
+            encoder,
             &current_subscriptions,
             &program_config.defaults,
+            size,
+            num_samples,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -279,7 +289,14 @@ impl ProgramStore {
 
     /// Check if changes have been made to shaders and recompile if needed.
     /// Call every timestep.
-    pub fn update_shaders(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    pub fn update_shaders(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        num_samples: u32,
+        size: Point2,
+    ) {
         // check for changes
         if let Ok(event) = self.changes_channel.try_recv() {
             if let DebouncedEvent::Write(path) = event {
@@ -287,7 +304,7 @@ impl ProgramStore {
                 println!("changes written to: {}", path_str);
 
                 if path_str.ends_with(".json") {
-                    self.configure(app, device, num_samples);
+                    self.configure(app, device, encoder, num_samples, size);
                 } else {
                     self.compile_current(app, device, num_samples);
                 }
@@ -314,9 +331,16 @@ impl ProgramStore {
 
     /// Update uniform data.
     /// Call every timestep.
-    pub fn update_uniforms(&mut self, device: &wgpu::Device) {
+    pub fn update_uniforms(
+        &mut self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        size: Point2,
+        num_samples: u32,
+    ) {
         if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
-            self.buffer_store.update(device, current_subscriptions);
+            self.buffer_store
+                .update(device, encoder, current_subscriptions, size, num_samples);
         }
     }
 
@@ -331,8 +355,11 @@ impl ProgramStore {
         &mut self,
         app: &App,
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
         selected: usize,
         force: bool,
+        size: Point2,
+        num_samples: u32,
     ) -> Option<bool> {
         if self.error.is_none() && !force && selected == self.program_index {
             return None;
@@ -372,8 +399,11 @@ impl ProgramStore {
         self.buffer_store.set_program_defaults(
             app,
             device,
+            encoder,
             &current_subscriptions,
             &program_config.defaults,
+            size,
+            num_samples,
         );
 
         self.current_subscriptions = Some(current_subscriptions);
@@ -387,7 +417,10 @@ impl ProgramStore {
         &mut self,
         app: &App,
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
         selected: usize,
+        size: Point2,
+        num_samples: u32,
     ) -> Option<bool> {
         if self.error.is_none() && selected == self.folder_index {
             return None;
@@ -426,7 +459,7 @@ impl ProgramStore {
         };
 
         self.program_names = Some(program_names);
-        self.select_program(app, device, program_index, true)
+        self.select_program(app, device, encoder, program_index, true, size, num_samples)
     }
 
     /// Update GPU uniform buffers with current data.

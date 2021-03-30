@@ -1,7 +1,10 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
+use std::cell::Ref;
 
+use crate::interface;
 use crate::programs;
+use crate::quad_2d;
 
 widget_ids! {
     /// UI widget ids
@@ -90,6 +93,8 @@ pub struct Model {
     pub paused: bool,
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
+    pub texture: wgpu::Texture,
+    pub texture_reshaper: wgpu::TextureReshaper,
     pub ui: Ui,
     pub ui_show_audio_features: bool,
     pub ui_show_audio_fft: bool,
@@ -99,4 +104,70 @@ pub struct Model {
     pub ui_show_noise: bool,
     pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
+}
+
+impl Model {
+    pub fn encode_update(
+        &mut self,
+        app: &App,
+        window: &Ref<'_, Window>,
+        device: &wgpu::Device,
+        num_samples: u32,
+    ) {
+        let desc = wgpu::CommandEncoderDescriptor {
+            label: Some("nannou_isf_pipeline_update"),
+        };
+        let mut encoder = device.create_command_encoder(&desc);
+
+        if self.show_controls {
+            interface::update(app, device, &mut encoder, self, num_samples);
+        }
+
+        self.program_store
+            .update_uniforms(device, &mut encoder, self.size, num_samples);
+
+        self.program_store
+            .update_shaders(app, device, &mut encoder, num_samples, self.size);
+
+        window.swap_chain_queue().submit(&[encoder.finish()]);
+    }
+
+    pub fn encode_render_pass(
+        &self,
+        device: &wgpu::Device,
+        texture_view: &wgpu::TextureView,
+        encoder: &mut wgpu::CommandEncoder,
+    ) -> bool {
+        // get render pipeline for current pass
+        let render_pipeline = match self.program_store.current_pipeline() {
+            Some(pipeline) => pipeline,
+            None => return false,
+        };
+
+        // update GPU data
+        self.program_store.update_uniform_buffers(device, encoder);
+
+        // configure pipeline
+        let mut render_pass = wgpu::RenderPassBuilder::new()
+            .color_attachment(texture_view, |color| color)
+            .begin(encoder);
+
+        render_pass.set_pipeline(render_pipeline);
+        render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
+
+        // attach appropriate bind groups for the current program
+        let bind_groups = match self.program_store.get_bind_groups() {
+            Some(g) => g,
+            None => return false,
+        };
+        for (set, bind_group) in bind_groups.iter().enumerate() {
+            render_pass.set_bind_group(set as u32, bind_group, &[]);
+        }
+
+        // render quad
+        let vertex_range = 0..quad_2d::VERTICES.len() as u32;
+        let instance_range = 0..1;
+        render_pass.draw(vertex_range, instance_range);
+        true
+    }
 }

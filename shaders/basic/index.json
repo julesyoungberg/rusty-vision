@@ -1,5 +1,5 @@
 {
-  "default": "lights",
+  "default": "motionBlur",
   "programs": {
     "basic": {
       "pipeline": {
@@ -97,6 +97,15 @@
         "frag": "lines2.frag"
       },
       "uniforms": ["general"]
+    },
+    "motionBlur": {
+      "pipeline": {
+        "frag": "motionBlur.frag"
+      },
+      "uniforms": ["general", "multipass"],
+      "defaults": {
+        "passes": 1
+      }
     },
     "palette": {
       "pipeline": {

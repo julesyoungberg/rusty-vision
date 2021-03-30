@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use programs::uniforms::base::Bufferable;
 use std::{thread, time};
 
 mod app;
@@ -32,11 +33,47 @@ fn model(app: &App) -> app::Model {
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
 
+    let desc = wgpu::CommandEncoderDescriptor {
+        label: Some("nannou_isf_pipeline_new"),
+    };
+    let mut encoder = device.create_command_encoder(&desc);
+
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
     let mut program_store = programs::ProgramStore::new(app, device, size);
-    program_store.configure(app, device, msaa_samples);
+    program_store.configure(app, device, &mut encoder, msaa_samples, size);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
+
+    let texture = wgpu::TextureBuilder::new()
+        .size([size[0] as u32, size[1] as u32])
+        // Our texture will be used as the OUTPUT_ATTACHMENT for our `Draw` render pass.
+        // It will also be SAMPLED by the `TextureCapturer` and `TextureResizer`.
+        .usage(
+            wgpu::TextureUsage::OUTPUT_ATTACHMENT
+                | wgpu::TextureUsage::SAMPLED
+                | wgpu::TextureUsage::COPY_SRC,
+        )
+        // Use nannou's default multisampling sample count.
+        .sample_count(msaa_samples)
+        // Use a spacious 16-bit linear sRGBA format suitable for high quality drawing.
+        .format(Frame::TEXTURE_FORMAT)
+        // Build it!
+        .build(device);
+
+    // Create the texture reshaper.
+    let texture_view = texture.view().build();
+    let texture_component_type = texture.component_type();
+    let dst_format = Frame::TEXTURE_FORMAT;
+    let texture_reshaper = wgpu::TextureReshaper::new(
+        device,
+        &texture_view,
+        msaa_samples,
+        texture_component_type,
+        msaa_samples,
+        dst_format,
+    );
+
+    window.swap_chain_queue().submit(&[encoder.finish()]);
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
@@ -50,6 +87,8 @@ fn model(app: &App) -> app::Model {
         paused: false,
         program_store,
         show_controls: true,
+        texture,
+        texture_reshaper,
         ui,
         ui_show_audio_features: false,
         ui_show_audio_fft: false,
@@ -60,30 +99,6 @@ fn model(app: &App) -> app::Model {
         size,
         vertex_buffer,
     }
-}
-
-/// Update app state.
-/// WARNING: order is very important here.
-/// The image uniforms use an update flag so other parts of the app know to update.
-/// This flag is set by the interface and unset by the profram store.
-/// Update order should be: interface, uniforms, shaders
-fn update(app: &App, model: &mut app::Model, _update: Update) {
-    if model.paused {
-        return;
-    }
-
-    let window = app.window(model.main_window_id).unwrap();
-    let device = window.swap_chain_device();
-
-    if model.show_controls {
-        interface::update(app, device, model);
-    }
-
-    model.program_store.update_uniforms(device);
-
-    model
-        .program_store
-        .update_shaders(app, device, window.msaa_samples());
 }
 
 fn resize(app: &App, model: &mut app::Model, width: u32, height: u32) {
@@ -190,41 +205,103 @@ fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseBut
         .mouse_down = 0;
 }
 
-/// Draw the state of the app to the frame
-fn draw(model: &app::Model, frame: &Frame) -> bool {
-    // setup environment
-    let device = frame.device_queue_pair().device();
-    let render_pipeline = match model.program_store.current_pipeline() {
-        Some(pipeline) => pipeline,
-        None => return false,
-    };
-    let mut encoder = frame.command_encoder();
-
-    // send new uniform data to the GPU buffers
-    model
-        .program_store
-        .update_uniform_buffers(device, &mut encoder);
-
-    // configure pipeline
-    let mut render_pass = wgpu::RenderPassBuilder::new()
-        .color_attachment(&frame.texture_view(), |color| color)
-        .begin(&mut encoder);
-    render_pass.set_pipeline(&render_pipeline);
-    render_pass.set_vertex_buffer(0, &model.vertex_buffer, 0, 0);
-
-    // attach appropriate bind groups for the current program
-    let bind_groups = match model.program_store.get_bind_groups() {
-        Some(g) => g,
-        None => return false,
-    };
-    for (set, bind_group) in bind_groups.iter().enumerate() {
-        render_pass.set_bind_group(set as u32, bind_group, &[]);
+/// Update app state.
+/// WARNING: order is very important here.
+/// The image uniforms use an update flag so other parts of the app know to update.
+/// This flag is set by the interface and unset by the profram store.
+/// Update order should be: interface, uniforms, shaders
+fn update(app: &App, model: &mut app::Model, _update: Update) {
+    if model.paused {
+        return;
     }
 
-    // render quad
-    let vertex_range = 0..quad_2d::VERTICES.len() as u32;
-    let instance_range = 0..1;
-    render_pass.draw(vertex_range, instance_range);
+    let window = app.window(model.main_window_id).unwrap();
+    let device = window.swap_chain_device();
+    let num_samples = window.msaa_samples();
+
+    model.encode_update(app, &window, device, num_samples);
+
+    let multipass = match &model.program_store.current_subscriptions {
+        Some(s) => s.multipass,
+        None => false,
+    };
+
+    if multipass {
+        // reset pass index
+        model
+            .program_store
+            .buffer_store
+            .multipass_uniforms
+            .data
+            .pass_index = 0;
+
+        // get number of passes
+        let passes = model
+            .program_store
+            .buffer_store
+            .multipass_uniforms
+            .passes
+            .clone();
+
+        // encode a render pass for each pass of the shader
+        for i in 0..passes {
+            // setup environment
+            let desc = wgpu::CommandEncoderDescriptor {
+                label: Some("nannou_isf_pipeline_update"),
+            };
+            let mut encoder = device.create_command_encoder(&desc);
+
+            // draw to model texture
+            let texture_view = model.texture.view().build();
+            model.encode_render_pass(device, &texture_view, &mut encoder);
+
+            // copy image into pass texture
+            let pass_texture = model
+                .program_store
+                .buffer_store
+                .multipass_uniforms
+                .textures()[i as usize];
+            let pass_texture_copy_view = pass_texture.default_copy_view();
+            let render_texture_copy_view = model.texture.default_copy_view();
+            let copy_size = pass_texture.extent();
+            encoder.copy_texture_to_texture(
+                render_texture_copy_view,
+                pass_texture_copy_view,
+                copy_size,
+            );
+
+            // increment pass index
+            model
+                .program_store
+                .buffer_store
+                .multipass_uniforms
+                .data
+                .pass_index += 1;
+
+            // finish pass
+            window.swap_chain_queue().submit(&[encoder.finish()]);
+        }
+    }
+}
+
+/// Draw the state of the app to the frame
+fn draw(model: &app::Model, frame: &Frame) -> bool {
+    let mut encoder = frame.command_encoder();
+
+    let multipass = match &model.program_store.current_subscriptions {
+        Some(s) => s.multipass,
+        None => false,
+    };
+
+    if multipass {
+        model
+            .texture_reshaper
+            .encode_render_pass(frame.texture_view(), &mut *encoder);
+    } else {
+        let device = frame.device_queue_pair().device();
+        model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
+    }
+
     true
 }
 
