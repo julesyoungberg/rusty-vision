@@ -18,7 +18,7 @@
         "frag": "glitch.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.5
       }
     },
@@ -27,7 +27,7 @@
         "frag": "halftone.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.95
       }
     },
@@ -36,7 +36,7 @@
         "frag": "multipass.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam", "multipass"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.95,
         "passes": 2
       }

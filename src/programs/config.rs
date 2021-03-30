@@ -12,7 +12,7 @@ pub struct PipelineConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProgramDefaults {
+pub struct ProgramSettings {
     pub audio_feature_smoothing: Option<f32>,
     pub audio_fft_smoothing: Option<f32>,
     pub camera_position: Option<Vector3<f32>>,
@@ -37,7 +37,7 @@ pub struct ProgramDefaults {
 pub struct ProgramConfig {
     pub pipeline: PipelineConfig,
     pub uniforms: Vec<String>,
-    pub defaults: Option<ProgramDefaults>,
+    pub config: Option<ProgramSettings>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

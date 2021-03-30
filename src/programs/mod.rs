@@ -272,12 +272,12 @@ impl ProgramStore {
 
         // get subscriptions and initialize
         let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
-        self.buffer_store.set_program_defaults(
+        self.buffer_store.configure(
             app,
             device,
             encoder,
             &current_subscriptions,
-            &program_config.defaults,
+            &program_config.config,
             size,
             num_samples,
         );
@@ -396,12 +396,12 @@ impl ProgramStore {
         ));
 
         let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
-        self.buffer_store.set_program_defaults(
+        self.buffer_store.configure(
             app,
             device,
             encoder,
             &current_subscriptions,
-            &program_config.defaults,
+            &program_config.config,
             size,
             num_samples,
         );

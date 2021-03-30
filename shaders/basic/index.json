@@ -12,7 +12,7 @@
         "frag": "basicAudio.frag"
       },
       "uniforms": ["general", "audio_features"],
-      "defaults": {
+      "config": {
         "audio_feature_smoothing": 0.4
       }
     },
@@ -27,7 +27,7 @@
         "frag": "deformedImage.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -54,7 +54,7 @@
         "frag": "flowImage.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -75,7 +75,7 @@
         "frag": "imageFade.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "fractal1.png",
         "image2": "fractal2.png"
       }
@@ -103,7 +103,7 @@
         "frag": "motionBlur.frag"
       },
       "uniforms": ["general", "multipass"],
-      "defaults": {
+      "config": {
         "passes": 1
       }
     },
@@ -112,7 +112,7 @@
         "frag": "pallete.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "jj.jpg"
       }
     },
@@ -121,7 +121,7 @@
         "frag": "soundBall.frag"
       },
       "uniforms": ["general", "audio_features", "camera"],
-      "defaults": {
+      "config": {
         "camera_position": [0.0, 0.0, 2.0],
         "camera_target": [0.0, 0.0, 0.0],
         "camera_up": [0.0, 1.0, 0.0],
@@ -133,7 +133,7 @@
         "frag": "soundBands.frag"
       },
       "uniforms": ["general", "audio_features", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_feature_smoothing": 0.7,
         "audio_fft_smoothing": 0.7
       }
@@ -143,7 +143,7 @@
         "frag": "soundFBM.frag"
       },
       "uniforms": ["general", "audio_features", "noise"],
-      "defaults": {
+      "config": {
         "audio_feature_smoothing": 0.8,
         "noise_scale_by_prev": 1,
         "noise_sharpen": 1
@@ -154,7 +154,7 @@
         "frag": "soundLights.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -163,7 +163,7 @@
         "frag": "squareSpiral.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.97
       }
     }

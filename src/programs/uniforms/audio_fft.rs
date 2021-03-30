@@ -43,10 +43,10 @@ impl AudioFftUniforms {
         }
     }
 
-    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
+    pub fn configure(&mut self, settings: &Option<config::ProgramSettings>) {
         self.smoothing = 0.5;
 
-        if let Some(cnfg) = defaults {
+        if let Some(cnfg) = settings {
             if let Some(smoothing) = cnfg.audio_fft_smoothing {
                 self.smoothing = smoothing;
             }

@@ -94,8 +94,8 @@ impl ImageUniforms {
         self.updated = true;
     }
 
-    pub fn set_defaults(&mut self, app: &App, defaults: &Option<config::ProgramDefaults>) {
-        if let Some(cnfg) = defaults {
+    pub fn configure(&mut self, app: &App, settings: &Option<config::ProgramSettings>) {
+        if let Some(cnfg) = settings {
             let project_path = app.project_path().expect("failed to locate `project_path`");
 
             if let Some(img1) = &cnfg.image1 {

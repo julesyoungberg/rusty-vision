@@ -64,10 +64,10 @@ impl WebcamUniforms {
         }
     }
 
-    pub fn set_defaults(
+    pub fn configure(
         &mut self,
         device: &wgpu::Device,
-        _default: &Option<config::ProgramDefaults>,
+        _settings: &Option<config::ProgramSettings>,
     ) {
         self.running = self.start_session(device);
     }

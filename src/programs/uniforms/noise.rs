@@ -43,8 +43,8 @@ impl NoiseUniforms {
         }
     }
 
-    pub fn set_defaults(&mut self, defaults: &Option<config::ProgramDefaults>) {
-        if let Some(cnfg) = defaults {
+    pub fn configure(&mut self, settings: &Option<config::ProgramSettings>) {
+        if let Some(cnfg) = settings {
             if let Some(lacunarity) = cnfg.noise_lacunarity {
                 self.data.lacunarity = lacunarity;
             }

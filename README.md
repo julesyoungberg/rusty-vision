@@ -32,7 +32,7 @@ Descriptions of values you must configure in `index.json` for each program:
 
 - `uniforms`: An array of uniform buffer lists for each program. Each list is a single string with uniform types separated with a comma.
 
-- `defaults`: Default uniform values for each program.
+- `config`: Default uniform values for each program.
 
 ## screenshots
 

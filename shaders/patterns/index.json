@@ -12,7 +12,7 @@
         "frag": "eyes.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.99
       }
     },
@@ -21,7 +21,7 @@
         "frag": "hexagonal1.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.85
       }
     },
@@ -30,7 +30,7 @@
         "frag": "hexagonal2.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.97
       }
     },
@@ -45,7 +45,7 @@
         "frag": "soundCells.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.97
       }
     },
@@ -54,7 +54,7 @@
         "frag": "soundCellsHex.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.85
       }
     },
@@ -81,7 +81,7 @@
         "frag": "triangles.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.90
       }
     },
@@ -102,7 +102,7 @@
         "frag": "universeWithin.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.6
       }
     },
@@ -117,7 +117,7 @@
         "frag": "voronoiNested.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.4
       }
     }

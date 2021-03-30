@@ -38,7 +38,7 @@ impl MultipassUniforms {
         }
     }
 
-    fn configure(
+    fn setup(
         &mut self,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
@@ -62,9 +62,9 @@ impl MultipassUniforms {
         }
     }
 
-    pub fn set_defaults(
+    pub fn configure(
         &mut self,
-        defaults: &Option<config::ProgramDefaults>,
+        defaults: &Option<config::ProgramSettings>,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
         size: Point2,
@@ -78,7 +78,7 @@ impl MultipassUniforms {
             None => return,
         };
 
-        self.configure(device, encoder, size, num_samples);
+        self.setup(device, encoder, size, num_samples);
     }
 
     pub fn update(
@@ -89,7 +89,7 @@ impl MultipassUniforms {
         num_samples: u32,
     ) {
         if self.size != size {
-            self.configure(device, encoder, size, num_samples);
+            self.setup(device, encoder, size, num_samples);
         }
     }
 }

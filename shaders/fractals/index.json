@@ -6,7 +6,7 @@
         "frag": "flame.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.93
       }
     },
@@ -15,7 +15,7 @@
         "frag": "flame2.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.93
       }
     },
@@ -24,7 +24,7 @@
         "frag": "hexFractal.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -33,7 +33,7 @@
         "frag": "kaliset.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -42,7 +42,7 @@
         "frag": "kaliset2.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -51,7 +51,7 @@
         "frag": "kaliset3.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -60,7 +60,7 @@
         "frag": "kalisetCircuits.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -69,7 +69,7 @@
         "frag": "mandelbox.frag"
       },
       "uniforms": ["general", "camera", "color", "geometry"],
-      "defaults": {
+      "config": {
         "camera_position": [25.0, 0.0, 15.0],
         "camera_target": [0.0, 0.0, 0.0],
         "camera_up": [0.0, 1.0, 0.0],
@@ -88,7 +88,7 @@
         "frag": "mandelbulb.frag"
       },
       "uniforms": ["general", "camera", "color", "geometry"],
-      "defaults": {
+      "config": {
         "camera_position": [5.0, 0.0, 5.0],
         "camera_target": [0.0, 0.0, 0.0],
         "camera_up": [0.0, 1.0, 0.0],
@@ -101,7 +101,7 @@
         "frag": "mandelbulbSound.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -110,7 +110,7 @@
         "frag": "tetrahedron.frag"
       },
       "uniforms": ["general", "camera", "color", "geometry"],
-      "defaults": {
+      "config": {
         "camera_position": [7.0, 0.68, 6.72],
         "camera_target": [2.0, 0.48, 1.72],
         "camera_up": [-0.02, 1.0, -0.02],

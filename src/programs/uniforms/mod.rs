@@ -292,34 +292,34 @@ impl BufferStore {
 
     /// Set default uniforms for current selected program.
     /// Also a place to do any initialization and/or cleanup.
-    pub fn set_program_defaults(
+    pub fn configure(
         &mut self,
         app: &App,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
-        defaults: &Option<config::ProgramDefaults>,
+        defaults: &Option<config::ProgramSettings>,
         size: Point2,
         num_samples: u32,
     ) {
         self.end_audio_session();
-        self.audio_features_uniforms.set_defaults(defaults);
-        self.audio_fft_uniforms.set_defaults(defaults);
+        self.audio_features_uniforms.configure(defaults);
+        self.audio_fft_uniforms.configure(defaults);
         self.start_audio_session(subscriptions);
 
-        self.camera_uniforms.set_defaults(defaults);
+        self.camera_uniforms.configure(defaults);
 
-        self.color_uniforms.set_defaults(defaults);
+        self.color_uniforms.configure(defaults);
 
-        self.image_uniforms.set_defaults(app, defaults);
+        self.image_uniforms.configure(app, defaults);
 
         self.multipass_uniforms
-            .set_defaults(defaults, device, encoder, size, num_samples);
+            .configure(defaults, device, encoder, size, num_samples);
 
-        self.noise_uniforms.set_defaults(defaults);
+        self.noise_uniforms.configure(defaults);
 
         if subscriptions.webcam {
-            self.webcam_uniforms.set_defaults(device, defaults);
+            self.webcam_uniforms.configure(device, defaults);
             if self.webcam_uniforms.updated {
                 let webcam_uniform_buffer = UniformBuffer::new(device, &self.webcam_uniforms);
                 self.buffers

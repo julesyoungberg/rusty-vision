@@ -6,7 +6,7 @@
         "frag": "kaleidoImage.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -15,7 +15,7 @@
         "frag": "kaleidoscope1.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -24,7 +24,7 @@
         "frag": "kaleidoscope1Image.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -33,7 +33,7 @@
         "frag": "kaleidoscope2.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -42,7 +42,7 @@
         "frag": "kaleidoscope3.frag"
       },
       "uniforms": ["general", "audio_fft"],
-      "defaults": {
+      "config": {
         "audio_fft_smoothing": 0.9
       }
     },
@@ -51,7 +51,7 @@
         "frag": "kifs.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -60,7 +60,7 @@
         "frag": "kifs2.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },
@@ -69,7 +69,7 @@
         "frag": "kifs3.frag"
       },
       "uniforms": ["general", "image"],
-      "defaults": {
+      "config": {
         "image1": "forest.jpg"
       }
     },

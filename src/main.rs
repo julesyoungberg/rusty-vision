@@ -46,18 +46,13 @@ fn model(app: &App) -> app::Model {
 
     let texture = wgpu::TextureBuilder::new()
         .size([size[0] as u32, size[1] as u32])
-        // Our texture will be used as the OUTPUT_ATTACHMENT for our `Draw` render pass.
-        // It will also be SAMPLED by the `TextureCapturer` and `TextureResizer`.
         .usage(
             wgpu::TextureUsage::OUTPUT_ATTACHMENT
                 | wgpu::TextureUsage::SAMPLED
                 | wgpu::TextureUsage::COPY_SRC,
         )
-        // Use nannou's default multisampling sample count.
         .sample_count(msaa_samples)
-        // Use a spacious 16-bit linear sRGBA format suitable for high quality drawing.
         .format(Frame::TEXTURE_FORMAT)
-        // Build it!
         .build(device);
 
     // Create the texture reshaper.
@@ -206,10 +201,6 @@ fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseBut
 }
 
 /// Update app state.
-/// WARNING: order is very important here.
-/// The image uniforms use an update flag so other parts of the app know to update.
-/// This flag is set by the interface and unset by the profram store.
-/// Update order should be: interface, uniforms, shaders
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     if model.paused {
         return;
