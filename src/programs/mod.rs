@@ -95,6 +95,7 @@ impl ProgramStore {
             .iter()
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
+        println!("bind group layouts: {:?}", bind_group_layouts);
         // update the program with the new shader code and appropriate layout description
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
         current_program.compile(app, device, &layout_desc, num_samples);

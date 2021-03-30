@@ -93,6 +93,8 @@ pub struct Model {
     pub paused: bool,
     pub program_store: programs::ProgramStore,
     pub show_controls: bool,
+    pub texture: wgpu::Texture,
+    pub texture_reshaper: wgpu::TextureReshaper,
     pub ui: Ui,
     pub ui_show_audio_features: bool,
     pub ui_show_audio_fft: bool,
@@ -132,16 +134,25 @@ impl Model {
 
     pub fn encode_render_pass(
         &self,
-        texture_view: wgpu::TextureView,
+        device: &wgpu::Device,
+        texture_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-        pipeline: &wgpu::RenderPipeline,
     ) -> bool {
+        // get render pipeline for current pass
+        let render_pipeline = match self.program_store.current_pipeline() {
+            Some(pipeline) => pipeline,
+            None => return false,
+        };
+
+        // update GPU data
+        self.program_store.update_uniform_buffers(device, encoder);
+
         // configure pipeline
         let mut render_pass = wgpu::RenderPassBuilder::new()
-            .color_attachment(&texture_view, |color| color)
+            .color_attachment(texture_view, |color| color)
             .begin(encoder);
 
-        render_pass.set_pipeline(pipeline);
+        render_pass.set_pipeline(render_pipeline);
         render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
 
         // attach appropriate bind groups for the current program

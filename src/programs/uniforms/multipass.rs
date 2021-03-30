@@ -12,16 +12,16 @@ pub struct Data {
 #[derive(Debug, Clone)]
 pub struct MultipassUniforms {
     pub data: Data,
-    pub passes: u32,
+    pub passes: i32,
 
     size: Point2,
     textures: Vec<wgpu::Texture>,
 }
 
 impl Bufferable<Data> for MultipassUniforms {
-    fn as_bytes(&self) -> &[u8] {
-        unsafe { wgpu::bytes::from(&self.data) }
-    }
+    // fn as_bytes(&self) -> &[u8] {
+    //     unsafe { wgpu::bytes::from(&self.data) }
+    // }
 
     fn textures(&self) -> Vec<&wgpu::Texture> {
         self.textures.iter().collect::<Vec<&wgpu::Texture>>()

@@ -30,10 +30,9 @@ void main() {
     // color += 0.01 / d;
 
     color += smoothstep(0.1, 0.0, d);
-    color += pass_index;
-    // vec3 prev_color = texture(sampler2D(pass1, multipass_sampler), uv * 0.5 + 0.5).rgb;
-
-    // color = 0.97 * prev_color + 0.03 * color;
+    // color += pass_index;
+    vec3 prev_color = texture(sampler2D(pass1, multipass_sampler), uv * 0.5 + 0.5).rgb;
+    color = max(prev_color, color);
 
     frag_color = vec4(color, 1);
 }
