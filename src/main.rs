@@ -200,7 +200,6 @@ fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseBut
         .mouse_down = 0;
 }
 
-/// Update app state.
 fn update(app: &App, model: &mut app::Model, _update: Update) {
     if model.paused {
         return;
@@ -227,12 +226,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
             .pass_index = 0;
 
         // get number of passes
-        let passes = model
-            .program_store
-            .buffer_store
-            .multipass_uniforms
-            .passes
-            .clone();
+        let passes = model.program_store.buffer_store.multipass_uniforms.passes;
 
         // encode a render pass for each pass of the shader
         for i in 0..passes {
@@ -288,12 +282,11 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
         model
             .texture_reshaper
             .encode_render_pass(frame.texture_view(), &mut *encoder);
-    } else {
-        let device = frame.device_queue_pair().device();
-        model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
+        return true;
     }
 
-    true
+    let device = frame.device_queue_pair().device();
+    model.encode_render_pass(device, frame.texture_view(), &mut *encoder)
 }
 
 /// Render app

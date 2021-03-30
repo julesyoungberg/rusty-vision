@@ -68,12 +68,12 @@ impl ProgramStore {
 
     fn get_folder_name(&self) -> Option<String> {
         let folder_names = &self.folder_names.as_ref()?;
-        Some(folder_names[self.folder_index.clone()].clone())
+        Some(folder_names[self.folder_index].clone())
     }
 
     fn get_program_name(&self) -> Option<String> {
         let program_names = &self.program_names.as_ref()?;
-        Some(program_names[self.program_index.clone()].clone())
+        Some(program_names[self.program_index].clone())
     }
 
     /// Compile current program with latest shader code.
@@ -135,10 +135,11 @@ impl ProgramStore {
         let mut using_defaults = false;
 
         // if the name matches with new config and old then use the old folder name
-        if old_folder_name_opt.is_some() && new_folder_name_opt.is_some() {
-            let old_folder_name = old_folder_name_opt.unwrap();
-            if old_folder_name == new_folder_name_opt.unwrap() {
-                folder_name_opt = Some(old_folder_name);
+        if let Some(old_folder_name) = old_folder_name_opt {
+            if let Some(new_folder_name) = new_folder_name_opt {
+                if old_folder_name == new_folder_name {
+                    folder_name_opt = Some(old_folder_name);
+                }
             }
         }
 
@@ -203,10 +204,11 @@ impl ProgramStore {
             self.program_names = Some(program_names.clone());
             let new_program_name_opt = self.get_program_name();
 
-            if old_program_name_opt.is_some() && new_program_name_opt.is_some() {
-                let old_program_name = old_program_name_opt.unwrap();
-                if old_program_name == new_program_name_opt.unwrap() {
-                    program_name_opt = Some(old_program_name);
+            if let Some(old_program_name) = old_program_name_opt {
+                if let Some(new_program_name) = new_program_name_opt {
+                    if old_program_name == new_program_name {
+                        program_name_opt = Some(old_program_name);
+                    }
                 }
             }
         } else {
@@ -215,14 +217,13 @@ impl ProgramStore {
 
         // fallback on the default program
         if program_name_opt.is_none() {
-            let program_index =
-                match folder_config.get_default_program_index(&program_names.clone()) {
-                    Ok(i) => i,
-                    Err(e) => {
-                        self.error = Some(e);
-                        return;
-                    }
-                };
+            let program_index = match folder_config.get_default_program_index(&program_names) {
+                Ok(i) => i,
+                Err(e) => {
+                    self.error = Some(e);
+                    return;
+                }
+            };
 
             self.program_index = program_index;
             program_name_opt = Some(folder_config.default.clone());
@@ -243,14 +244,13 @@ impl ProgramStore {
                 }
 
                 // maybe the config updated, get the new default index
-                let program_index =
-                    match folder_config.get_default_program_index(&program_names.clone()) {
-                        Ok(i) => i,
-                        Err(e) => {
-                            self.error = Some(e);
-                            return;
-                        }
-                    };
+                let program_index = match folder_config.get_default_program_index(&program_names) {
+                    Ok(i) => i,
+                    Err(e) => {
+                        self.error = Some(e);
+                        return;
+                    }
+                };
 
                 self.program_index = program_index;
                 program_name = program_names[program_index].clone();
@@ -409,7 +409,7 @@ impl ProgramStore {
         self.current_subscriptions = Some(current_subscriptions);
         self.error = None;
 
-        return Some(true);
+        Some(true)
     }
 
     /// Selects the current shader folder

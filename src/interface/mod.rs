@@ -316,9 +316,17 @@ pub fn update(
             config_error.as_str(),
             model.size,
         );
-    } else if !compile_errors.is_none() && compile_errors.unwrap().keys().len() > 0 {
-        errors::compilation_errors(&model.widget_ids, ui, &compile_errors.unwrap(), model.size);
-    } else if let Some(audio_error) = &model.program_store.buffer_store.audio_source.error {
+        return;
+    }
+
+    if let Some(c_errors) = compile_errors {
+        if c_errors.keys().len() > 0 {
+            errors::compilation_errors(&model.widget_ids, ui, &compile_errors.unwrap(), model.size);
+            return;
+        }
+    }
+
+    if let Some(audio_error) = &model.program_store.buffer_store.audio_source.error {
         errors::update(
             &model.widget_ids,
             ui,
