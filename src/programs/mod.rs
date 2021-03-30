@@ -95,7 +95,6 @@ impl ProgramStore {
             .iter()
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
-        println!("bind group layouts: {:?}", bind_group_layouts);
         // update the program with the new shader code and appropriate layout description
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
         current_program.compile(app, device, &layout_desc, num_samples);
@@ -312,19 +311,9 @@ impl ProgramStore {
         }
 
         if let Some(current_program) = &mut self.current_program {
-            if current_program.is_new()
-                || self.buffer_store.image_uniforms.updated
-                || self.buffer_store.webcam_uniforms.updated
-            {
+            if current_program.is_new() || self.buffer_store.updated() {
                 self.compile_current(app, device, num_samples);
-
-                if self.buffer_store.image_uniforms.updated {
-                    self.buffer_store.image_uniforms.updated = false;
-                }
-
-                if self.buffer_store.webcam_uniforms.updated {
-                    self.buffer_store.webcam_uniforms.updated = false;
-                }
+                self.buffer_store.finish_update();
             }
         }
     }

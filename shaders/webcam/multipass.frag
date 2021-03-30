@@ -150,8 +150,8 @@ void halftone() {
 }
 
 vec3 pass1_color(in vec2 p) {
-    return texture(sampler2D(pass1, multipass_sampler), p).rgb;
-    // return webcam_color(p).rgb;
+    vec2 coord = vec2(p.x, 1.0 - p.y);
+    return texture(sampler2D(pass1, multipass_sampler), coord).rgb;
 }
 
 void glitch() {

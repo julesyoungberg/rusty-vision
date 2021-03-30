@@ -4,9 +4,7 @@ use opencv::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time;
 
-use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
 
 enum Message {
@@ -64,11 +62,7 @@ impl WebcamUniforms {
         }
     }
 
-    pub fn configure(
-        &mut self,
-        device: &wgpu::Device,
-        _settings: &Option<config::ProgramSettings>,
-    ) {
+    pub fn configure(&mut self, device: &wgpu::Device) {
         self.running = self.start_session(device);
     }
 
@@ -159,8 +153,6 @@ impl WebcamUniforms {
                     Message::Unpause(()) => (),
                 }
             }
-
-            thread::sleep(time::Duration::from_millis(10));
         }));
 
         self.updated = true;

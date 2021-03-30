@@ -102,6 +102,7 @@ pub struct Model {
     pub ui_show_geometry: bool,
     pub ui_show_image: bool,
     pub ui_show_noise: bool,
+    pub resized: bool,
     pub size: Vector2,
     pub vertex_buffer: wgpu::Buffer,
 }
@@ -133,6 +134,36 @@ impl Model {
 
         self.program_store
             .update_shaders(app, device, &mut encoder, num_samples, self.size);
+
+        if self.resized {
+            let msaa_samples = window.msaa_samples();
+
+            self.texture = wgpu::TextureBuilder::new()
+                .size([self.size[0] as u32, self.size[1] as u32])
+                .usage(
+                    wgpu::TextureUsage::OUTPUT_ATTACHMENT
+                        | wgpu::TextureUsage::SAMPLED
+                        | wgpu::TextureUsage::COPY_SRC,
+                )
+                .sample_count(msaa_samples)
+                .format(Frame::TEXTURE_FORMAT)
+                .build(device);
+
+            // Create the texture reshaper.
+            let texture_view = self.texture.view().build();
+            let texture_component_type = self.texture.component_type();
+            let dst_format = Frame::TEXTURE_FORMAT;
+            self.texture_reshaper = wgpu::TextureReshaper::new(
+                device,
+                &texture_view,
+                msaa_samples,
+                texture_component_type,
+                msaa_samples,
+                dst_format,
+            );
+
+            self.resized = false;
+        }
 
         window.swap_chain_queue().submit(&[encoder.finish()]);
     }

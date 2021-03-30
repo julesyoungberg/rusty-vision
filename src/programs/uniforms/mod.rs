@@ -227,8 +227,8 @@ impl BufferStore {
         buffers.insert(String::from("general"), general_uniform_buffer);
         buffers.insert(String::from("geometry"), geometry_uniform_buffer);
         buffers.insert(String::from("image"), image_uniform_buffer);
-        buffers.insert(String::from("noise"), noise_uniform_buffer);
         buffers.insert(String::from("multipass"), multipass_uniform_buffer);
+        buffers.insert(String::from("noise"), noise_uniform_buffer);
         buffers.insert(String::from("webcam"), webcam_uniform_buffer);
 
         Self {
@@ -298,28 +298,31 @@ impl BufferStore {
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
-        defaults: &Option<config::ProgramSettings>,
+        settings: &Option<config::ProgramSettings>,
         size: Point2,
         num_samples: u32,
     ) {
         self.end_audio_session();
-        self.audio_features_uniforms.configure(defaults);
-        self.audio_fft_uniforms.configure(defaults);
+        self.audio_features_uniforms.configure(settings);
+        self.audio_fft_uniforms.configure(settings);
         self.start_audio_session(subscriptions);
 
-        self.camera_uniforms.configure(defaults);
+        self.camera_uniforms.configure(settings);
 
-        self.color_uniforms.configure(defaults);
+        self.color_uniforms.configure(settings);
 
-        self.image_uniforms.configure(app, defaults);
+        self.image_uniforms.configure(app, settings);
 
         self.multipass_uniforms
-            .configure(defaults, device, encoder, size, num_samples);
+            .configure(settings, device, encoder, size, num_samples);
+        let multipass_uniform_buffer = UniformBuffer::new(device, &self.multipass_uniforms);
+        self.buffers
+            .insert(String::from("multipass"), multipass_uniform_buffer);
 
-        self.noise_uniforms.configure(defaults);
+        self.noise_uniforms.configure(settings);
 
         if subscriptions.webcam {
-            self.webcam_uniforms.configure(device, defaults);
+            self.webcam_uniforms.configure(device);
             if self.webcam_uniforms.updated {
                 let webcam_uniform_buffer = UniformBuffer::new(device, &self.webcam_uniforms);
                 self.buffers
@@ -363,6 +366,11 @@ impl BufferStore {
         if subscriptions.multipass {
             self.multipass_uniforms
                 .update(device, encoder, size, num_samples);
+            if self.multipass_uniforms.updated {
+                let multipass_uniform_buffer = UniformBuffer::new(device, &self.multipass_uniforms);
+                self.buffers
+                    .insert(String::from("multipass"), multipass_uniform_buffer);
+            }
         }
 
         if subscriptions.image && self.image_uniforms.updated {
@@ -476,5 +484,17 @@ impl BufferStore {
         if subscriptions.webcam {
             self.webcam_uniforms.unpause();
         }
+    }
+
+    pub fn updated(&self) -> bool {
+        self.image_uniforms.updated
+            || self.webcam_uniforms.updated
+            || self.multipass_uniforms.updated
+    }
+
+    pub fn finish_update(&mut self) {
+        self.image_uniforms.updated = false;
+        self.webcam_uniforms.updated = false;
+        self.multipass_uniforms.updated = false;
     }
 }

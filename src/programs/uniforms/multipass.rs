@@ -13,15 +13,16 @@ pub struct Data {
 pub struct MultipassUniforms {
     pub data: Data,
     pub passes: i32,
+    pub updated: bool,
 
     size: Point2,
     textures: Vec<wgpu::Texture>,
 }
 
 impl Bufferable<Data> for MultipassUniforms {
-    // fn as_bytes(&self) -> &[u8] {
-    //     unsafe { wgpu::bytes::from(&self.data) }
-    // }
+    fn as_bytes(&self) -> &[u8] {
+        unsafe { wgpu::bytes::from(&self.data) }
+    }
 
     fn textures(&self) -> Vec<&wgpu::Texture> {
         self.textures.iter().collect::<Vec<&wgpu::Texture>>()
@@ -35,6 +36,7 @@ impl MultipassUniforms {
             passes: 0,
             size,
             textures: vec![],
+            updated: false,
         }
     }
 
@@ -60,6 +62,8 @@ impl MultipassUniforms {
             texture.upload_data(device, encoder, &data);
             self.textures.push(texture);
         }
+
+        self.updated = true;
     }
 
     pub fn configure(

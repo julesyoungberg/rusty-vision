@@ -91,6 +91,7 @@ fn model(app: &App) -> app::Model {
         ui_show_geometry: false,
         ui_show_image: false,
         ui_show_noise: false,
+        resized: false,
         size,
         vertex_buffer,
     }
@@ -172,6 +173,7 @@ fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
         .buffer_store
         .general_uniforms
         .set_size(size);
+    model.resized = true;
 }
 
 fn mouse_moved(_app: &App, model: &mut app::Model, position: Vector2) {
