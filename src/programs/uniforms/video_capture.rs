@@ -30,7 +30,6 @@ pub struct VideoCapture {
 
 impl VideoCapture {
     pub fn new(device: &wgpu::Device, mut capture: opencv::videoio::VideoCapture) -> Self {
-        // capture.set(opencv::videoio::CAP_PROP_BUFFERSIZE, 1.0).ok();
         // save size
         let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH).unwrap();
         let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT).unwrap();
