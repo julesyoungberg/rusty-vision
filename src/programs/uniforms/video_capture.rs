@@ -24,7 +24,7 @@ pub struct VideoCapture {
     capture_thread: Option<std::thread::JoinHandle<()>>,
     message_channel_tx: Sender<Message>,
     error_channel_rx: Receiver<String>,
-    frame_data: Vec<u8>,
+    frame_data: Vec<Vec<opencv::core::Vec3b>>,
     video_consumer: Consumer<Vec<Vec<opencv::core::Vec3b>>>,
 }
 
@@ -46,7 +46,6 @@ impl VideoCapture {
             [width as u32, height as u32],
             wgpu::TextureFormat::Rgba8Uint,
         );
-        let frame_data = vec![0; (width * height * 3.0) as usize];
 
         // setup ring buffer
         let video_ring_buffer = RingBuffer::<Vec<Vec<opencv::core::Vec3b>>>::new(2);
@@ -120,7 +119,7 @@ impl VideoCapture {
             message_channel_tx,
             error: None,
             error_channel_rx,
-            frame_data,
+            frame_data: vec![],
             running: true,
             video_consumer,
             video_size,
@@ -156,16 +155,7 @@ impl VideoCapture {
 
         let popped = self.video_consumer.pop();
         if let Some(d) = popped {
-            self.frame_data = d
-                .iter()
-                .map(|row| {
-                    row.iter()
-                        .map(|pixel| pixel.iter().copied().collect::<Vec<u8>>())
-                        .flatten()
-                        .collect::<Vec<u8>>()
-                })
-                .flatten()
-                .collect::<Vec<u8>>();
+            self.frame_data = d;
         }
     }
 
@@ -174,18 +164,17 @@ impl VideoCapture {
             return;
         }
 
+        if self.frame_data.len() == 0 || self.frame_data[0].len() == 0 {
+            return;
+        }
+
         let width = self.video_size.x as u32;
         let height = self.video_size.y as u32;
 
         let image = image::ImageBuffer::from_fn(width, height, |x, y| {
-            let index = (((height - y - 1) * width + (width - x - 1)) * 3) as usize;
+            let pixel = self.frame_data[(height - y - 1) as usize][(width - x - 1) as usize];
             // convert from BGR to RGB
-            image::Rgba([
-                self.frame_data[index + 2],
-                self.frame_data[index + 1],
-                self.frame_data[index],
-                std::u8::MAX,
-            ])
+            image::Rgba([pixel[2], pixel[1], pixel[0], std::u8::MAX])
         });
 
         let flat_samples = image.as_flat_samples();
