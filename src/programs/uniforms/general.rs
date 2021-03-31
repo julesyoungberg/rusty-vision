@@ -47,7 +47,7 @@ impl GeneralUniforms {
 
     fn get_time(&self) -> f32 {
         let elapsed = self.clock.elapsed().unwrap();
-        elapsed.as_millis() as f32 / 1000.0 - self.reset_at - self.paused_time
+        elapsed.as_secs_f32() - self.reset_at - self.paused_time
     }
 
     pub fn update(&mut self) {
