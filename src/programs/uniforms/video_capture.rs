@@ -8,7 +8,7 @@ use std::{thread, time};
 
 use crate::util;
 
-const FRAME_RATE: f32 = 30.0;
+const FRAME_RATE: f64 = 30.0;
 
 enum Message {
     Close(()),
@@ -30,11 +30,15 @@ pub struct VideoCapture {
 
 impl VideoCapture {
     pub fn new(device: &wgpu::Device, mut capture: opencv::videoio::VideoCapture) -> Self {
-        capture.set(opencv::videoio::CAP_PROP_BUFFERSIZE, 1.0).ok();
+        // capture.set(opencv::videoio::CAP_PROP_BUFFERSIZE, 1.0).ok();
         // save size
         let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH).unwrap();
         let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT).unwrap();
         let video_size = pt2(width as f32, height as f32);
+        let mut frame_rate = FRAME_RATE;
+        if let Ok(fr) = capture.get(opencv::videoio::CAP_PROP_FPS) {
+            frame_rate = fr;
+        }
 
         // create video texture
         let video_texture = util::create_texture(
@@ -55,11 +59,11 @@ impl VideoCapture {
         // thread for reading from the capture
         let capture_thread = thread::spawn(move || {
             let clock = SystemTime::now();
-            let mut prev = 0.0;
-            let frame_dur = 1.0 / FRAME_RATE;
+            let frame_dur = 1.0_f64 / frame_rate;
 
             loop {
                 // read from camera
+                let start_time = clock.elapsed().unwrap().as_secs_f64();
                 let mut frame = opencv::core::Mat::default().unwrap();
                 match capture.read(&mut frame) {
                     Ok(success) => {
@@ -101,13 +105,11 @@ impl VideoCapture {
                     }
                 }
 
-                // TODO: wait the correct amount of time to delay
-                // let elapsed = clock.elapsed().unwrap().as_secs_f32();
-                // let diff = elapsed - prev;
-                // if diff < frame_dur {
-                //     thread::sleep(time::Duration::from_secs((frame_dur - diff) as u32);
-                // }
-                // prev = clock.elapsed().unwrap().as_secs_f32();
+                let elapsed = clock.elapsed().unwrap().as_secs_f64() - start_time;
+                let extra_time = frame_dur - elapsed;
+                if extra_time > 0.0 {
+                    thread::sleep(time::Duration::from_millis((extra_time * 1000.0) as u64));
+                }
             }
         });
 
