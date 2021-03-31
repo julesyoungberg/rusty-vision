@@ -13,6 +13,7 @@ mod errors;
 mod geometry_controls;
 mod image_controls;
 mod noise_controls;
+mod video_controls;
 
 fn controls_height(model: &mut app::Model) -> f32 {
     let mut height = 140.0;
@@ -29,6 +30,7 @@ fn controls_height(model: &mut app::Model) -> f32 {
         subscriptions.geometry,
         subscriptions.image,
         subscriptions.noise,
+        subscriptions.video,
     ]
     .iter()
     .for_each(|s| {
@@ -43,7 +45,8 @@ fn controls_height(model: &mut app::Model) -> f32 {
         + color_controls::height(model)
         + geometry_controls::height(model)
         + image_controls::height(model)
-        + noise_controls::height(model);
+        + noise_controls::height(model)
+        + video_controls::height(model);
 
     height
 }
@@ -278,6 +281,30 @@ pub fn update(
                     &model.widget_ids,
                     ui,
                     &mut model.program_store.buffer_store.image_uniforms,
+                );
+            }
+        }
+
+        //////////////////////////////////////////////////
+        // Video Controls
+        //////////////////////////////////////////////////
+        if subscriptions.video {
+            for _click in components::button_big()
+                .parent(model.widget_ids.controls_wrapper)
+                .down(20.0)
+                .label("Video")
+                .set(model.widget_ids.video_folder, ui)
+            {
+                println!("toggle video controls");
+                model.ui_show_video = !model.ui_show_video;
+            }
+
+            if model.ui_show_video {
+                video_controls::update(
+                    device,
+                    &model.widget_ids,
+                    ui,
+                    &mut model.program_store.buffer_store.video_uniforms,
                 );
             }
         }

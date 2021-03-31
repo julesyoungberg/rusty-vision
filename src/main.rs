@@ -70,6 +70,7 @@ fn model(app: &App) -> app::Model {
         ui_show_geometry: false,
         ui_show_image: false,
         ui_show_noise: false,
+        ui_show_video: false,
         resized: false,
         size,
         vertex_buffer,

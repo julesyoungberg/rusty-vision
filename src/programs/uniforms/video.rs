@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use tinyfiledialogs::open_file_dialog;
 
 use crate::app;
 use crate::programs::config;
@@ -44,6 +45,17 @@ impl VideoUniforms {
         }
     }
 
+    fn start_session(&mut self, device: &wgpu::Device, filepath: String) {
+        let capture =
+            opencv::videoio::VideoCapture::from_file(&filepath, opencv::videoio::CAP_ANY).unwrap();
+
+        self.video_capture = Some(VideoCapture::new(device, capture));
+
+        self.video_path = Some(filepath.split('/').last().unwrap().to_string());
+
+        self.updated = true;
+    }
+
     pub fn configure(
         &mut self,
         app: &App,
@@ -54,33 +66,16 @@ impl VideoUniforms {
             let project_path = app.project_path().expect("failed to locate `project_path`");
 
             if let Some(video) = &cnfg.video {
-                self.video_path = Some(
-                    project_path
-                        .join(app::MEDIA_DIR)
-                        .join(video)
-                        .into_os_string()
-                        .into_string()
-                        .unwrap(),
-                );
+                let video_path = project_path
+                    .join(app::MEDIA_DIR)
+                    .join(video)
+                    .into_os_string()
+                    .into_string()
+                    .unwrap();
 
-                self.start_session(device);
+                self.start_session(device, video_path);
             }
         }
-    }
-
-    fn start_session(&mut self, device: &wgpu::Device) {
-        let video_path = match self.video_path.clone() {
-            Some(p) => p,
-            None => return,
-        };
-
-        let capture =
-            opencv::videoio::VideoCapture::from_file(video_path.as_str(), opencv::videoio::CAP_ANY)
-                .unwrap();
-
-        self.video_capture = Some(VideoCapture::new(device, capture));
-
-        self.updated = true;
     }
 
     pub fn end_session(&mut self) {
@@ -88,6 +83,21 @@ impl VideoUniforms {
             video_capture.end_session();
             self.video_capture = None;
         }
+    }
+
+    pub fn select_video(&mut self, device: &wgpu::Device) {
+        let filepath = match open_file_dialog(
+            "Load Video",
+            "~",
+            Some((&["*.mp4", "*.avi", "*.mov", "*.mpeg", "*.flv", "*.wmv"], "")),
+        ) {
+            Some(filepath) => filepath,
+            None => return,
+        };
+
+        println!("selected video: {:?}", filepath);
+
+        self.start_session(device, filepath);
     }
 
     pub fn update(&mut self) {
