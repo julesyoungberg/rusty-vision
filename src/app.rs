@@ -7,6 +7,8 @@ use crate::programs;
 use crate::quad_2d;
 use crate::util;
 
+pub const MEDIA_DIR: &str = "media";
+
 widget_ids! {
     /// UI widget ids
     pub struct WidgetIds {

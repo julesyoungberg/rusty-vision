@@ -1,10 +1,11 @@
 {
-  "default": "webcam",
+  "default": "video",
   "folders": [
     "basic",
     "fractals",
     "kaleidoscopes",
     "patterns",
+    "video",
     "webcam"
   ]
 }

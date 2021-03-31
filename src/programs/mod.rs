@@ -474,7 +474,7 @@ impl ProgramStore {
     pub fn update_uniform_buffers(
         &self,
         device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
+        encoder: &mut wgpu::CommandEncoder,
     ) {
         if let Some(current_subscriptions) = self.current_subscriptions.as_ref() {
             self.buffer_store

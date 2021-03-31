@@ -1,17 +1,7 @@
-use nannou::image;
 use nannou::prelude::*;
-use opencv::prelude::*;
-use ringbuf::{Consumer, RingBuffer};
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
 
 use crate::programs::uniforms::base::Bufferable;
-
-enum Message {
-    Close(()),
-    Pause(()),
-    Unpause(()),
-}
+use crate::programs::uniforms::video_capture::VideoCapture;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -21,15 +11,9 @@ pub struct Data {
 
 pub struct WebcamUniforms {
     pub updated: bool,
+    pub video_capture: Option<VideoCapture>,
 
-    capture_thread: Option<std::thread::JoinHandle<()>>,
-    message_channel_tx: Option<Sender<Message>>,
     data: Data,
-    error_channel_rx: Option<Receiver<String>>,
-    frame_data: Vec<u8>,
-    running: bool,
-    video_consumer: Option<Consumer<Vec<u8>>>,
-    video_texture: Option<wgpu::Texture>,
 }
 
 impl Bufferable<Data> for WebcamUniforms {
@@ -38,8 +22,8 @@ impl Bufferable<Data> for WebcamUniforms {
     }
 
     fn textures(&self) -> Vec<&wgpu::Texture> {
-        match &self.video_texture {
-            Some(t) => vec![&t],
+        match &self.video_capture {
+            Some(capture) => vec![&capture.video_texture],
             None => vec![],
         }
     }
@@ -48,191 +32,63 @@ impl Bufferable<Data> for WebcamUniforms {
 impl WebcamUniforms {
     pub fn new() -> Self {
         Self {
-            capture_thread: None,
-            message_channel_tx: None,
             data: Data {
                 video_size: pt2(0.0, 0.0),
             },
-            error_channel_rx: None,
-            frame_data: vec![],
-            running: false,
             updated: false,
-            video_consumer: None,
-            video_texture: None,
+            video_capture: None,
         }
     }
 
     pub fn configure(&mut self, device: &wgpu::Device) {
-        self.running = self.start_session(device);
+        self.start_session(device);
     }
 
     /// Starts a webcam session.
     /// Spawns a thread to consumer webcam data with OpenCV.
-    pub fn start_session(&mut self, device: &wgpu::Device) -> bool {
-        if self.running {
-            return true;
+    fn start_session(&mut self, device: &wgpu::Device) {
+        if let Some(video_capture) = &self.video_capture {
+            if video_capture.running {
+                return;
+            }
         }
 
-        let (error_channel_tx, error_channel_rx) = channel();
-        self.error_channel_rx = Some(error_channel_rx);
+        let capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
 
-        let (message_channel_tx, message_channel_rx) = channel();
-        self.message_channel_tx = Some(message_channel_tx);
-
-        let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
-
-        let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH).unwrap();
-        let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT).unwrap();
-
-        self.data.video_size = pt2(width as f32, height as f32);
-
-        self.video_texture = Some(
-            wgpu::TextureBuilder::new()
-                .size([width as u32, height as u32])
-                .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-                .format(wgpu::TextureFormat::Rgba8Uint)
-                .build(device),
-        );
-        self.frame_data = vec![0; (width * height * 3.0) as usize];
-
-        let video_ring_buffer = RingBuffer::<Vec<u8>>::new(2);
-        let (mut video_producer, video_consumer) = video_ring_buffer.split();
-        video_producer
-            .push(vec![0; (width * height * 3.0) as usize])
-            .unwrap();
-        self.video_consumer = Some(video_consumer);
-
-        self.capture_thread = Some(thread::spawn(move || loop {
-            // read from camera
-            let mut frame = opencv::core::Mat::default().unwrap();
-            match capture.read(&mut frame) {
-                Ok(success) => {
-                    if !success {
-                        println!("No video frame available");
-                        continue;
-                    }
-                }
-                Err(e) => {
-                    println!("Error capturing video frame: {:?}", e);
-                    error_channel_tx.send(e.to_string()).unwrap();
-                    break;
-                }
-            }
-
-            // get usable data
-            let data: Vec<Vec<opencv::core::Vec3b>> = frame.to_vec_2d().unwrap();
-
-            let img_data = data
-                .iter()
-                .map(|row| {
-                    row.iter()
-                        .map(|pixel| pixel.iter().copied().collect::<Vec<u8>>())
-                        .flatten()
-                        .collect::<Vec<u8>>()
-                })
-                .flatten()
-                .collect::<Vec<u8>>();
-
-            video_producer.push(img_data).ok();
-
-            if let Ok(msg) = message_channel_rx.try_recv() {
-                match msg {
-                    Message::Close(()) => {
-                        // break from the outer loop
-                        println!("Closing capture thread");
-                        break;
-                    }
-                    Message::Pause(()) => {
-                        // the stream has been paused, block it is unpaused
-                        for message in message_channel_rx.iter() {
-                            if let Message::Unpause(()) = message {
-                                break;
-                            }
-                        }
-                    }
-                    Message::Unpause(()) => (),
-                }
-            }
-        }));
+        self.video_capture = Some(VideoCapture::new(device, capture));
 
         self.updated = true;
-
-        true
     }
 
     pub fn end_session(&mut self) {
-        if !self.running {
-            return;
+        if let Some(video_capture) = &mut self.video_capture {
+            video_capture.end_session();
+            self.video_capture = None;
         }
-
-        if let Some(message_channel) = self.message_channel_tx.take() {
-            message_channel.send(Message::Close(())).unwrap();
-        }
-
-        if let Some(handle) = self.capture_thread.take() {
-            handle.join().unwrap();
-        }
-
-        self.running = false;
     }
 
     pub fn update(&mut self) {
-        if !self.running {
-            return;
-        }
-
-        // check the error channel for errors
-        if let Ok(err) = self.error_channel_rx.as_ref().unwrap().try_recv() {
-            println!("Webcam error: {:?}", err);
-            self.end_session();
-            return;
-        }
-
-        if let Some(mut c) = self.video_consumer.take() {
-            let popped = c.pop();
-            self.video_consumer = Some(c);
-            if let Some(d) = popped {
-                self.frame_data = d;
-            }
+        if let Some(video_capture) = &mut self.video_capture {
+            video_capture.update();
+            self.data.video_size = video_capture.video_size;
         }
     }
 
-    pub fn update_texture(
-        &self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-    ) {
-        if let Some(video_texture) = &self.video_texture {
-            let width = self.data.video_size.x as u32;
-            let height = self.data.video_size.y as u32;
-
-            let image = image::ImageBuffer::from_fn(width, height, |x, y| {
-                let index = (((height - y - 1) * width + (width - x - 1)) * 3) as usize;
-                // convert from BGR to RGB
-                image::Rgba([
-                    self.frame_data[index + 2],
-                    self.frame_data[index + 1],
-                    self.frame_data[index],
-                    std::u8::MAX,
-                ])
-            });
-
-            let flat_samples = image.as_flat_samples();
-            video_texture.upload_data(device, encoder, &flat_samples.as_slice());
+    pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
+        if let Some(video_capture) = &self.video_capture {
+            video_capture.update_texture(device, encoder);
         }
     }
 
     pub fn pause(&mut self) {
-        if let Some(message_channel) = self.message_channel_tx.take() {
-            message_channel.send(Message::Pause(())).unwrap();
-            self.message_channel_tx = Some(message_channel);
+        if let Some(video_capture) = &mut self.video_capture {
+            video_capture.pause();
         }
     }
 
     pub fn unpause(&mut self) {
-        if let Some(message_channel) = self.message_channel_tx.take() {
-            message_channel.send(Message::Unpause(())).unwrap();
-            self.message_channel_tx = Some(message_channel);
+        if let Some(video_capture) = &mut self.video_capture {
+            video_capture.unpause();
         }
     }
 }

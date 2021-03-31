@@ -1,0 +1,25 @@
+{
+  "default": "video",
+  "programs": {
+    "multipass": {
+      "pipeline": {
+        "frag": "multipass.frag"
+      },
+      "uniforms": ["general", "audio_fft", "video", "multipass"],
+      "config": {
+        "audio_fft_smoothing": 0.95,
+        "passes": 2,
+        "video": "london.mov"
+      }
+    },
+    "video": {
+      "pipeline": {
+        "frag": "video.frag"
+      },
+      "uniforms": ["general", "video"],
+      "config": {
+        "video": "london.mov"
+      }
+    }
+  }
+}

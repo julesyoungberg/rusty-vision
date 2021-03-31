@@ -31,6 +31,7 @@ pub struct ProgramSettings {
     pub noise_sharpen: Option<i32>,
     pub noise_speed: Option<f32>,
     pub passes: Option<i32>,
+    pub video: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

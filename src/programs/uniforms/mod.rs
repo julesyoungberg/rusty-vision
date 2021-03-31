@@ -1,13 +1,11 @@
 use nannou::prelude::*;
-use std::collections::HashMap;
 
 use crate::programs::config;
-use crate::programs::uniforms::base::Bufferable;
 
 pub mod audio;
 pub mod audio_features;
 pub mod audio_fft;
-pub mod audio_source;
+mod audio_source;
 pub mod base;
 pub mod camera;
 pub mod color;
@@ -16,96 +14,11 @@ pub mod geometry;
 pub mod image;
 pub mod multipass;
 pub mod noise;
+pub mod video;
+mod video_capture;
 pub mod webcam;
 
-/// Stores a uniform buffer along with the relevant bind groups.
-/// Maintains the uniform buffer.
-/// Since this application requires many uniform buffers but nearly no
-/// other type of GPU data, it makes sense to wrap the bind_group and
-/// layout all into one object with generic functionality.
-#[derive(Debug)]
-pub struct UniformBuffer {
-    pub bind_group: wgpu::BindGroup,
-    pub bind_group_layout: wgpu::BindGroupLayout,
-    pub buffer: Option<wgpu::Buffer>,
-}
-
-impl UniformBuffer {
-    pub fn new<T>(device: &wgpu::Device, uniforms: &impl Bufferable<T>) -> Self
-    where
-        T: Copy,
-    {
-        let data = uniforms.as_bytes();
-        let textures = uniforms.textures();
-
-        let mut layout_builder = wgpu::BindGroupLayoutBuilder::new();
-        let mut texture_views = vec![];
-
-        if !textures.is_empty() {
-            layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
-
-            for texture in textures.iter() {
-                let texture_view = texture.view().build();
-                layout_builder = layout_builder.sampled_texture(
-                    wgpu::ShaderStage::FRAGMENT,
-                    false,
-                    wgpu::TextureViewDimension::D2,
-                    texture_view.component_type(),
-                );
-                texture_views.push(texture_view);
-            }
-        }
-
-        let mut buffer = None;
-        if !data.is_empty() {
-            layout_builder = layout_builder.uniform_buffer(wgpu::ShaderStage::FRAGMENT, false);
-            let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-            let buff = device.create_buffer_with_data(data, usage);
-            buffer = Some(buff);
-        }
-
-        let bind_group_layout = layout_builder.build(device);
-
-        let mut group_builder = wgpu::BindGroupBuilder::new();
-        let sampler = wgpu::SamplerBuilder::new().build(device);
-
-        if !texture_views.is_empty() {
-            group_builder = group_builder.sampler(&sampler);
-            for texture_view in texture_views.iter() {
-                group_builder = group_builder.texture_view(texture_view);
-            }
-        }
-
-        if let Some(buff) = &buffer {
-            group_builder = group_builder.buffer::<T>(buff, 0..1);
-        }
-
-        let bind_group = group_builder.build(device, &bind_group_layout);
-
-        Self {
-            bind_group,
-            bind_group_layout,
-            buffer,
-        }
-    }
-
-    /// updates the buffer with new data
-    pub fn update<T>(
-        &self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-        uniforms: &impl Bufferable<T>,
-    ) {
-        if let Some(buffer) = &self.buffer {
-            let size = std::mem::size_of::<T>() as wgpu::BufferAddress;
-            let usage = wgpu::BufferUsage::COPY_SRC;
-            let next_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
-            encoder.copy_buffer_to_buffer(&next_buffer, 0, buffer, 0, size);
-        }
-    }
-}
-
-pub type UniformBuffers = HashMap<String, UniformBuffer>;
+use base::{UniformBuffers, UniformBuffersMethods};
 
 /// Defines a program's subscriptions to uniform data.
 /// This determines which data should be fetched / updated.
@@ -121,6 +34,7 @@ pub struct UniformSubscriptions {
     pub image: bool,
     pub noise: bool,
     pub multipass: bool,
+    pub video: bool,
     pub webcam: bool,
 }
 
@@ -137,6 +51,7 @@ pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
         image: false,
         noise: false,
         multipass: false,
+        video: false,
         webcam: false,
     };
 
@@ -151,6 +66,7 @@ pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
         "image" => subscriptions.image = true,
         "noise" => subscriptions.noise = true,
         "multipass" => subscriptions.multipass = true,
+        "video" => subscriptions.video = true,
         "webcam" => subscriptions.webcam = true,
         _ => (),
     });
@@ -173,6 +89,7 @@ pub struct BufferStore {
     pub image_uniforms: image::ImageUniforms,
     pub noise_uniforms: noise::NoiseUniforms,
     pub multipass_uniforms: multipass::MultipassUniforms,
+    pub video_uniforms: video::VideoUniforms,
     pub webcam_uniforms: webcam::WebcamUniforms,
 }
 
@@ -180,56 +97,45 @@ impl BufferStore {
     pub fn new(device: &wgpu::Device, size: Vector2) -> Self {
         let audio_source = audio_source::AudioSource::new();
 
+        // store buffers in map
+        let mut buffers = UniformBuffers::new();
+
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device);
-        let audio_uniform_buffer = UniformBuffer::new(device, &audio_uniforms);
+        buffers.add(device, "audio", &audio_uniforms);
 
         let audio_features_uniforms = audio_features::AudioFeaturesUniforms::new(device);
-        let audio_features_uniform_buffer = UniformBuffer::new(device, &audio_features_uniforms);
+        buffers.add(device, "audio_features", &audio_features_uniforms);
 
         let audio_fft_uniforms = audio_fft::AudioFftUniforms::new(device);
-        let audio_fft_uniform_buffer = UniformBuffer::new(device, &audio_fft_uniforms);
+        buffers.add(device, "audio_fft", &audio_fft_uniforms);
 
         let camera_uniforms = camera::CameraUniforms::new();
-        let camera_uniform_buffer = UniformBuffer::new(device, &camera_uniforms);
+        buffers.add(device, "camera", &camera_uniforms);
 
         let color_uniforms = color::ColorUniforms::new();
-        let color_uniform_buffer = UniformBuffer::new(device, &color_uniforms);
+        buffers.add(device, "color", &color_uniforms);
 
         let general_uniforms = general::GeneralUniforms::new(size);
-        let general_uniform_buffer = UniformBuffer::new(device, &general_uniforms);
+        buffers.add(device, "general", &general_uniforms);
 
         let geometry_uniforms = geometry::GeometryUniforms::new();
-        let geometry_uniform_buffer = UniformBuffer::new(device, &geometry_uniforms);
+        buffers.add(device, "geometry", &geometry_uniforms);
 
         let image_uniforms = image::ImageUniforms::new(device);
-        let image_uniform_buffer = UniformBuffer::new(device, &image_uniforms);
+        buffers.add(device, "image", &image_uniforms);
 
         let multipass_uniforms = multipass::MultipassUniforms::new(size);
-        let multipass_uniform_buffer = UniformBuffer::new(device, &multipass_uniforms);
+        buffers.add(device, "multipass", &multipass_uniforms);
 
         let noise_uniforms = noise::NoiseUniforms::new();
-        let noise_uniform_buffer = UniformBuffer::new(device, &noise_uniforms);
+        buffers.add(device, "noise", &noise_uniforms);
+
+        let video_uniforms = video::VideoUniforms::new();
+        buffers.add(device, "video", &video_uniforms);
 
         let webcam_uniforms = webcam::WebcamUniforms::new();
-        let webcam_uniform_buffer = UniformBuffer::new(device, &webcam_uniforms);
-
-        // store buffers in map
-        let mut buffers = HashMap::new();
-        buffers.insert(String::from("audio"), audio_uniform_buffer);
-        buffers.insert(
-            String::from("audio_features"),
-            audio_features_uniform_buffer,
-        );
-        buffers.insert(String::from("audio_fft"), audio_fft_uniform_buffer);
-        buffers.insert(String::from("camera"), camera_uniform_buffer);
-        buffers.insert(String::from("color"), color_uniform_buffer);
-        buffers.insert(String::from("general"), general_uniform_buffer);
-        buffers.insert(String::from("geometry"), geometry_uniform_buffer);
-        buffers.insert(String::from("image"), image_uniform_buffer);
-        buffers.insert(String::from("multipass"), multipass_uniform_buffer);
-        buffers.insert(String::from("noise"), noise_uniform_buffer);
-        buffers.insert(String::from("webcam"), webcam_uniform_buffer);
+        buffers.add(device, "webcam", &webcam_uniforms);
 
         Self {
             audio_uniforms,
@@ -244,6 +150,7 @@ impl BufferStore {
             image_uniforms,
             multipass_uniforms,
             noise_uniforms,
+            video_uniforms,
             webcam_uniforms,
         }
     }
@@ -315,18 +222,23 @@ impl BufferStore {
 
         self.multipass_uniforms
             .configure(settings, device, encoder, size, num_samples);
-        let multipass_uniform_buffer = UniformBuffer::new(device, &self.multipass_uniforms);
         self.buffers
-            .insert(String::from("multipass"), multipass_uniform_buffer);
+            .add(device, "multipass", &self.multipass_uniforms);
 
         self.noise_uniforms.configure(settings);
+
+        self.video_uniforms.end_session();
+        if subscriptions.video {
+            self.video_uniforms.configure(app, device, settings);
+            if self.video_uniforms.updated {
+                self.buffers.add(device, "video", &self.video_uniforms);
+            }
+        }
 
         if subscriptions.webcam {
             self.webcam_uniforms.configure(device);
             if self.webcam_uniforms.updated {
-                let webcam_uniform_buffer = UniformBuffer::new(device, &self.webcam_uniforms);
-                self.buffers
-                    .insert(String::from("webcam"), webcam_uniform_buffer);
+                self.buffers.add(device, "webcam", &self.webcam_uniforms);
             }
         } else {
             self.webcam_uniforms.end_session();
@@ -363,21 +275,21 @@ impl BufferStore {
             self.general_uniforms.update();
         }
 
+        if subscriptions.image && self.image_uniforms.updated {
+            self.buffers.add(device, "image", &self.image_uniforms);
+        }
+
         if subscriptions.multipass {
             self.multipass_uniforms
                 .update(device, encoder, size, num_samples);
             if self.multipass_uniforms.updated {
-                let multipass_uniform_buffer = UniformBuffer::new(device, &self.multipass_uniforms);
                 self.buffers
-                    .insert(String::from("multipass"), multipass_uniform_buffer);
+                    .add(device, "multipass", &self.multipass_uniforms);
             }
         }
 
-        if subscriptions.image && self.image_uniforms.updated {
-            // recreate the uniform buffer object
-            let image_uniform_buffer = UniformBuffer::new(device, &self.image_uniforms);
-            self.buffers
-                .insert(String::from("image"), image_uniform_buffer);
+        if subscriptions.video {
+            self.video_uniforms.update();
         }
 
         if subscriptions.webcam {
@@ -390,7 +302,7 @@ impl BufferStore {
     pub fn update_buffers(
         &self,
         device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
+        encoder: &mut wgpu::CommandEncoder,
         subscriptions: &UniformSubscriptions,
     ) {
         if subscriptions.audio {
@@ -399,9 +311,10 @@ impl BufferStore {
 
         if subscriptions.audio_features {
             self.audio_features_uniforms.update_texture(device, encoder);
-            self.buffers.get("audio_features").unwrap().update(
+            self.buffers.update(
                 device,
                 encoder,
+                "audio_features",
                 &self.audio_features_uniforms,
             );
         }
@@ -412,53 +325,44 @@ impl BufferStore {
 
         if subscriptions.camera {
             self.buffers
-                .get("camera")
-                .unwrap()
-                .update(device, encoder, &self.camera_uniforms);
+                .update(device, encoder, "camera", &self.camera_uniforms);
         }
 
         if subscriptions.color {
             self.buffers
-                .get("color")
-                .unwrap()
-                .update(device, encoder, &self.color_uniforms);
+                .update(device, encoder, "color", &self.color_uniforms);
         }
 
         if subscriptions.general {
             self.buffers
-                .get("general")
-                .unwrap()
-                .update(device, encoder, &self.general_uniforms);
+                .update(device, encoder, "general", &self.general_uniforms);
         }
 
         if subscriptions.geometry {
             self.buffers
-                .get("geometry")
-                .unwrap()
-                .update(device, encoder, &self.geometry_uniforms);
+                .update(device, encoder, "geometry", &self.geometry_uniforms);
         }
 
         if subscriptions.multipass {
-            self.buffers.get("multipass").unwrap().update(
-                device,
-                encoder,
-                &self.multipass_uniforms,
-            );
+            self.buffers
+                .update(device, encoder, "multipass", &self.multipass_uniforms);
         }
 
         if subscriptions.noise {
             self.buffers
-                .get("noise")
-                .unwrap()
-                .update(device, encoder, &self.noise_uniforms);
+                .update(device, encoder, "noise", &self.noise_uniforms);
+        }
+
+        if subscriptions.video {
+            self.video_uniforms.update_texture(device, encoder);
+            self.buffers
+                .update(device, encoder, "video", &self.video_uniforms);
         }
 
         if subscriptions.webcam {
             self.webcam_uniforms.update_texture(device, encoder);
             self.buffers
-                .get("webcam")
-                .unwrap()
-                .update(device, encoder, &self.webcam_uniforms);
+                .update(device, encoder, "webcam", &self.webcam_uniforms);
         }
     }
 
@@ -468,6 +372,10 @@ impl BufferStore {
         }
 
         self.general_uniforms.pause();
+
+        if subscriptions.video {
+            self.video_uniforms.pause();
+        }
 
         if subscriptions.webcam {
             self.webcam_uniforms.pause();
@@ -481,6 +389,10 @@ impl BufferStore {
 
         self.general_uniforms.unpause();
 
+        if subscriptions.video {
+            self.video_uniforms.unpause();
+        }
+
         if subscriptions.webcam {
             self.webcam_uniforms.unpause();
         }
@@ -488,13 +400,15 @@ impl BufferStore {
 
     pub fn updated(&self) -> bool {
         self.image_uniforms.updated
-            || self.webcam_uniforms.updated
             || self.multipass_uniforms.updated
+            || self.video_uniforms.updated
+            || self.webcam_uniforms.updated
     }
 
     pub fn finish_update(&mut self) {
         self.image_uniforms.updated = false;
-        self.webcam_uniforms.updated = false;
         self.multipass_uniforms.updated = false;
+        self.video_uniforms.updated = false;
+        self.webcam_uniforms.updated = false;
     }
 }

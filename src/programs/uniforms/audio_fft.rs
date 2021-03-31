@@ -7,6 +7,7 @@ use std::thread;
 use crate::programs::config;
 use crate::programs::uniforms::audio_source;
 use crate::programs::uniforms::base::Bufferable;
+use crate::util;
 
 const SPECTRUM_SIZE: usize = 32;
 const WINDOW_SIZE: usize = 1024;
@@ -28,11 +29,11 @@ impl Bufferable for AudioFftUniforms {
 
 impl AudioFftUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
-        let spectrum_texture = wgpu::TextureBuilder::new()
-            .size([SPECTRUM_SIZE as u32, 1])
-            .format(wgpu::TextureFormat::R32Float)
-            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-            .build(device);
+        let spectrum_texture = util::create_texture(
+            device,
+            [SPECTRUM_SIZE as u32, 1],
+            wgpu::TextureFormat::R32Float,
+        );
 
         Self {
             fft_thread: None,
@@ -139,11 +140,7 @@ impl AudioFftUniforms {
         }
     }
 
-    pub fn update_texture(
-        &self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-    ) {
+    pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
         let mut spectrum = [0.0; SPECTRUM_SIZE];
         spectrum[..SPECTRUM_SIZE].clone_from_slice(&self.spectrum[..SPECTRUM_SIZE]);
         self.spectrum_texture

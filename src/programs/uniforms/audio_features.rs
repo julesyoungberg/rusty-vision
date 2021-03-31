@@ -9,6 +9,7 @@ use websocket::OwnedMessage;
 use crate::programs::config;
 use crate::programs::uniforms::audio_source;
 use crate::programs::uniforms::base::Bufferable;
+use crate::util;
 
 const CONNECTION: &str = "ws://127.0.0.1:9002";
 const NUM_MFCCS: usize = 12;
@@ -59,11 +60,8 @@ impl Bufferable<Data> for AudioFeaturesUniforms {
 
 impl AudioFeaturesUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
-        let mfcc_texture = wgpu::TextureBuilder::new()
-            .size([NUM_MFCCS as u32, 1])
-            .format(wgpu::TextureFormat::R32Float)
-            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-            .build(device);
+        let mfcc_texture =
+            util::create_texture(device, [NUM_MFCCS as u32, 1], wgpu::TextureFormat::R32Float);
 
         Self {
             audio_channel_rx: None,
@@ -389,11 +387,7 @@ impl AudioFeaturesUniforms {
         }
     }
 
-    pub fn update_texture(
-        &self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-    ) {
+    pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
         self.mfcc_texture
             .upload_data(device, encoder, bytemuck::bytes_of(&self.mfccs));
     }

@@ -133,6 +133,18 @@ pub fn create_app_texture(device: &wgpu::Device, size: Point2, msaa_samples: u32
         .build(device)
 }
 
+pub fn create_texture(
+    device: &wgpu::Device,
+    size: [u32; 2],
+    format: wgpu::TextureFormat,
+) -> wgpu::Texture {
+    wgpu::TextureBuilder::new()
+        .size(size)
+        .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
+        .format(format)
+        .build(device)
+}
+
 pub fn create_texture_reshaper(
     device: &wgpu::Device,
     texture: &wgpu::Texture,

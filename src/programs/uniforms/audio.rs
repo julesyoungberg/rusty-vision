@@ -5,6 +5,7 @@ use std::thread;
 
 use crate::programs::uniforms::audio_source;
 use crate::programs::uniforms::base::Bufferable;
+use crate::util;
 
 pub struct AudioUniforms {
     audio_consumer: Option<Consumer<Vec<f32>>>,
@@ -21,11 +22,11 @@ impl Bufferable for AudioUniforms {
 
 impl AudioUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
-        let audio_texture = wgpu::TextureBuilder::new()
-            .size([audio_source::FRAME_SIZE as u32, 1])
-            .format(wgpu::TextureFormat::R32Float)
-            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-            .build(device);
+        let audio_texture = util::create_texture(
+            device,
+            [audio_source::FRAME_SIZE as u32, 1],
+            wgpu::TextureFormat::R32Float,
+        );
 
         Self {
             audio_consumer: None,
@@ -73,11 +74,7 @@ impl AudioUniforms {
         };
     }
 
-    pub fn update_texture(
-        &self,
-        device: &wgpu::Device,
-        encoder: &mut nannou::wgpu::CommandEncoder,
-    ) {
+    pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
         let mut frame = [0.0; audio_source::FRAME_SIZE];
         frame[..audio_source::FRAME_SIZE].clone_from_slice(&self.frame[..audio_source::FRAME_SIZE]);
         self.audio_texture

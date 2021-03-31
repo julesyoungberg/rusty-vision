@@ -3,8 +3,10 @@ use nannou::image::GenericImageView;
 use nannou::prelude::*;
 use tinyfiledialogs::open_file_dialog;
 
+use crate::app;
 use crate::programs::config;
 use crate::programs::uniforms::base::Bufferable;
+use crate::util;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -36,17 +38,8 @@ impl Bufferable<Data> for ImageUniforms {
 // TODO show error in interface in non obtrusive way (bottom right)
 impl ImageUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
-        let image1_texture = wgpu::TextureBuilder::new()
-            .size([1, 1])
-            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-            .format(wgpu::TextureFormat::Rgba16Float)
-            .build(device);
-
-        let image2_texture = wgpu::TextureBuilder::new()
-            .size([1, 1])
-            .usage(wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED)
-            .format(wgpu::TextureFormat::Rgba16Float)
-            .build(device);
+        let image1_texture = util::create_texture(device, [1, 1], wgpu::TextureFormat::Rgba16Float);
+        let image2_texture = util::create_texture(device, [1, 1], wgpu::TextureFormat::Rgba16Float);
 
         Self {
             data: Data {
@@ -103,7 +96,7 @@ impl ImageUniforms {
                     app,
                     1,
                     project_path
-                        .join("images")
+                        .join(app::MEDIA_DIR)
                         .join(img1)
                         .into_os_string()
                         .into_string()
@@ -116,7 +109,7 @@ impl ImageUniforms {
                     app,
                     2,
                     project_path
-                        .join("images")
+                        .join(app::MEDIA_DIR)
                         .join(img2)
                         .into_os_string()
                         .into_string()
