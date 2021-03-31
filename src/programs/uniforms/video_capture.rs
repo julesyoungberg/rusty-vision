@@ -107,8 +107,10 @@ impl VideoCapture {
 
                 let elapsed = clock.elapsed().unwrap().as_secs_f64() - start_time;
                 let extra_time = frame_dur - elapsed;
-                if extra_time > 0.0 {
-                    thread::sleep(time::Duration::from_millis((extra_time * 1000.0) as u64));
+                if extra_time > 0.01 {
+                    thread::sleep(time::Duration::from_millis(
+                        ((extra_time - 0.01) * 1000.0) as u64,
+                    ));
                 }
             }
         });
