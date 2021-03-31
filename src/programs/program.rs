@@ -48,13 +48,7 @@ impl Program {
     }
 
     /// Compile the program with the latest shader code.
-    pub fn compile(
-        &mut self,
-        app: &App,
-        device: &wgpu::Device,
-        layout_desc: &wgpu::PipelineLayoutDescriptor,
-        num_samples: u32,
-    ) {
+    pub fn compile(&mut self, app: &App, device: &wgpu::Device) {
         let mut shaders = [&mut self.vert_shader, &mut self.frag_shader];
         let path = util::shaders_path(app);
 
@@ -74,22 +68,29 @@ impl Program {
 
         // exit early if errors
         if self.errors.keys().len() > 0 {
-            self.pipeline = None;
             return;
         }
 
-        // collect modules
-        let modules = shaders
-            .iter()
-            .map(|shader| shader.module.as_ref().unwrap())
-            .collect::<Vec<&wgpu::ShaderModule>>();
-
-        // create the render pipeline and clear errors
-        println!("creating render pipeline");
-        let pipeline =
-            util::create_pipeline(device, layout_desc, modules[0], modules[1], num_samples);
-        println!("created render pipeline");
-        self.pipeline = Some(pipeline);
         self.errors = HashMap::new();
+    }
+
+    /// Create the render pipeline
+    pub fn create_render_pipeline(
+        &mut self,
+        device: &wgpu::Device,
+        layout_desc: &wgpu::PipelineLayoutDescriptor,
+        num_samples: u32,
+    ) {
+        if let Some(vert_module) = &self.vert_shader.module {
+            if let Some(frag_module) = &self.frag_shader.module {
+                self.pipeline = Some(util::create_pipeline(
+                    device,
+                    layout_desc,
+                    vert_module,
+                    frag_module,
+                    num_samples,
+                ));
+            }
+        }
     }
 }

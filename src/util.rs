@@ -119,3 +119,41 @@ pub fn shaders_path(app: &App) -> PathBuf {
 pub fn shaders_path_string(app: &App) -> String {
     shaders_path(app).into_os_string().into_string().unwrap()
 }
+
+pub fn create_app_texture(device: &wgpu::Device, size: Point2, msaa_samples: u32) -> wgpu::Texture {
+    wgpu::TextureBuilder::new()
+        .size([size[0] as u32, size[1] as u32])
+        .usage(
+            wgpu::TextureUsage::OUTPUT_ATTACHMENT
+                | wgpu::TextureUsage::SAMPLED
+                | wgpu::TextureUsage::COPY_SRC,
+        )
+        .sample_count(msaa_samples)
+        .format(Frame::TEXTURE_FORMAT)
+        .build(device)
+}
+
+pub fn create_texture_reshaper(
+    device: &wgpu::Device,
+    texture: &wgpu::Texture,
+    msaa_samples: u32,
+) -> wgpu::TextureReshaper {
+    let texture_view = texture.view().build();
+    let texture_component_type = texture.component_type();
+    let dst_format = Frame::TEXTURE_FORMAT;
+    wgpu::TextureReshaper::new(
+        device,
+        &texture_view,
+        msaa_samples,
+        texture_component_type,
+        msaa_samples,
+        dst_format,
+    )
+}
+
+pub fn copy_texture(encoder: &mut wgpu::CommandEncoder, src: &wgpu::Texture, dst: &wgpu::Texture) {
+    let src_copy_view = src.default_copy_view();
+    let dst_copy_view = dst.default_copy_view();
+    let copy_size = dst.extent();
+    encoder.copy_texture_to_texture(src_copy_view, dst_copy_view, copy_size);
+}

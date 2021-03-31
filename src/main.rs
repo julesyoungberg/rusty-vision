@@ -44,29 +44,8 @@ fn model(app: &App) -> app::Model {
     program_store.configure(app, device, &mut encoder, msaa_samples, size);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
-    let texture = wgpu::TextureBuilder::new()
-        .size([size[0] as u32, size[1] as u32])
-        .usage(
-            wgpu::TextureUsage::OUTPUT_ATTACHMENT
-                | wgpu::TextureUsage::SAMPLED
-                | wgpu::TextureUsage::COPY_SRC,
-        )
-        .sample_count(msaa_samples)
-        .format(Frame::TEXTURE_FORMAT)
-        .build(device);
-
-    // Create the texture reshaper.
-    let texture_view = texture.view().build();
-    let texture_component_type = texture.component_type();
-    let dst_format = Frame::TEXTURE_FORMAT;
-    let texture_reshaper = wgpu::TextureReshaper::new(
-        device,
-        &texture_view,
-        msaa_samples,
-        texture_component_type,
-        msaa_samples,
-        dst_format,
-    );
+    let texture = util::create_app_texture(device, size, msaa_samples);
+    let texture_reshaper = util::create_texture_reshaper(device, &texture, msaa_samples);
 
     window.swap_chain_queue().submit(&[encoder.finish()]);
 
@@ -213,12 +192,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 
     model.encode_update(app, &window, device, num_samples);
 
-    let multipass = match &model.program_store.current_subscriptions {
-        Some(s) => s.multipass,
-        None => false,
-    };
-
-    if multipass {
+    if model.program_store.is_multipass() {
         // reset pass index
         model
             .program_store
@@ -234,7 +208,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
         for i in 0..passes {
             // setup environment
             let desc = wgpu::CommandEncoderDescriptor {
-                label: Some("nannou_isf_pipeline_update"),
+                label: Some("rusty_vision_render_pass"),
             };
             let mut encoder = device.create_command_encoder(&desc);
 
@@ -248,14 +222,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
                 .buffer_store
                 .multipass_uniforms
                 .textures()[i as usize];
-            let pass_texture_copy_view = pass_texture.default_copy_view();
-            let render_texture_copy_view = model.texture.default_copy_view();
-            let copy_size = pass_texture.extent();
-            encoder.copy_texture_to_texture(
-                render_texture_copy_view,
-                pass_texture_copy_view,
-                copy_size,
-            );
+            util::copy_texture(&mut encoder, &model.texture, pass_texture);
 
             // increment pass index
             model
@@ -272,7 +239,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
 }
 
 /// Draw the state of the app to the frame
-fn draw(model: &app::Model, frame: &Frame) -> bool {
+fn draw(model: &app::Model, frame: &Frame) {
     let mut encoder = frame.command_encoder();
 
     let multipass = match &model.program_store.current_subscriptions {
@@ -284,11 +251,10 @@ fn draw(model: &app::Model, frame: &Frame) -> bool {
         model
             .texture_reshaper
             .encode_render_pass(frame.texture_view(), &mut *encoder);
-        return true;
+    } else {
+        let device = frame.device_queue_pair().device();
+        model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
     }
-
-    let device = frame.device_queue_pair().device();
-    model.encode_render_pass(device, frame.texture_view(), &mut *encoder)
 }
 
 /// Render app
@@ -298,11 +264,7 @@ fn view(app: &App, model: &app::Model, frame: Frame) {
         return;
     }
 
-    if !draw(model, &frame) {
-        let draw = app.draw();
-        draw.background().color(DARKGRAY);
-        draw.to_frame(app, &frame).unwrap();
-    }
+    draw(model, &frame);
 
     if model.show_controls {
         interface::draw(app, model, &frame);

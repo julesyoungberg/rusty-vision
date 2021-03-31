@@ -5,6 +5,7 @@ use std::cell::Ref;
 use crate::interface;
 use crate::programs;
 use crate::quad_2d;
+use crate::util;
 
 widget_ids! {
     /// UI widget ids
@@ -121,7 +122,7 @@ impl Model {
         num_samples: u32,
     ) {
         let desc = wgpu::CommandEncoderDescriptor {
-            label: Some("nannou_isf_pipeline_update"),
+            label: Some("rusty_vision_update"),
         };
         let mut encoder = device.create_command_encoder(&desc);
 
@@ -137,47 +138,26 @@ impl Model {
 
         if self.resized {
             let msaa_samples = window.msaa_samples();
-
-            self.texture = wgpu::TextureBuilder::new()
-                .size([self.size[0] as u32, self.size[1] as u32])
-                .usage(
-                    wgpu::TextureUsage::OUTPUT_ATTACHMENT
-                        | wgpu::TextureUsage::SAMPLED
-                        | wgpu::TextureUsage::COPY_SRC,
-                )
-                .sample_count(msaa_samples)
-                .format(Frame::TEXTURE_FORMAT)
-                .build(device);
-
-            // Create the texture reshaper.
-            let texture_view = self.texture.view().build();
-            let texture_component_type = self.texture.component_type();
-            let dst_format = Frame::TEXTURE_FORMAT;
-            self.texture_reshaper = wgpu::TextureReshaper::new(
-                device,
-                &texture_view,
-                msaa_samples,
-                texture_component_type,
-                msaa_samples,
-                dst_format,
-            );
-
+            self.texture = util::create_app_texture(device, self.size, msaa_samples);
+            self.texture_reshaper =
+                util::create_texture_reshaper(device, &self.texture, msaa_samples);
             self.resized = false;
         }
 
         window.swap_chain_queue().submit(&[encoder.finish()]);
     }
 
+    /// Encode a render pass to a given texture
     pub fn encode_render_pass(
         &self,
         device: &wgpu::Device,
         texture_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
-    ) -> bool {
+    ) {
         // get render pipeline for current pass
         let render_pipeline = match self.program_store.current_pipeline() {
             Some(pipeline) => pipeline,
-            None => return false,
+            None => return,
         };
 
         // update GPU data
@@ -194,7 +174,7 @@ impl Model {
         // attach appropriate bind groups for the current program
         let bind_groups = match self.program_store.get_bind_groups() {
             Some(g) => g,
-            None => return false,
+            None => return,
         };
         for (set, bind_group) in bind_groups.iter().enumerate() {
             render_pass.set_bind_group(set as u32, bind_group, &[]);
@@ -204,6 +184,5 @@ impl Model {
         let vertex_range = 0..quad_2d::VERTICES.len() as u32;
         let instance_range = 0..1;
         render_pass.draw(vertex_range, instance_range);
-        true
     }
 }

@@ -76,9 +76,8 @@ impl ProgramStore {
         Some(program_names[self.program_index].clone())
     }
 
-    /// Compile current program with latest shader code.
-    /// Call once after initialization.
-    fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+    /// Create the render pipeline with the program's required buffers
+    fn create_render_pipeline(&mut self, device: &wgpu::Device, num_samples: u32) {
         let current_program = match &mut self.current_program {
             Some(p) => p,
             None => {
@@ -97,7 +96,21 @@ impl ProgramStore {
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
         // update the program with the new shader code and appropriate layout description
         let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
-        current_program.compile(app, device, &layout_desc, num_samples);
+        current_program.create_render_pipeline(device, &layout_desc, num_samples);
+    }
+
+    /// Compile current program with latest shader code.
+    /// Call once after initialization.
+    fn compile_current(&mut self, app: &App, device: &wgpu::Device, num_samples: u32) {
+        let current_program = match &mut self.current_program {
+            Some(p) => p,
+            None => {
+                return;
+            }
+        };
+
+        current_program.compile(app, device);
+        self.create_render_pipeline(device, num_samples);
     }
 
     /// Read fresh config and recompile
@@ -311,8 +324,13 @@ impl ProgramStore {
         }
 
         if let Some(current_program) = &mut self.current_program {
-            if current_program.is_new() || self.buffer_store.updated() {
+            if current_program.is_new() {
+                // if the shader has changed recompile and recreate the pipeline
                 self.compile_current(app, device, num_samples);
+                self.buffer_store.finish_update();
+            } else if self.buffer_store.updated() {
+                // if the data has changed only just recreated the pipeline
+                self.create_render_pipeline(device, num_samples);
                 self.buffer_store.finish_update();
             }
         }
@@ -492,6 +510,13 @@ impl ProgramStore {
     pub fn unpause(&mut self) {
         if let Some(current_subscriptions) = &self.current_subscriptions {
             self.buffer_store.unpause(current_subscriptions);
+        }
+    }
+
+    pub fn is_multipass(&self) -> bool {
+        match &self.current_subscriptions {
+            Some(s) => s.multipass,
+            None => false,
         }
     }
 }
