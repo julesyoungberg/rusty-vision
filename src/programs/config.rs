@@ -32,6 +32,7 @@ pub struct ProgramSettings {
     pub noise_speed: Option<f32>,
     pub passes: Option<i32>,
     pub video: Option<String>,
+    pub video_speed: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -85,6 +85,7 @@ widget_ids! {
         image2_load_button,
         video_label,
         video_load_button,
+        video_speed,
         fps_container,
         fps,
     }

@@ -55,7 +55,7 @@ impl WebcamUniforms {
 
         let capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
 
-        self.video_capture = Some(VideoCapture::new(device, capture));
+        self.video_capture = Some(VideoCapture::new(device, capture, 1.0));
 
         self.updated = true;
     }

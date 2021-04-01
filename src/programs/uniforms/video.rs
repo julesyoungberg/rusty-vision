@@ -45,11 +45,11 @@ impl VideoUniforms {
         }
     }
 
-    fn start_session(&mut self, device: &wgpu::Device, filepath: String) {
+    fn start_session(&mut self, device: &wgpu::Device, filepath: String, speed: f32) {
         let capture =
             opencv::videoio::VideoCapture::from_file(&filepath, opencv::videoio::CAP_ANY).unwrap();
 
-        let video_capture = VideoCapture::new(device, capture);
+        let video_capture = VideoCapture::new(device, capture, speed);
 
         self.data.video_size = video_capture.video_size;
 
@@ -77,7 +77,12 @@ impl VideoUniforms {
                     .into_string()
                     .unwrap();
 
-                self.start_session(device, video_path);
+                let mut speed = 1.0;
+                if let Some(s) = &cnfg.video_speed {
+                    speed = *s;
+                }
+
+                self.start_session(device, video_path, speed);
             }
         }
     }
@@ -102,7 +107,7 @@ impl VideoUniforms {
         println!("selected video: {:?}", filepath);
 
         self.end_session();
-        self.start_session(device, filepath);
+        self.start_session(device, filepath, 1.0);
         println!(
             "running: {:?}",
             self.video_capture.as_ref().unwrap().running

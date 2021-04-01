@@ -13,11 +13,13 @@ const FRAME_RATE: f64 = 30.0;
 enum Message {
     Close(()),
     Pause(()),
+    SetSpeed(f32),
     Unpause(()),
 }
 pub struct VideoCapture {
     pub error: Option<String>,
     pub running: bool,
+    pub speed: f32,
     pub video_size: Vector2,
     pub video_texture: wgpu::Texture,
 
@@ -29,7 +31,11 @@ pub struct VideoCapture {
 }
 
 impl VideoCapture {
-    pub fn new(device: &wgpu::Device, mut capture: opencv::videoio::VideoCapture) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        mut capture: opencv::videoio::VideoCapture,
+        speed: f32,
+    ) -> Self {
         // save size
         let width = capture.get(opencv::videoio::CAP_PROP_FRAME_WIDTH).unwrap();
         let height = capture.get(opencv::videoio::CAP_PROP_FRAME_HEIGHT).unwrap();
@@ -57,9 +63,9 @@ impl VideoCapture {
         // thread for reading from the capture
         let capture_thread = thread::spawn(move || {
             let clock = SystemTime::now();
-            let frame_dur = 1.0_f64 / frame_rate;
+            let mut video_speed = speed as f64;
 
-            loop {
+            'capture: loop {
                 // read from camera
                 let start_time = clock.elapsed().unwrap().as_secs_f64();
                 let mut frame = opencv::core::Mat::default().unwrap();
@@ -89,20 +95,25 @@ impl VideoCapture {
                         Message::Close(()) => {
                             // break from the outer loop
                             println!("Closing capture thread");
-                            break;
+                            break 'capture;
                         }
                         Message::Pause(()) => {
                             // the stream has been paused, block it is unpaused
-                            for message in message_channel_rx.iter() {
-                                if let Message::Unpause(()) = message {
-                                    break;
+                            'pause: for message in message_channel_rx.iter() {
+                                match message {
+                                    Message::Close(()) => break 'capture,
+                                    Message::SetSpeed(s) => video_speed = s as f64,
+                                    Message::Unpause(()) => break 'pause,
+                                    _ => (),
                                 }
                             }
                         }
+                        Message::SetSpeed(s) => video_speed = s as f64,
                         Message::Unpause(()) => (),
                     }
                 }
 
+                let frame_dur = 1.0_f64 / (frame_rate * video_speed);
                 let elapsed = clock.elapsed().unwrap().as_secs_f64() - start_time;
                 let extra_time = frame_dur - elapsed;
                 if extra_time > 0.01 {
@@ -120,6 +131,7 @@ impl VideoCapture {
             error_channel_rx,
             frame_data: vec![],
             running: true,
+            speed,
             video_consumer,
             video_size,
             video_texture,
@@ -187,5 +199,10 @@ impl VideoCapture {
 
     pub fn unpause(&mut self) {
         self.message_channel_tx.send(Message::Unpause(())).ok();
+    }
+
+    pub fn set_speed(&mut self, speed: f32) {
+        self.speed = speed;
+        self.message_channel_tx.send(Message::SetSpeed(speed)).ok();
     }
 }

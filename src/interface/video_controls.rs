@@ -11,7 +11,7 @@ pub fn height(model: &mut app::Model) -> f32 {
     let mut h = 0.0;
 
     if model.ui_show_video {
-        h = 60.0;
+        h = 100.0;
     }
 
     h
@@ -41,5 +41,16 @@ pub fn update(
         .set(widget_ids.video_load_button, ui)
     {
         uniforms.select_video(device);
+    }
+
+    if let Some(capture) = &mut uniforms.video_capture {
+        if let Some(value) = components::slider(capture.speed, 0.1, 2.0)
+            .parent(widget_ids.controls_wrapper)
+            .down(10.0)
+            .label("Speed")
+            .set(widget_ids.video_speed, ui)
+        {
+            capture.set_speed(value);
+        }
     }
 }
