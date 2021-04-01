@@ -83,6 +83,7 @@ impl Program {
     ) {
         if let Some(vert_module) = &self.vert_shader.module {
             if let Some(frag_module) = &self.frag_shader.module {
+                println!("creating pipeline");
                 self.pipeline = Some(util::create_pipeline(
                     device,
                     layout_desc,

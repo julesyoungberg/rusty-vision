@@ -15,7 +15,7 @@ pub struct Data {
 pub struct VideoUniforms {
     pub updated: bool,
     pub video_capture: Option<VideoCapture>,
-    pub video_path: Option<String>,
+    pub video_name: Option<String>,
 
     data: Data,
 }
@@ -41,7 +41,7 @@ impl VideoUniforms {
             },
             updated: false,
             video_capture: None,
-            video_path: None,
+            video_name: None,
         }
     }
 
@@ -49,9 +49,13 @@ impl VideoUniforms {
         let capture =
             opencv::videoio::VideoCapture::from_file(&filepath, opencv::videoio::CAP_ANY).unwrap();
 
-        self.video_capture = Some(VideoCapture::new(device, capture));
+        let video_capture = VideoCapture::new(device, capture);
 
-        self.video_path = Some(filepath.split('/').last().unwrap().to_string());
+        self.data.video_size = video_capture.video_size;
+
+        self.video_capture = Some(video_capture);
+
+        self.video_name = Some(filepath.split('/').last().unwrap().to_string());
 
         self.updated = true;
     }
@@ -97,13 +101,18 @@ impl VideoUniforms {
 
         println!("selected video: {:?}", filepath);
 
+        self.end_session();
         self.start_session(device, filepath);
+        println!(
+            "running: {:?}",
+            self.video_capture.as_ref().unwrap().running
+        );
+        println!("updated: {:?}", self.updated);
     }
 
     pub fn update(&mut self) {
         if let Some(video_capture) = &mut self.video_capture {
             video_capture.update();
-            self.data.video_size = video_capture.video_size;
         }
     }
 

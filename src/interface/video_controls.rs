@@ -25,9 +25,9 @@ pub fn update(
     uniforms: &mut video::VideoUniforms,
 ) {
     let mut label = "Video".to_owned();
-    if let Some(image1_path) = &uniforms.video_path {
+    if let Some(video_name) = &uniforms.video_name {
         label.push_str(": ");
-        label.push_str(image1_path.as_str());
+        label.push_str(video_name.as_str());
     }
 
     components::label(label.as_str())

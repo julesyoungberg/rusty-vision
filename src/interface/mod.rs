@@ -334,47 +334,7 @@ pub fn update(
     //////////////////////////////////////////////////
     // Error Display
     //////////////////////////////////////////////////
-    let compile_errors = model.program_store.get_program_errors();
-    if let Some(config_error) = &model.program_store.error {
-        errors::update(
-            &model.widget_ids,
-            ui,
-            "Config Error",
-            config_error.as_str(),
-            model.size,
-        );
-        return;
-    }
-
-    if let Some(c_errors) = compile_errors {
-        if c_errors.keys().len() > 0 {
-            errors::compilation_errors(&model.widget_ids, ui, &compile_errors.unwrap(), model.size);
-            return;
-        }
-    }
-
-    if let Some(audio_error) = &model.program_store.buffer_store.audio_source.error {
-        errors::update(
-            &model.widget_ids,
-            ui,
-            "Audio Error",
-            audio_error.as_str(),
-            model.size,
-        );
-    } else if let Some(audio_error) = &model
-        .program_store
-        .buffer_store
-        .audio_features_uniforms
-        .error
-    {
-        errors::update(
-            &model.widget_ids,
-            ui,
-            "Audio Features Error",
-            audio_error.as_str(),
-            model.size,
-        );
-    }
+    errors::update(&model.program_store, &model.widget_ids, ui, model.size);
 }
 
 /// Draw the state of the `Ui` to the frame.

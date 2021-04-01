@@ -17,10 +17,10 @@ pub struct Data {
 
 pub struct ImageUniforms {
     pub data: Data,
-    pub error: Option<nannou::image::ImageError>,
-    pub image1_path: Option<String>,
+    pub error: Option<String>,
+    pub image1_name: Option<String>,
     pub image1_texture: wgpu::Texture,
-    pub image2_path: Option<String>,
+    pub image2_name: Option<String>,
     pub image2_texture: wgpu::Texture,
     pub updated: bool,
 }
@@ -35,7 +35,6 @@ impl Bufferable<Data> for ImageUniforms {
     }
 }
 
-// TODO show error in interface in non obtrusive way (bottom right)
 impl ImageUniforms {
     pub fn new(device: &wgpu::Device) -> Self {
         let image1_texture = util::create_texture(device, [1, 1], wgpu::TextureFormat::Rgba16Float);
@@ -47,9 +46,9 @@ impl ImageUniforms {
                 image2_size: pt2(0.0, 0.0),
             },
             error: None,
-            image1_path: None,
+            image1_name: None,
             image1_texture,
-            image2_path: None,
+            image2_name: None,
             image2_texture,
             updated: false,
         }
@@ -59,7 +58,7 @@ impl ImageUniforms {
         let img = match image::open(&filepath) {
             Ok(img) => img,
             Err(e) => {
-                self.error = Some(e);
+                self.error = Some(e.to_string());
                 return;
             }
         };
@@ -72,12 +71,12 @@ impl ImageUniforms {
 
         match image_id {
             1 => {
-                self.image1_path = Some(filename);
+                self.image1_name = Some(filename);
                 self.image1_texture = texture;
                 self.data.image1_size = size;
             }
             2 => {
-                self.image2_path = Some(filename);
+                self.image2_name = Some(filename);
                 self.image2_texture = texture;
                 self.data.image2_size = size;
             }

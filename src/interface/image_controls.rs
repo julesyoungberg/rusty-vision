@@ -25,9 +25,9 @@ pub fn update(
     uniforms: &mut image::ImageUniforms,
 ) {
     let mut label = "Image 1".to_owned();
-    if let Some(image1_path) = &uniforms.image1_path {
+    if let Some(image1_name) = &uniforms.image1_name {
         label.push_str(": ");
-        label.push_str(image1_path.as_str());
+        label.push_str(image1_name.as_str());
     }
 
     components::label(label.as_str())
@@ -44,9 +44,9 @@ pub fn update(
     }
 
     let mut label = "Image 2".to_owned();
-    if let Some(image2_path) = &uniforms.image2_path {
+    if let Some(image2_name) = &uniforms.image2_name {
         label.push_str(": ");
-        label.push_str(image2_path.as_str());
+        label.push_str(image2_name.as_str());
     }
 
     components::label(label.as_str())

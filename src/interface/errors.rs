@@ -4,8 +4,9 @@ use nannou::ui::prelude::*;
 use crate::app;
 use crate::interface::components;
 use crate::programs::program::ProgramErrors;
+use crate::programs::ProgramStore;
 
-pub fn update(
+fn error_display(
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
     title: &str,
@@ -48,11 +49,66 @@ pub fn compilation_errors(
         error_string.push('\n');
     }
 
-    update(
+    error_display(
         widget_ids,
         ui,
         "Compilation Errors",
         error_string.as_str(),
         size,
     );
+}
+
+pub fn update(
+    program_store: &ProgramStore,
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    size: Vector2,
+) {
+    let compile_errors = program_store.get_program_errors();
+    if let Some(config_error) = &program_store.error {
+        error_display(&widget_ids, ui, "Config Error", config_error.as_str(), size);
+        return;
+    }
+
+    if let Some(c_errors) = compile_errors {
+        if c_errors.keys().len() > 0 {
+            compilation_errors(&widget_ids, ui, &compile_errors.unwrap(), size);
+            return;
+        }
+    }
+
+    if let Some(audio_error) = &program_store.buffer_store.audio_source.error {
+        error_display(&widget_ids, ui, "Audio Error", audio_error.as_str(), size);
+        return;
+    }
+
+    if let Some(audio_error) = &program_store.buffer_store.audio_features_uniforms.error {
+        error_display(
+            &widget_ids,
+            ui,
+            "Audio Features Error",
+            audio_error.as_str(),
+            size,
+        );
+        return;
+    }
+
+    if let Some(image_error) = &program_store.buffer_store.image_uniforms.error {
+        error_display(&widget_ids, ui, "Image Error", image_error.as_str(), size);
+        return;
+    }
+
+    if let Some(capture) = &program_store.buffer_store.video_uniforms.video_capture {
+        if let Some(video_error) = &capture.error {
+            error_display(&widget_ids, ui, "Video Error", video_error.as_str(), size);
+            return;
+        }
+    }
+
+    if let Some(capture) = &program_store.buffer_store.webcam_uniforms.video_capture {
+        if let Some(webcam_error) = &capture.error {
+            error_display(&widget_ids, ui, "Webcam Error", webcam_error.as_str(), size);
+            return;
+        }
+    }
 }

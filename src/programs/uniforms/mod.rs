@@ -290,6 +290,9 @@ impl BufferStore {
 
         if subscriptions.video {
             self.video_uniforms.update();
+            if self.video_uniforms.updated {
+                self.buffers.add(device, "video", &self.video_uniforms);
+            }
         }
 
         if subscriptions.webcam {
