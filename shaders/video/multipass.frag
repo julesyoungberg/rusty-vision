@@ -162,7 +162,7 @@ void glitch() {
     float t = floor(time * 0.5 * 60.0);
 
     // offset slices horizontally according to treble
-    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 2.0;
+    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 0.1;
     for (float i = 0.0; i < max_offset * 20.0; i++) {
         // get random start and end y coords
         float slice_y = rand21(vec2(t, 3679.0 + i));
@@ -176,7 +176,7 @@ void glitch() {
     }
 
     // calculate color shift according to bass
-    float max_color_offset = spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02;
+    float max_color_offset = spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.005;
     vec2 color_offset = vec2(
         rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
         rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset)
