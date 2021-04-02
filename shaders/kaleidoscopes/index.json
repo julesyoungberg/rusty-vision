@@ -46,6 +46,15 @@
         "audio_fft_smoothing": 0.9
       }
     },
+    "kaleidoscope4": {
+      "pipeline": {
+        "frag": "kaleidoscope4.frag"
+      },
+      "uniforms": ["general", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
     "kifs": {
       "pipeline": {
         "frag": "kifs.frag"
