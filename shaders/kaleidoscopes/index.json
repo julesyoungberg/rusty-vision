@@ -1,5 +1,5 @@
 {
-  "default": "kaleidoscope2",
+  "default": "kaleidoscope3",
   "programs": {
     "kaleidoImage": {
       "pipeline": {
