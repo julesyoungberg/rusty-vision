@@ -68,6 +68,7 @@ impl Program {
 
         // exit early if errors
         if self.errors.keys().len() > 0 {
+            self.pipeline = None;
             return;
         }
 
