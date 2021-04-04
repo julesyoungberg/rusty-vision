@@ -1,5 +1,5 @@
 {
-  "default": "multipass",
+  "default": "sobel",
   "programs": {
     "cells": {
       "pipeline": {
@@ -40,6 +40,12 @@
         "audio_fft_smoothing": 0.95,
         "passes": 2
       }
+    },
+    "sobel": {
+      "pipeline": {
+        "frag": "sobel.frag"
+      },
+      "uniforms": ["general", "webcam"]
     },
     "webcam": {
       "pipeline": {
