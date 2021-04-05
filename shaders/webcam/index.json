@@ -1,5 +1,5 @@
 {
-  "default": "rainbow",
+  "default": "pieces",
   "programs": {
     "cells": {
       "pipeline": {
@@ -46,6 +46,12 @@
         "frag": "notebook.frag"
       },
       "uniforms": ["general", "webcam"]
+    },
+    "pieces": {
+      "pipeline": {
+        "frag": "pieces.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"]
     },
     "rainbow": {
       "pipeline": {
