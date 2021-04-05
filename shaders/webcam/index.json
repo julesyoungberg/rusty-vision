@@ -1,5 +1,5 @@
 {
-  "default": "sobel",
+  "default": "rainbow",
   "programs": {
     "cells": {
       "pipeline": {
@@ -36,6 +36,22 @@
         "frag": "multipass.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam", "multipass"],
+      "config": {
+        "audio_fft_smoothing": 0.95,
+        "passes": 2
+      }
+    },
+    "notebook": {
+      "pipeline": {
+        "frag": "notebook.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    },
+    "rainbow": {
+      "pipeline": {
+        "frag": "rainbow.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft", "multipass"],
       "config": {
         "audio_fft_smoothing": 0.95,
         "passes": 2
