@@ -1,11 +1,20 @@
 {
-  "default": "pieces",
+  "default": "ripples",
   "programs": {
     "cells": {
       "pipeline": {
         "frag": "cells.frag"
       },
       "uniforms": ["general", "webcam"]
+    },
+    "dither": {
+      "pipeline": {
+        "frag": "dither.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "dots": {
       "pipeline": {
@@ -61,6 +70,15 @@
       "config": {
         "audio_fft_smoothing": 0.95,
         "passes": 2
+      }
+    },
+    "ripples": {
+      "pipeline": {
+        "frag": "ripples.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
       }
     },
     "sobel": {

@@ -175,7 +175,7 @@ impl VideoCapture {
             return;
         }
 
-        if self.frame_data.len() == 0 || self.frame_data[0].len() == 0 {
+        if self.frame_data.is_empty() || self.frame_data[0].is_empty() {
             return;
         }
 

@@ -64,12 +64,12 @@ pub fn update(
     ui: &mut UiCell,
     size: Vector2,
 ) {
-    let compile_errors = program_store.get_program_errors();
     if let Some(config_error) = &program_store.error {
         error_display(&widget_ids, ui, "Config Error", config_error.as_str(), size);
         return;
     }
 
+    let compile_errors = program_store.get_program_errors();
     if let Some(c_errors) = compile_errors {
         if c_errors.keys().len() > 0 {
             compilation_errors(&widget_ids, ui, &compile_errors.unwrap(), size);

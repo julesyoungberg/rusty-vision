@@ -65,14 +65,6 @@ impl Program {
             }
             errors
         });
-
-        // exit early if errors
-        if self.errors.keys().len() > 0 {
-            self.pipeline = None;
-            return;
-        }
-
-        self.errors = HashMap::new();
     }
 
     /// Create the render pipeline
@@ -82,6 +74,11 @@ impl Program {
         layout_desc: &wgpu::PipelineLayoutDescriptor,
         num_samples: u32,
     ) {
+        if self.errors.keys().len() > 0 {
+            self.pipeline = None;
+            return;
+        }
+
         if let Some(vert_module) = &self.vert_shader.module {
             if let Some(frag_module) = &self.frag_shader.module {
                 println!("creating pipeline");

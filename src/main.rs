@@ -267,7 +267,5 @@ fn view(app: &App, model: &app::Model, frame: Frame) {
 
     draw(model, &frame);
 
-    if model.show_controls {
-        interface::draw(app, model, &frame);
-    }
+    interface::draw(app, model, &frame);
 }

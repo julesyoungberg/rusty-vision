@@ -66,9 +66,11 @@ pub fn update(
         height = model.size[1] - border;
     }
 
-    // Calling `set_widgets` allows us to instantiate some widgets.
-    let ui = &mut model.ui.set_widgets();
+    if !model.show_controls {
+        return;
+    }
 
+    let ui = &mut model.ui.set_widgets();
     /////////////////////////
     // controls wrapper
     let mut controls_wrapper =
@@ -339,6 +341,10 @@ pub fn update(
 
 /// Draw the state of the `Ui` to the frame.
 pub fn draw(app: &App, model: &app::Model, frame: &Frame) {
+    if !model.show_controls {
+        return;
+    }
+
     let color_attachment_desc = frame.color_attachment_descriptor();
     let primitives = model.ui.draw();
     let window = app
