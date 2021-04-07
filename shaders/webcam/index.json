@@ -1,5 +1,5 @@
 {
-  "default": "liquid4",
+  "default": "grid",
   "programs": {
     "cells": {
       "pipeline": {
@@ -25,6 +25,15 @@
     "glitch": {
       "pipeline": {
         "frag": "glitch.frag"
+      },
+      "uniforms": ["general", "audio_fft", "webcam"],
+      "config": {
+        "audio_fft_smoothing": 0.5
+      }
+    },
+    "grid": {
+      "pipeline": {
+        "frag": "grid.frag"
       },
       "uniforms": ["general", "audio_fft", "webcam"],
       "config": {
@@ -128,6 +137,12 @@
       "config": {
         "audio_fft_smoothing": 0.9
       }
+    },
+    "tv": {
+      "pipeline": {
+        "frag": "tv.frag"
+      },
+      "uniforms": ["general", "webcam"]
     },
     "webcam": {
       "pipeline": {
