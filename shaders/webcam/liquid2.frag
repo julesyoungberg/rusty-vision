@@ -22,16 +22,10 @@ layout(set = 2, binding = 1) uniform texture2D spectrum;
 // based on RippleCam by sleep
 // https://www.shadertoy.com/view/4djGzz
 
+const vec3 LIGHT_POS = vec3(0.5, 0.5, -1.0);
+
 vec3 webcam_color(in vec2 coord) {
     return texture(usampler2D(webcam, webcam_sampler), coord).xyz / 255.0;
-}
-
-// Simple circular wave function
-float wave(vec2 pos, float freq, float numWaves, vec2 center) {
-	float d = length(pos - center);
-	d = log(1.0 + exp(d));
-	float w = 0.3 / (1.0 + 20.0 * d * d) * sin(2.0 * 3.1415 * (-numWaves * d + time * freq));
-    return w;
 }
 
 float get_spectrum(float i) {
@@ -39,12 +33,14 @@ float get_spectrum(float i) {
 }
 
 // This height map combines a couple of waves
-float height(vec2 pos) {
-	float w = wave(pos, 2.0, 10.0, vec2(0.0, -1.0));
-    w *= get_spectrum(0.2) * 5.0 + 0.4;
-    w += wave(pos, 3.0, 20.0, vec2(-1.0, 1.0)) * (get_spectrum(0.6) * 10.0 + 0.1);
-    w += wave(pos, 3.0, 20.0, vec2(1.0, 1.0)) * (get_spectrum(0.6) * 10.0 + 0.1);
-	return w;
+float height(vec2 st) {
+	float s1 = get_spectrum(0.3) * 2.0 + 0.1;
+    float s2 = get_spectrum(0.6) * 2.0 + 0.1;
+    float t = time;
+
+    float shift = sin(st.y * 10.0 + t + cos(st.y * st.x + t)) * s1;
+    shift *= sin(st.x * 15.0 + t * 1.387) * s2;
+    return shift;
 }
 
 // Discrete differentiation
@@ -68,4 +64,3 @@ void main() {
 
 	frag_color = vec4(color, 1.0);
 }
-

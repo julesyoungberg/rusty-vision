@@ -236,7 +236,7 @@ impl BufferStore {
         }
 
         if subscriptions.webcam {
-            self.webcam_uniforms.configure(device);
+            self.webcam_uniforms.configure(device, size);
             if self.webcam_uniforms.updated {
                 self.buffers.add(device, "webcam", &self.webcam_uniforms);
             }

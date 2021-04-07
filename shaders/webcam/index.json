@@ -1,5 +1,5 @@
 {
-  "default": "ripples",
+  "default": "liquid4",
   "programs": {
     "cells": {
       "pipeline": {
@@ -38,6 +38,39 @@
       "uniforms": ["general", "audio_fft", "webcam"],
       "config": {
         "audio_fft_smoothing": 0.95
+      }
+    },
+    "liquid1": {
+      "pipeline": {
+        "frag": "liquid1.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "liquid2": {
+      "pipeline": {
+        "frag": "liquid2.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
+    "liquid3": {
+      "pipeline": {
+        "frag": "liquid3.frag"
+      },
+      "uniforms": ["general", "webcam"]
+    },
+    "liquid4": {
+      "pipeline": {
+        "frag": "liquid4.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
       }
     },
     "multipass": {
@@ -86,6 +119,15 @@
         "frag": "sobel.frag"
       },
       "uniforms": ["general", "webcam"]
+    },
+    "trippy": {
+      "pipeline": {
+        "frag": "trippy.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "webcam": {
       "pipeline": {

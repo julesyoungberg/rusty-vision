@@ -12,7 +12,8 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 
 #define PI 3.14159265359
 
-// adapted from: https://editor.isf.video/shaders/5e7a80437c113618206dee05
+// based on ColorDiffusionFlow by mojovideotech
+// https://editor.isf.video/shaders/5e7a80437c113618206dee05
 void main() {
     vec2 st = uv * 0.5 + 0.5;;
     st.y *= resolution.y / resolution.x;

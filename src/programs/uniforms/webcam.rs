@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use opencv::prelude::*;
 
 use crate::programs::uniforms::base::Bufferable;
 use crate::programs::uniforms::video_capture::VideoCapture;
@@ -40,24 +41,30 @@ impl WebcamUniforms {
         }
     }
 
-    pub fn configure(&mut self, device: &wgpu::Device) {
-        self.start_session(device);
-    }
-
     /// Starts a webcam session.
     /// Spawns a thread to consumer webcam data with OpenCV.
-    fn start_session(&mut self, device: &wgpu::Device) {
+    fn start_session(&mut self, device: &wgpu::Device, size: Point2) {
         if let Some(video_capture) = &self.video_capture {
             if video_capture.running {
                 return;
             }
         }
 
-        let capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
+        let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
+        capture
+            .set(opencv::videoio::CAP_PROP_FRAME_WIDTH, size[0] as f64)
+            .ok();
+        capture
+            .set(opencv::videoio::CAP_PROP_FRAME_HEIGHT, size[1] as f64)
+            .ok();
 
         self.video_capture = Some(VideoCapture::new(device, capture, 1.0));
 
         self.updated = true;
+    }
+
+    pub fn configure(&mut self, device: &wgpu::Device, size: Point2) {
+        self.start_session(device, size);
     }
 
     pub fn end_session(&mut self) {
