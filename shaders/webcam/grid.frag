@@ -40,7 +40,7 @@ void main() {
     vec2 st = uv;
     st.x *= resolution.x / resolution.y;
 
-    const float scale = 3.0;
+    const float scale = 4.0;
 
     vec3 color = vec3(0.0);
 
@@ -50,14 +50,14 @@ void main() {
     vec2 id = floor(st);
     
     vec2 coord = uv * 0.5 + 0.5;
-    coord += gv * 0.1;
+    coord += gv * 0.1 * (sin(length(id) * 0.8 - time) * 0.5 + 0.5);
     color = webcam_color(coord);
 
     vec3 hsv = rgb2hsv(color);
     float i = rand21(id) * 7693.78;
-    color = mix(color, hsv2rgb(vec3(fract(i + time * 0.1), 1.0, 1.0)), 0.2);
+    color = mix(color, hsv2rgb(vec3(fract(i + time * 0.1 * fract(i)), 1.0, 1.0)), 0.3);
     color *= color;
-    color *= get_spectrum(i) * 3.0 + 1.0;
+    color *= get_spectrum(i) * 3.0 + 0.5;
 
 	frag_color = vec4(color, 1.0);
 }

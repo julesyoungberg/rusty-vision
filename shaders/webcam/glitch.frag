@@ -41,26 +41,8 @@ float spectrum_strength(float start, float end) {
     return sum / (end - start);
 }
 
-// from Barrel Distortion by ttyy
-// https://www.shadertoy.com/view/wtBXRz
-// uv is in [-1:1]
-vec2 brown_conrady_distortion(in vec2 uv, in float k1, in float k2) {
-    // positive values of K1 give barrel distortion, negative give pincushion
-    float r2 = dot(uv, uv);
-    uv *= 1.0 + k1 * r2 + k2 * r2 * r2;
-    return uv;
-}
-
 void main() {
-    vec2 st = uv * 0.9;
-
-    float strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x;;
-
-    float k1 = mix(0.0, 0.4, strength);
-    float k2 = 0.0;
-    st = brown_conrady_distortion(st, k1, k2);
-
-    st = st * 0.5 + 0.5;
+    vec2 st = uv * 0.5 + 0.5;
 
     vec3 color = webcam_color(st);
 
@@ -101,12 +83,6 @@ void main() {
     vec2 st2 = abs(st * 2.0 - 1.0);
     vec2 border = 1.0 - smoothstep(vec2(0.95), vec2(1.0), st2);
     color *= mix(0.2, 1.0, border.x * border.y);
-
-    float vignetteRange = clamp(k1, 0.0, 0.2);
-    float dist = distance(st, vec2(0.5, 0.5));
-    dist = (dist - (0.707 - vignetteRange)) / vignetteRange;
-    float mult = smoothstep(1.0, 0.0, dist);
-    color *= mult;
     
 	frag_color = vec4(color, 1.0);
 }

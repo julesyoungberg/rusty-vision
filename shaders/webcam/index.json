@@ -1,11 +1,20 @@
 {
-  "default": "grid",
+  "default": "slices",
   "programs": {
     "cells": {
       "pipeline": {
         "frag": "cells.frag"
       },
       "uniforms": ["general", "webcam"]
+    },
+    "cracked": {
+      "pipeline": {
+        "frag": "cracked.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "dither": {
       "pipeline": {
@@ -123,6 +132,15 @@
         "audio_fft_smoothing": 0.9
       }
     },
+    "slices": {
+      "pipeline": {
+        "frag": "slices.frag"
+      },
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
+    },
     "sobel": {
       "pipeline": {
         "frag": "sobel.frag"
@@ -142,7 +160,10 @@
       "pipeline": {
         "frag": "tv.frag"
       },
-      "uniforms": ["general", "webcam"]
+      "uniforms": ["general", "webcam", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.9
+      }
     },
     "webcam": {
       "pipeline": {

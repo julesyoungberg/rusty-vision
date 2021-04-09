@@ -61,53 +61,26 @@ vec4 voroni(vec3 p, float scale) {
         }
     }
 
-    float m_edge_dist = scale;
-
-    // find the nearest edge
-    // #pragma unroll
-    // for (int z = -1; z <= 1; z++) {
-    //     #pragma unroll
-    //     for (int y = -1; y <= 1; y++) {
-    //         #pragma unroll
-    //         for (int x = -1; x <= 1; x++) {
-    //             vec3 neighbor = vec3(x, y, z);
-    //             vec3 coord = i_st + neighbor;
-    //             if (all(equal(m_coord, coord))) {
-    //                 continue;
-    //             }
-
-    //             vec3 point = get_point(coord);
-
-    //             vec3 diff = neighbor + point - f_st;
-    //             float dist = length(diff);
-
-    //             vec3 to_center = (m_diff + diff) * 0.5;
-    //             vec3 cell_diff = normalize(diff - m_diff);
-    //             float edge_dist = dot(to_center, cell_diff);
-    //             m_edge_dist = min(m_edge_dist, edge_dist);
-    //         }
-    //     }
-    // }
-
-    return vec4(m_coord + m_point, m_edge_dist);
+    return vec4(m_coord + m_point, m_dist);
 }
 
 void main() {
     vec2 st = uv;
     st = st * 0.5 + 0.5;
 
-    float scale = 80.0;
+    float scale = 20.0;
     st *= scale;
 
     vec3 p = vec3(st, time * 0.4);
     vec4 val = voroni(p, scale);
     vec3 m_point = val.xyz;
-    float m_edge_dist = val.w;
+    float m_dist = val.w;
     
     vec2 g_point = m_point.xy;
     vec2 coord = g_point / scale;
     vec3 color = texture(usampler2D(webcam, webcam_sampler), coord).xyz / 255.0;
     // color = mix(vec3(0), color, smoothstep(0.01, 0.02, m_edge_dist));
+    color *= (1.0 - m_dist) * 1.1;
     
 	frag_color = vec4(color, 1.0);
 }
