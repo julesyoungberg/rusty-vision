@@ -1,5 +1,5 @@
 {
-  "default": "motionBlur",
+  "default": "sunset",
   "programs": {
     "basic": {
       "pipeline": {
@@ -166,6 +166,12 @@
       "config": {
         "audio_fft_smoothing": 0.97
       }
+    },
+    "sunset": {
+      "pipeline": {
+        "frag": "sunset.frag"
+      },
+      "uniforms": ["general"]
     }
   }
 }

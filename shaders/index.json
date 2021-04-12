@@ -1,5 +1,5 @@
 {
-  "default": "webcam",
+  "default": "basic",
   "folders": [
     "basic",
     "fractals",
