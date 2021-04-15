@@ -38,8 +38,9 @@ pub struct ProgramSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramConfig {
     pub pipeline: PipelineConfig,
-    pub uniforms: Vec<String>,
+    pub uniforms: Option<Vec<String>>,
     pub config: Option<ProgramSettings>,
+    pub isf: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

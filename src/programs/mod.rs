@@ -6,6 +6,7 @@ use std::time;
 use crate::util;
 
 mod config;
+// pub mod isf;
 pub mod program;
 mod shaders;
 pub mod uniforms;
@@ -91,6 +92,8 @@ impl ProgramStore {
         let bind_group_layouts = &current_program
             .config
             .uniforms
+            .as_ref()
+            .unwrap()
             .iter()
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
@@ -283,7 +286,7 @@ impl ProgramStore {
         self.current_program = Some(current_program);
 
         // get subscriptions and initialize
-        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
+        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
         self.buffer_store.configure(
             app,
             device,
@@ -402,7 +405,7 @@ impl ProgramStore {
             folder_name.clone(),
         ));
 
-        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms);
+        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
         self.buffer_store.configure(
             app,
             device,
@@ -490,6 +493,8 @@ impl ProgramStore {
             current_program
                 .config
                 .uniforms
+                .as_ref()
+                .unwrap()
                 .iter()
                 .map(|u| &self.buffer_store.buffers.get(u).unwrap().bind_group)
                 .collect::<Vec<&wgpu::BindGroup>>(),
