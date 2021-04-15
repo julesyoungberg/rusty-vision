@@ -1,7 +1,8 @@
 {
-  "default": "basic",
+  "default": "collabs",
   "folders": [
     "basic",
+    "collabs",
     "fractals",
     "kaleidoscopes",
     "patterns",

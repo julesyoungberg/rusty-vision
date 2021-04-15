@@ -1,0 +1,16 @@
+{
+  "default": "yama",
+  "programs": {
+    "yama": {
+      "pipeline": {
+        "frag": "yama.frag"
+      },
+      "uniforms": ["general", "image", "audio_fft"],
+      "config": {
+        "audio_fft_smoothing": 0.7,
+        "image1": "yama.png"
+      }
+    }
+  }
+}
+    

@@ -1,0 +1,265 @@
+#version 450
+
+layout(location = 0) in vec2 uv;
+layout(location = 0) out vec4 frag_color;
+
+layout(set = 0, binding = 0) uniform GeneralUniforms {
+    vec2 mouse;
+    vec2 resolution;
+    float time;
+    int mouse_down;
+};
+
+// Image by Julie Erhart
+layout(set = 1, binding = 0) uniform sampler image_sampler;
+layout(set = 1, binding = 1) uniform texture2D image;
+layout(set = 1, binding = 2) uniform texture2D _image2;
+layout(set = 1, binding = 3) uniform ImageUniforms {
+    vec2 image_size;
+};
+
+layout(set = 2, binding = 0) uniform sampler spectrum_sampler;
+layout(set = 2, binding = 1) uniform texture2D spectrum;
+
+//@import util/complex_inv
+//@import util/complex_mult
+//@import util/palette
+//@import util/rand
+
+vec2 complex_inv(in vec2 z);
+vec2 complex_mult(in vec2 a, in vec2 b);
+vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
+vec2 rand2(vec2 p);
+
+vec4 image_color(in vec2 p) {
+    p += 0.5;
+    p.y = 1.0 - p.y;
+    vec4 color = texture(sampler2D(image, image_sampler), p);
+    return color;
+}
+
+// based on Circuits by Kali
+// https://www.shadertoy.com/view/XlX3Rj
+vec3 formula(in vec2 st, in vec2 c) {
+    vec2 z = st;
+    float last_stable = 0.0;
+
+    // orbit traps
+    float min_comp = 1000.0;
+    float min_mag = min_comp;
+
+    float angle = time * 0.05;
+
+    const float iterations = 7;
+    for (float i = 0.0; i < iterations; i++) {
+        z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+        z = abs(complex_inv(z)) + c;
+
+        float mag = length(z);
+
+        // orbit traps
+        float w = 0.1;
+        // get minimum component
+        float m_comp = clamp(abs(min(z.x, z.y)), w - mag, abs(mag - w));
+        // update overall minimum component
+        min_comp = min(m_comp, min_comp);
+        // update minimum magnitude
+        min_mag = min(mag, min_mag);
+        // m is 0 unless minimum == min_comp
+        // catches the lasst i where z is stable
+        last_stable = max(last_stable, i * (1.0 - abs(sign(min_comp - m_comp))));
+    }
+
+    last_stable += 1.0;
+
+    float intensity = 0.01;
+    float width = intensity * last_stable * 2.0;
+
+    float circ = pow(max(0.0, width - min_mag * 0.1) / width, 6.0);
+    float shape = max(pow(max(0.0, width - min_comp) / width, 0.25), circ);
+
+    float t = time * 0.1;
+    vec3 color = palette(
+        last_stable / iterations,
+        vec3(0.5, 0.5, 0.5), 
+        vec3(0.5, 0.5, 0.5),
+        vec3(1.0, 1.0, 1.0),
+        fract(vec3(
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x,
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x + 0.1,
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x + 0.2
+        ))
+    );
+
+    // carve out the pattern
+    color *= 0.4 + mod(last_stable / iterations + min_mag * 0.2 - t, 1.0) * 1.6;
+
+    return color * shape;
+}
+
+vec3 fill_ball(in vec2 st) {
+    st *= 10.0;
+    
+    vec3 color = vec3(0);
+
+    float t = time;
+    float scale = 1.5 + sin(t / 25.0);
+    st *= scale;
+
+    vec2 c = vec2(-0.6);
+    c += vec2(sin(t / 11.0), sin(t / 13.0)) * 0.5;
+
+    color = formula(st, c);
+
+    return color;
+}
+
+// Background
+// ----------
+// based on Random Isometric Blocks by Shane
+// https://www.shadertoy.com/view/ltSczW
+#define TAU 6.28318530718
+const vec2 s = vec2(1, 1.7320508);
+float hash21(vec2 p) { return fract(sin(dot(p, vec2(141.13, 289.97))) * 43758.5453); }
+mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+
+// A diamond of sorts - Stretched in a way so as to match the dimensions of a
+// cube face in an isometric scene.
+float iso_diamond(in vec2 p) {
+    p = abs(p);
+    return dot(p, s * 0.5); 
+}
+
+// This function returns the hexagonal grid coordinate for the grid cell, and the corresponding 
+// hexagon cell ID - in the form of the central hexagonal point.
+vec4 get_hex(vec2 p) {
+    vec4 hC = floor(vec4(p, p - vec2(0.5, 1.0)) / s.xyxy) + 0.5;
+    vec4 h = vec4(p - hC.xy * s, p - (hC.zw + 0.5) * s);
+    return dot(h.xy, h.xy) < dot(h.zw, h.zw) ? vec4(h.xy, hC.xy) : vec4(h.zw, hC.zw + vec2(0.5, 1));
+}
+
+vec3 background(in vec2 st) {
+    vec4 hex = get_hex(st * 6.0 + s.yx * time * 0.5);
+    vec2 p = hex.xy;
+
+    // Relative squared distance from the center.
+    float d = dot(p, p) * 1.5;
+
+    // Using the idetifying coordinate - stored in "h.zw," to produce a unique random number
+    // for the hexagonal grid cell.  
+    float rnd = hash21(hex.zw);
+    float t = rnd * TAU + time * (fract(rnd) + 0.5);
+    rnd = sin(t) * 0.5 + 0.5;
+
+    vec3 color = palette(
+        rnd,
+        vec3(0.5, 0.5, 0.5), 
+        vec3(0.5, 0.5, 0.5),
+        vec3(1.0, 1.0, 1.0),
+        vec3(0.4, 0.2, 1.0)
+    ) * 0.5;
+    
+    color *= mix(vec3(0.0), vec3(1.0), vec3(
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x,
+        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x
+    ));
+
+    // tile flipping
+    if (rnd > 0.5) {
+        p.xy = -p.xy;
+        color *= max(1.25 - d, 0.0);
+    } else {
+        color *= max(d + 0.55, 0.0);
+    }
+
+    // Cube face ID
+    float face_id = 0.0;
+    if (p.x > 0.0 && -p.y * s.y < p.x * s.x) {
+        face_id = 1.0; 
+    } else if (p.y * s.y < p.x * s.x) {
+        face_id = 2.0;
+    }
+
+    // Decorating the cube faces:
+    // Three rotated diamonds to represent the face borders.
+    float di = iso_diamond((p - vec2(0, -0.5) / s)); // bottom
+    di = min(di, iso_diamond(r2(TAU / 6.0) * p - vec2(0.0, 0.5) / s)); // left
+    di = min(di, iso_diamond(r2(-TAU / 6.0) * p - vec2(0.0, 0.5) / s)); // right
+    di -= .25;
+
+    float bord = max(di, -(di + .01));
+
+    // darken inner corners
+    if (rnd <= 0.5) {
+        color = mix(color, vec3(0), (1.0 - smoothstep(0., .02, bord)) * .7);
+    }
+
+    // highlight edge
+    color = mix(color, color * 10.0, (1.0 - smoothstep(0., .02, bord - .02)) * .3);
+   
+    // Cube shading, based on ID. Three different shades for each face of the cube.
+    color *= face_id * .5 + .1;
+
+    color *= smoothstep(1.0, 0.5, length(st));
+
+    // Rough gamma correction
+    return sqrt(max(color, 0.0));
+}
+
+float get_spectrum(float i) {
+    return clamp(texture(sampler2D(spectrum, spectrum_sampler), vec2(fract(i), 0)).x, 0.0, 1.0);
+}
+
+vec2 get_aspect_ratio() {
+    return vec2(
+        max(1.0, resolution.x / resolution.y),
+        max(1.0, resolution.y / resolution.x)
+    );
+}
+
+void main() {
+    vec2 st = uv * 0.5 * get_aspect_ratio();
+    vec2 og = st;
+
+    // scale space with bass
+    float scale = mix(1.02, 1.0, get_spectrum(0.2));
+    st *= scale;
+
+    // apply random shake with treble
+    float shake = mix(0.0, 0.01, get_spectrum(0.6));
+    st += rand2(vec2(0.0, time)) * shake;
+    
+    // fetch image pixel, if it has color return it
+    frag_color = image_color(st);
+    if (frag_color.a > 0.5) {
+        return;
+    }
+
+    // reset
+    frag_color *= 0.0;
+	vec3 color = vec3(0.0);
+
+    // crystal ball setup
+    const vec2 center = vec2(-0.005, -0.17);
+    const float ball_size = 0.25;
+    const float ball_border = 0.012;
+    const float bg_radius = ball_size + ball_border;
+    
+    // compute d and masks
+    vec2 ball_st = st * vec2(0.75, 1.0);
+    float d = distance(center, ball_st);
+    float ball_mask = smoothstep(ball_size, ball_size - 0.001, d);
+    float bg_mask = smoothstep(bg_radius, bg_radius + 0.1, d);
+
+    // compute color for pixel
+    if (ball_mask > 0.0) {
+        color = fill_ball(st - center) * ball_mask * smoothstep(ball_size, ball_size - 0.1, d);
+        float shine_d = distance(center + vec2(-0.1, 0.1), ball_st);
+        color += smoothstep(0.1, 0.0, shine_d);
+    } else if (bg_mask > 0.0) {
+        color = background(og) * bg_mask;
+    }
+
+    frag_color = vec4(color, 1.0);
+}
