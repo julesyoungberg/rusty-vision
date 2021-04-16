@@ -10,6 +10,9 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
     int mouse_down;
 };
 
+// based on Beutypi by iq
+// https://www.shadertoy.com/view/lsfGRr
+
 #define PI 3.14159265359
 
 //@import util/noise

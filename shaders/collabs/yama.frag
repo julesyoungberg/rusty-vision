@@ -21,15 +21,28 @@ layout(set = 1, binding = 3) uniform ImageUniforms {
 layout(set = 2, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 2, binding = 1) uniform texture2D spectrum;
 
+#define PI 3.14159265359
+#define AUDIO_REACTIVE 1
+
 //@import util/complex_inv
 //@import util/complex_mult
+//@import util/noise
 //@import util/palette
 //@import util/rand
 
 vec2 complex_inv(in vec2 z);
 vec2 complex_mult(in vec2 a, in vec2 b);
+float noise2(in vec2 p);
+float noise3(in vec3 p);
 vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
 vec2 rand2(vec2 p);
+
+const float ball_sensitivity = 0.1;
+const float bg_sensitivity = 0.05;
+const float scale_strength = 0.1;
+const float shake_strength = 0.05;
+
+mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 
 vec4 image_color(in vec2 p) {
     p += 0.5;
@@ -38,6 +51,185 @@ vec4 image_color(in vec2 p) {
     return color;
 }
 
+float get_spectrum(float i) {
+    return clamp(texture(sampler2D(spectrum, spectrum_sampler), vec2(fract(i), 0)).x, 0.0, 1.0);
+}
+
+// Eyes
+// -------
+// based on Beutypi by iq
+// https://www.shadertoy.com/view/lsfGRr
+mat2 m = mat2(0.8, 0.6, -0.6, 0.8);
+float fbm(in vec2 p) {
+    float f = 0.0;
+    f += 0.500 * noise2(p);
+    p *= m * 2.02;
+    f += 0.250 * noise2(p);
+    p *= m * 2.03;
+    f += 0.125 * noise2(p);
+    p *= m * 2.01;
+    f += 0.0625 * noise2(p);
+    p *= m * 2.04;
+    f /= 0.9375;
+    return f * 0.5 + 0.5;
+}
+
+vec3 eye_color(in vec2 st, in vec2 id, in vec2 shine_cent) {
+    // st *= 3.5;
+    vec3 color = vec3(1);
+    vec2 shift = vec2(0);
+
+    float strength = 0.0;
+    if (AUDIO_REACTIVE == 1) {
+        float i = fract(dot(id, id) * 0.01);
+        strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(i, 0)).x;
+        // strength *= (i * 8.0 + 1.0);
+    }
+
+    // get a random shift
+    shift = vec2(
+        noise3(vec3(time * 2.0, id.x * 17.67, id.y * 23.42)),
+        noise3(vec3(time * 2.0, id.x * 11.94, id.y * 27.65))
+    ) * 2.0 - 1.0;
+    shift = pow(shift, vec2(3.0));
+    shift *= 0.8;
+
+    // get polar coords
+    vec2 ev = st + shift;
+    float r = length(ev);
+    float a = atan(ev.y, ev.x);
+
+    // animate the radius of the eye
+    float ss = sin(time * 2.0 + id.x * 3.77 + id.y * 5.33) * 0.1;
+    float anim = 1.0 + 0.5 * ss;
+    r *= anim;
+    if (AUDIO_REACTIVE == 1) {
+        r *= smoothstep(0.5, 0.0, strength) * 0.4 + 0.75;
+    }
+
+    // domain distortion
+    float a2 = a + fbm(st * 30.0) * 0.05;
+    // blood vessels
+    float concentration = smoothstep(1.0, 1.8, r) * 0.3;
+    float f = smoothstep(0.6 - concentration, 1.0, fbm(vec2(r * 6.0, a2 * 50.0)));
+    color = mix(color, vec3(1.0, 0.0, 0.0), f);
+    vec3 bg = color;
+
+    float iris_radius = 0.9;
+    if (r < iris_radius) {
+        float pupil_scale = (noise3(vec3(time * 0.5, id.x * 11.11, id.y * 13.13)) * 0.65 + 0.4);
+        if (AUDIO_REACTIVE == 1) {
+            pupil_scale = smoothstep(0.5, 0.05, strength) * 0.5 + 0.5;
+        }
+        // eye color
+        color = fract(vec3(0.0 + sin(id.x * 3.77), 0.3 + sin(id.y * 5.14), 0.4 + sin((id.x + id.y) * 7.35)));
+        f = fbm(st * 5.0);
+        color = mix(color, vec3(0.2, 0.5, 0.4), f);
+        // pupil fade
+        f = smoothstep(0.6, 0.2, r);
+        color = mix(color, vec3(0.9, 0.6, 0.2), f);
+        // domain distortion
+        a += fbm(st * 20.0) * 0.05;
+        // white shards
+        f = smoothstep(0.3, 1.0, fbm(vec2(r * 6.0, a * 20.0)));
+        color = mix(color, vec3(1), f);
+        // dark spots
+        f = smoothstep(0.4, 0.9, fbm(vec2(r * 10.0, a * 15.0)));
+        color *= 1.0 - f;
+        // edge fading
+        f = smoothstep(iris_radius, 0.5, r);
+        color *= f;
+        // pupil
+        f = smoothstep(0.2, 0.25, r * pupil_scale);
+        color *= f;
+        // fake reflection / shine
+        f = smoothstep(0.5, 0.0, length(st - shine_cent));
+        color += f * vec3(1.0, 0.9, 0.8) * 0.9;
+        // edge smoothing
+        f = smoothstep(iris_radius - 0.05, iris_radius, r);
+        color = mix(color, bg, f);
+    }
+
+    r = length(st);
+    a = atan(st.y, st.x);
+
+    // corners fade
+    f = smoothstep(1.8, 1.0, r);
+    color *= f;
+
+    return color;
+}
+
+vec3 apply_eye(in vec2 st, in vec3 color, float id, in vec2 shine_cent) {
+    if (step(-2.0, st.x) - step(2.0, st.x) == 0.0) {
+        return color;
+    }
+
+    // get eyelid curves
+    float eyelid = pow(cos(st.x * PI * 0.5) * 0.5 + 0.5, 0.5);
+    float top_eyelid = smoothstep(0.2, 0.0, eyelid - st.y);
+    float bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
+    float eye_mask = top_eyelid + bottom_eyelid;
+
+    if (eye_mask > 0.9) {
+        return color;
+    }
+
+    color = mix(eye_color(st, vec2(id, 0.0), shine_cent), color, eye_mask);
+
+    float blink = smoothstep(0.05, 0.0, abs(noise3(vec3(time * 0.5, id, 0.0)) - 0.5));
+    eyelid = mix(eyelid, 0.0, blink);
+
+    top_eyelid = smoothstep(0.2, 0.0, eyelid - st.y);
+    bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
+    color = mix(color, vec3(0.15, 0.69, 0.58) * 2.0, top_eyelid + bottom_eyelid);
+
+    return color;
+}
+
+vec3 right_eye(in vec2 st, in vec3 color) {
+    st.y -= 0.165;
+    st.x += 0.125;
+    float angle = -0.15;
+    st *= r2(angle);
+    st *= 50.0;
+    st.x *= 0.9;
+
+    return apply_eye(st, color, 1.0, vec2(-0.35, 0.3));
+}
+
+vec3 left_eye(in vec2 st, in vec3 color) {
+    st.y -= 0.175;
+    st.x -= 0.045;
+    float angle = 0.05;
+    st *= r2(angle);
+    st *= 40.0;
+    st.x *= 0.9;
+
+    return apply_eye(st, color, 2.0, vec2(-0.35, 0.3));
+}
+
+vec3 third_eye(in vec2 st, in vec3 color) {
+    st.y -= 0.235;
+    st.x += 0.055;
+    float angle = PI * 0.45;
+    st *= r2(angle);
+    st *= 40.0;
+    st.x *= 2.0;
+
+    return apply_eye(st, color, 0.0, vec2(-0.5, -0.3));
+}
+
+vec3 apply_eyes(in vec2 st, in vec3 color) {
+    color = right_eye(st, color);
+    color = left_eye(st, color);
+    color = third_eye(st, color);
+
+    return color;
+}
+
+// Crystal ball
+// ---------------------
 // based on Circuits by Kali
 // https://www.shadertoy.com/view/XlX3Rj
 vec3 formula(in vec2 st, in vec2 c) {
@@ -78,6 +270,8 @@ vec3 formula(in vec2 st, in vec2 c) {
     float circ = pow(max(0.0, width - min_mag * 0.1) / width, 6.0);
     float shape = max(pow(max(0.0, width - min_comp) / width, 0.25), circ);
 
+    vec2 m = mouse / resolution.x;
+
     float t = time * 0.1;
     vec3 color = palette(
         last_stable / iterations,
@@ -85,9 +279,9 @@ vec3 formula(in vec2 st, in vec2 c) {
         vec3(0.5, 0.5, 0.5),
         vec3(1.0, 1.0, 1.0),
         fract(vec3(
-            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x,
-            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x + 0.1,
-            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x + 0.2
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x * ball_sensitivity + 0.8 + m.x,
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x * ball_sensitivity + 0.1 + m.y,
+            texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x * ball_sensitivity
         ))
     );
 
@@ -121,7 +315,6 @@ vec3 fill_ball(in vec2 st) {
 #define TAU 6.28318530718
 const vec2 s = vec2(1, 1.7320508);
 float hash21(vec2 p) { return fract(sin(dot(p, vec2(141.13, 289.97))) * 43758.5453); }
-mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 
 // A diamond of sorts - Stretched in a way so as to match the dimensions of a
 // cube face in an isometric scene.
@@ -156,14 +349,8 @@ vec3 background(in vec2 st) {
         vec3(0.5, 0.5, 0.5), 
         vec3(0.5, 0.5, 0.5),
         vec3(1.0, 1.0, 1.0),
-        vec3(0.4, 0.2, 1.0)
-    ) * 0.5;
-    
-    color *= mix(vec3(0.0), vec3(1.0), vec3(
-        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x,
-        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x,
-        texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x
-    ));
+        vec3(0.4, 0.1, 1.0)
+    );
 
     // tile flipping
     if (rnd > 0.5) {
@@ -180,6 +367,8 @@ vec3 background(in vec2 st) {
     } else if (p.y * s.y < p.x * s.x) {
         face_id = 2.0;
     }
+
+    color *= mix(0.01, 0.3, clamp(get_spectrum(fract(rnd * face_id + 0.9)), 0.0, 1.0));;
 
     // Decorating the cube faces:
     // Three rotated diamonds to represent the face borders.
@@ -207,10 +396,6 @@ vec3 background(in vec2 st) {
     return sqrt(max(color, 0.0));
 }
 
-float get_spectrum(float i) {
-    return clamp(texture(sampler2D(spectrum, spectrum_sampler), vec2(fract(i), 0)).x, 0.0, 1.0);
-}
-
 vec2 get_aspect_ratio() {
     return vec2(
         max(1.0, resolution.x / resolution.y),
@@ -223,16 +408,17 @@ void main() {
     vec2 og = st;
 
     // scale space with bass
-    float scale = mix(1.02, 1.0, get_spectrum(0.2));
+    float scale = mix(1.0 + scale_strength, 1.0, get_spectrum(0.2));
     st *= scale;
 
     // apply random shake with treble
-    float shake = mix(0.0, 0.01, get_spectrum(0.6));
+    float shake = mix(0.0, shake_strength, get_spectrum(0.66));
     st += rand2(vec2(0.0, time)) * shake;
     
     // fetch image pixel, if it has color return it
     frag_color = image_color(st);
     if (frag_color.a > 0.5) {
+        frag_color = vec4(apply_eyes(st, frag_color.rgb), frag_color.a);
         return;
     }
 
@@ -255,8 +441,8 @@ void main() {
     // compute color for pixel
     if (ball_mask > 0.0) {
         color = fill_ball(st - center) * ball_mask * smoothstep(ball_size, ball_size - 0.1, d);
-        float shine_d = distance(center + vec2(-0.1, 0.1), ball_st);
-        color += smoothstep(0.1, 0.0, shine_d);
+        float shine_d = distance(center + vec2(-0.12, 0.13), ball_st);
+        color += pow(smoothstep(0.06, 0.0, shine_d), 4.0) * 0.5;
     } else if (bg_mask > 0.0) {
         color = background(og) * bg_mask;
     }

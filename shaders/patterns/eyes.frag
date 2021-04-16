@@ -13,6 +13,9 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
+// based on Beutypi by iq
+// https://www.shadertoy.com/view/lsfGRr
+
 #define PI 3.14159265359
 #define AUDIO_REACTIVE 0
 
