@@ -93,8 +93,8 @@ vec3 eye_color(in vec2 st, in vec2 id, in vec2 shine_cent) {
 
     // get a random shift
     shift = vec2(
-        noise3(vec3(time * 2.0, id.x * 17.67, id.y * 23.42)),
-        noise3(vec3(time * 2.0, id.x * 11.94, id.y * 27.65))
+        noise3(vec3(time * 2.0, id.x * 17.67, id.x * 230.42)),
+        noise3(vec3(time * 2.0, id.x * 409.94, id.x * 97.65))
     ) * 2.0 - 1.0;
     shift = pow(shift, vec2(3.0));
     shift *= 0.8;
@@ -176,7 +176,7 @@ vec3 apply_eye(in vec2 st, in vec3 color, float id, in vec2 shine_cent) {
     float bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
     float eye_mask = top_eyelid + bottom_eyelid;
 
-    if (eye_mask > 0.1) {
+    if (eye_mask > 0.9) {
         return color;
     }
 
@@ -184,11 +184,15 @@ vec3 apply_eye(in vec2 st, in vec3 color, float id, in vec2 shine_cent) {
 
     float blink = smoothstep(0.05, 0.0, abs(noise3(vec3(time * 0.5, id, 0.0)) - 0.5));
     eyelid = mix(eyelid, 0.0, blink);
+    eyelid -= abs(st.y);
 
-    top_eyelid = smoothstep(0.2, 0.0, eyelid - st.y);
-    bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
-    color = mix(color, vec3(0.15, 0.69, 0.58) * 0.5, top_eyelid + bottom_eyelid);
-    // color = vec3(0.15, 0.69, 0.58);
+    // eye lid shading
+    color = mix(color,  vec3(0.15, 0.13, 0.41) * 0.5, smoothstep(0.2, 0.0, eyelid));
+    color = mix(color, vec3(0.15, 0.69, 0.58), min(1.0, smoothstep(0.0, -0.1, eyelid)));
+    if (eyelid < 0.0) {
+        color += min(0.0, eyelid) * 0.3;
+        color -= abs(st.x) * 0.1;
+    }
 
     return color;
 }
@@ -209,7 +213,7 @@ vec3 left_eye(in vec2 st, in vec3 color) {
     st.x -= 0.031;
     float angle = 0.05;
     st *= r2(angle);
-    st *= 48.0;
+    st *= 45.0;
     st.y *= 0.8;
 
     return apply_eye(st, color, 2.0, vec2(-0.35, 0.3));
@@ -306,8 +310,8 @@ vec3 fill_ball(in vec2 st) {
     float scale = 1.5 + sin(t / 25.0);
     st *= scale;
 
-    vec2 c = vec2(-0.6);
-    c += vec2(sin(t / 11.0), sin(t / 13.0)) * 0.5;
+    vec2 c = vec2(-0.4);
+    c += vec2(sin(t / 11.0), sin(t / 13.0)) * 0.3;
 
     color = formula(st, c);
 
@@ -415,7 +419,7 @@ void main() {
     vec2 og = st;
 
     // scale space with bass
-    float scale = mix(1.0 + scale_strength, 1.0, get_spectrum(0.2));
+    float scale = mix(1.0 + scale_strength, 1.0, get_spectrum(0.1));
     st *= scale;
 
     // apply random shake with treble
