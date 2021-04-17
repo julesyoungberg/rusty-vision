@@ -44,7 +44,12 @@ const float shake_strength = 0.05;
 
 mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 
-vec4 image_color(in vec2 p) {
+vec4 image_color(in vec2 p, in vec2 ar) {
+    vec2 image_ar = vec2(
+        min(1.0, image_size.x / image_size.y),
+        min(1.0, image_size.y / image_size.x)
+    );
+    p /= image_ar;
     p += 0.5;
     p.y = 1.0 - p.y;
     vec4 color = texture(sampler2D(image, image_sampler), p);
@@ -81,7 +86,7 @@ vec3 eye_color(in vec2 st, in vec2 id, in vec2 shine_cent) {
 
     float strength = 0.0;
     if (AUDIO_REACTIVE == 1) {
-        float i = fract(dot(id, id) * 0.01);
+        float i = fract(dot(id, id) * 0.008);
         strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(i, 0)).x;
         // strength *= (i * 8.0 + 1.0);
     }
@@ -122,9 +127,9 @@ vec3 eye_color(in vec2 st, in vec2 id, in vec2 shine_cent) {
             pupil_scale = smoothstep(0.5, 0.05, strength) * 0.5 + 0.5;
         }
         // eye color
-        color = fract(vec3(0.0 + sin(id.x * 3.77), 0.3 + sin(id.y * 5.14), 0.4 + sin((id.x + id.y) * 7.35)));
+        color = vec3(0.1, 0.6, 0.5);
         f = fbm(st * 5.0);
-        color = mix(color, vec3(0.2, 0.5, 0.4), f);
+        color = mix(color, color + vec3(0.0, 0.2, 0.2), f);
         // pupil fade
         f = smoothstep(0.6, 0.2, r);
         color = mix(color, vec3(0.9, 0.6, 0.2), f);
@@ -171,7 +176,7 @@ vec3 apply_eye(in vec2 st, in vec3 color, float id, in vec2 shine_cent) {
     float bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
     float eye_mask = top_eyelid + bottom_eyelid;
 
-    if (eye_mask > 0.9) {
+    if (eye_mask > 0.1) {
         return color;
     }
 
@@ -182,40 +187,41 @@ vec3 apply_eye(in vec2 st, in vec3 color, float id, in vec2 shine_cent) {
 
     top_eyelid = smoothstep(0.2, 0.0, eyelid - st.y);
     bottom_eyelid = smoothstep(0.2, 0.0, eyelid + st.y);
-    color = mix(color, vec3(0.15, 0.69, 0.58) * 2.0, top_eyelid + bottom_eyelid);
+    color = mix(color, vec3(0.15, 0.69, 0.58) * 0.5, top_eyelid + bottom_eyelid);
+    // color = vec3(0.15, 0.69, 0.58);
 
     return color;
 }
 
 vec3 right_eye(in vec2 st, in vec3 color) {
     st.y -= 0.165;
-    st.x += 0.125;
-    float angle = -0.15;
+    st.x += 0.091;
+    float angle = -0.2;
     st *= r2(angle);
-    st *= 50.0;
-    st.x *= 0.9;
+    st *= 60.0;
+    st.y *= 0.8;
 
     return apply_eye(st, color, 1.0, vec2(-0.35, 0.3));
 }
 
 vec3 left_eye(in vec2 st, in vec3 color) {
     st.y -= 0.175;
-    st.x -= 0.045;
+    st.x -= 0.031;
     float angle = 0.05;
     st *= r2(angle);
-    st *= 40.0;
-    st.x *= 0.9;
+    st *= 48.0;
+    st.y *= 0.8;
 
     return apply_eye(st, color, 2.0, vec2(-0.35, 0.3));
 }
 
 vec3 third_eye(in vec2 st, in vec3 color) {
-    st.y -= 0.235;
-    st.x += 0.055;
-    float angle = PI * 0.45;
+    st.y -= 0.233;
+    st.x += 0.042;
+    float angle = PI * 0.49;
     st *= r2(angle);
-    st *= 40.0;
-    st.x *= 2.0;
+    st *= 68.0;
+    st.y *= 0.8;
 
     return apply_eye(st, color, 0.0, vec2(-0.5, -0.3));
 }
@@ -332,7 +338,7 @@ vec4 get_hex(vec2 p) {
 }
 
 vec3 background(in vec2 st) {
-    vec4 hex = get_hex(st * 6.0 + s.yx * time * 0.5);
+    vec4 hex = get_hex(st * 8.0 + s.yx * time * 0.5);
     vec2 p = hex.xy;
 
     // Relative squared distance from the center.
@@ -404,7 +410,8 @@ vec2 get_aspect_ratio() {
 }
 
 void main() {
-    vec2 st = uv * 0.5 * get_aspect_ratio();
+    vec2 ar = get_aspect_ratio();
+    vec2 st = uv * 0.5 * ar;
     vec2 og = st;
 
     // scale space with bass
@@ -416,10 +423,14 @@ void main() {
     st += rand2(vec2(0.0, time)) * shake;
     
     // fetch image pixel, if it has color return it
-    frag_color = image_color(st);
-    if (frag_color.a > 0.5) {
-        frag_color = vec4(apply_eyes(st, frag_color.rgb), frag_color.a);
-        return;
+    frag_color = image_color(st, ar);
+    // for pictures with drawing
+    if (frag_color.a > 0.1) {
+        // hack for removing artifact in image
+        if (st.x > -0.2 || st.y < 0.2) {
+            frag_color = vec4(apply_eyes(st, frag_color.rgb), 1.0);
+            return;
+        }
     }
 
     // reset
@@ -433,15 +444,14 @@ void main() {
     const float bg_radius = ball_size + ball_border;
     
     // compute d and masks
-    vec2 ball_st = st * vec2(0.75, 1.0);
-    float d = distance(center, ball_st);
+    float d = distance(center, st);
     float ball_mask = smoothstep(ball_size, ball_size - 0.001, d);
     float bg_mask = smoothstep(bg_radius, bg_radius + 0.1, d);
 
     // compute color for pixel
     if (ball_mask > 0.0) {
         color = fill_ball(st - center) * ball_mask * smoothstep(ball_size, ball_size - 0.1, d);
-        float shine_d = distance(center + vec2(-0.12, 0.13), ball_st);
+        float shine_d = distance(center + vec2(-0.12, 0.13), st);
         color += pow(smoothstep(0.06, 0.0, shine_d), 4.0) * 0.5;
     } else if (bg_mask > 0.0) {
         color = background(og) * bg_mask;
