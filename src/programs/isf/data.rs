@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 
-use isf;
 use nannou::image;
 use nannou::prelude::*;
 use std::collections::HashMap;
@@ -56,10 +55,7 @@ pub enum ImageState {
 impl ImageState {
     /// Whether or not the texture is currently loading.
     pub fn is_loading(&self) -> bool {
-        match *self {
-            ImageState::Loading(_) => true,
-            _ => false,
-        }
+        matches!(*self, ImageState::Loading(_))
     }
 
     /// If the image has been loaded, provides access to the result.
@@ -175,7 +171,7 @@ impl IsfInputData {
                 let init = n
                     .default
                     .or(n.min)
-                    .or(n.values.first().cloned())
+                    .or_else(|| n.values.first().cloned())
                     .unwrap_or_default();
                 IsfInputData::Long(init)
             }
@@ -188,7 +184,11 @@ impl IsfInputData {
                 IsfInputData::Point2d(pt2(x, y))
             }
             isf::InputType::Color(c) => {
-                let v = c.default.clone().or(c.min.clone()).unwrap_or_default();
+                let v = c
+                    .default
+                    .clone()
+                    .or_else(|| c.min.clone())
+                    .unwrap_or_default();
                 let r = v.get(0).cloned().unwrap_or_default();
                 let g = v.get(1).cloned().unwrap_or_default();
                 let b = v.get(2).cloned().unwrap_or_default();

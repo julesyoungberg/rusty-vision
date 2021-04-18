@@ -1,6 +1,5 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
-use isf;
 use std::path::Path;
 use thiserror::Error;
 
@@ -21,7 +20,7 @@ pub enum IsfError {
 
 pub fn read_isf_from_path(path: &Path) -> Result<isf::Isf, IsfError> {
     std::fs::read_to_string(path)
-        .map_err(|err| IsfError::from(err))
+        .map_err(IsfError::from)
         .and_then(|s| isf::parse(&s).map_err(From::from))
 }
 

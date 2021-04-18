@@ -1,6 +1,5 @@
 // A fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
-use isf;
 use nannou::prelude::*;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -96,7 +95,7 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
     // Create the textures for the "IMPORTED" images.
     let mut binding = 1;
     let mut imported_textures = vec![];
-    for (name, _) in &isf.imported {
+    for name in isf.imported.keys() {
         let s = format!(
             "layout(set = 2, binding = {}) uniform texture2D {};\n",
             binding, name

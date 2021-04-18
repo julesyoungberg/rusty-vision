@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 
-use isf;
 use nannou::prelude::*;
 use std::path::{Path, PathBuf};
 use threadpool::ThreadPool;
