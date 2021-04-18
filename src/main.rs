@@ -182,7 +182,7 @@ fn mouse_released(_app: &App, model: &mut app::Model, _: nannou::event::MouseBut
         .mouse_down = 0;
 }
 
-fn update(app: &App, model: &mut app::Model, _update: Update) {
+fn update(app: &App, model: &mut app::Model, update: Update) {
     if model.paused {
         return;
     }
@@ -191,7 +191,7 @@ fn update(app: &App, model: &mut app::Model, _update: Update) {
     let device = window.swap_chain_device();
     let num_samples = window.msaa_samples();
 
-    model.encode_update(app, &window, device, num_samples);
+    model.encode_update(app, update, &window, device, num_samples);
 
     if model.program_store.is_multipass() {
         // reset pass index
@@ -254,7 +254,12 @@ fn draw(model: &app::Model, frame: &Frame) {
             .encode_render_pass(frame.texture_view(), &mut *encoder);
     } else {
         let device = frame.device_queue_pair().device();
-        model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
+
+        if let Some(isf_pipeline) = &model.program_store.isf_pipeline {
+            isf_pipeline.encode_to_frame(&frame, model.program_store.isf_time.unwrap());
+        } else {
+            model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
+        }
     }
 }
 

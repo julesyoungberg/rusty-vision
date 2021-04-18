@@ -1,5 +1,7 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
+#![allow(dead_code)]
+
 use isf;
 use nannou::prelude::*;
 use std::path::{Path, PathBuf};

@@ -282,7 +282,7 @@ pub fn compile_shader(
 }
 
 #[derive(Debug)]
-enum ShaderSource {
+pub enum ShaderSource {
     Path(PathBuf),
     HardCoded,
 }

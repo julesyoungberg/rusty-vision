@@ -1,15 +1,16 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
+#![allow(dead_code)]
+
 use isf;
 use nannou::image;
 use nannou::prelude::*;
-use std::path::{Path, PathBuf};
-use thiserror::Error;
-use std::sync::mpsc;
-use threadpool::ThreadPool;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::mpsc;
+use thiserror::Error;
+use threadpool::ThreadPool;
 
-pub const DEFAULT_IMAGE_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 pub const DEFAULT_AUDIO_SAMPLE_COUNT: u32 = 64;
 pub const DEFAULT_AUDIO_FFT_COLUMNS: u32 = 64;
 pub const DEFAULT_AUDIO_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::R32Float;
@@ -23,7 +24,7 @@ pub struct ImageData {
 
 #[derive(Debug)]
 pub struct ImageLoader {
-    threadpool: ThreadPool,
+    pub threadpool: ThreadPool,
 }
 
 /// Errors that might occur while loading an image.
@@ -51,7 +52,6 @@ pub enum ImageState {
     Loading(mpsc::Receiver<Result<image::RgbaImage, ImageLoadError>>),
     Ready(Result<ImageData, ImageLoadError>),
 }
-
 
 impl ImageState {
     /// Whether or not the texture is currently loading.
@@ -205,9 +205,7 @@ impl IsfInputData {
                 IsfInputData::Image(image_state)
             }
             isf::InputType::Audio(a) => {
-                let n_samples = a
-                    .num_samples
-                    .unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
+                let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
                 let samples = vec![0.0; n_samples as usize];
                 let size = [n_samples, 1];
                 let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
@@ -215,9 +213,7 @@ impl IsfInputData {
                 IsfInputData::Audio { samples, texture }
             }
             isf::InputType::AudioFft(a) => {
-                let n_columns = a
-                    .num_columns
-                    .unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
+                let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
                 let columns = vec![0.0; n_columns as usize];
                 let size = [n_columns, 1];
                 let format = DEFAULT_AUDIO_TEXTURE_FORMAT;

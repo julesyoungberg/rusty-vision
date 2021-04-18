@@ -1,12 +1,13 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
 use crate::util;
 
 mod config;
-// pub mod isf;
+pub mod isf;
 pub mod program;
 mod shaders;
 pub mod uniforms;
@@ -26,6 +27,8 @@ pub struct ProgramStore {
     pub error: Option<String>,
     pub folder_index: usize,
     pub folder_names: Option<Vec<String>>,
+    pub isf_pipeline: Option<isf::IsfPipeline>,
+    pub isf_time: Option<isf::IsfTime>,
     pub program_names: Option<Vec<String>>,
     pub program_index: usize,
 
@@ -61,6 +64,8 @@ impl ProgramStore {
             error: None,
             folder_index: 0,
             folder_names: None,
+            isf_pipeline: None,
+            isf_time: None,
             program_index: 0,
             program_names: None,
             shader_watcher,
@@ -114,6 +119,94 @@ impl ProgramStore {
 
         current_program.compile(app, device);
         self.create_render_pipeline(device, num_samples);
+    }
+
+    fn configure_isf_program(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        program_config: &config::ProgramConfig,
+        folder_name: String,
+        num_samples: u32,
+        size: Point2,
+    ) {
+        let shader_path = app
+            .project_path()
+            .unwrap()
+            .join("shaders")
+            .join(folder_name)
+            .join(program_config.pipeline.frag.clone());
+
+        let media_path = app.project_path().unwrap().join("media");
+
+        let isf_pipeline = isf::IsfPipeline::new(
+            device,
+            encoder,
+            None,
+            shader_path,
+            Frame::TEXTURE_FORMAT,
+            [size[0] as u32, size[1] as u32],
+            num_samples,
+            &media_path,
+        );
+
+        let isf_time = Default::default();
+
+        self.isf_pipeline = Some(isf_pipeline);
+        self.isf_time = Some(isf_time);
+        self.error = None;
+        self.current_program = None;
+    }
+
+    fn configure_program(
+        &mut self,
+        app: &App,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        program_config: &config::ProgramConfig,
+        folder_name: String,
+        num_samples: u32,
+        size: Point2,
+    ) {
+        if let Some(isf) = program_config.isf {
+            if isf {
+                self.configure_isf_program(
+                    app,
+                    device,
+                    encoder,
+                    program_config,
+                    folder_name,
+                    num_samples,
+                    size,
+                );
+                return;
+            }
+        }
+
+        self.isf_pipeline = None;
+        self.isf_time = None;
+
+        // create current program
+        let current_program = program::Program::new(program_config.clone(), folder_name);
+        self.current_program = Some(current_program);
+
+        // get subscriptions and initialize
+        let current_subscriptions =
+            uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
+        self.buffer_store.configure(
+            app,
+            device,
+            encoder,
+            &current_subscriptions,
+            &program_config.config,
+            size,
+            num_samples,
+        );
+
+        self.current_subscriptions = Some(current_subscriptions);
+        self.compile_current(app, device, num_samples);
+        self.error = None;
     }
 
     /// Read fresh config and recompile
@@ -281,49 +374,46 @@ impl ProgramStore {
             }
         };
 
-        // create current program
-        let current_program = program::Program::new(program_config.clone(), folder_name.clone());
-        self.current_program = Some(current_program);
-
-        // get subscriptions and initialize
-        let current_subscriptions =
-            uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
-        self.buffer_store.configure(
+        self.configure_program(
             app,
             device,
             encoder,
-            &current_subscriptions,
-            &program_config.config,
-            size,
+            program_config,
+            folder_name,
             num_samples,
+            size,
         );
+    }
 
-        self.current_subscriptions = Some(current_subscriptions);
-        self.compile_current(app, device, num_samples);
-        self.error = None;
+    fn path_changed(&mut self) -> Option<PathBuf> {
+        match self.changes_channel.try_recv() {
+            Ok(event) => match event {
+                DebouncedEvent::Write(path) => Some(path),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 
     /// Check if changes have been made to shaders and recompile if needed.
     /// Call every timestep.
-    pub fn update_shaders(
+    fn update_shaders(
         &mut self,
         app: &App,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
-        num_samples: u32,
         size: Point2,
+        num_samples: u32,
+        path_changed: Option<PathBuf>,
     ) {
-        // check for changes
-        if let Ok(event) = self.changes_channel.try_recv() {
-            if let DebouncedEvent::Write(path) = event {
-                let path_str = path.into_os_string().into_string().unwrap();
-                println!("changes written to: {}", path_str);
+        if let Some(path) = path_changed {
+            let path_str = path.into_os_string().into_string().unwrap();
+            println!("changes written to: {}", path_str);
 
-                if path_str.ends_with(".json") {
-                    self.configure(app, device, encoder, num_samples, size);
-                } else {
-                    self.compile_current(app, device, num_samples);
-                }
+            if path_str.ends_with(".json") {
+                self.configure(app, device, encoder, num_samples, size);
+            } else {
+                self.compile_current(app, device, num_samples);
             }
         }
 
@@ -342,7 +432,7 @@ impl ProgramStore {
 
     /// Update uniform data.
     /// Call every timestep.
-    pub fn update_uniforms(
+    fn update_uniforms(
         &mut self,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
@@ -353,6 +443,38 @@ impl ProgramStore {
             self.buffer_store
                 .update(device, encoder, current_subscriptions, size, num_samples);
         }
+    }
+
+    /// Update data and shaders.
+    pub fn encode_update(
+        &mut self,
+        app: &App,
+        update: Update,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        size: Point2,
+        num_samples: u32,
+    ) {
+        let path_changed = self.path_changed();
+
+        if let Some(isf_pipeline) = self.isf_pipeline.as_mut() {
+            let mut touched: Vec<String> = vec![];
+            if let Some(path) = path_changed.clone() {
+                touched.push(String::from(path.to_str().unwrap()));
+            }
+
+            let images_path = app.project_path().unwrap().join("media");
+            isf_pipeline.encode_update(device, encoder, &images_path, touched);
+
+            if let Some(isf_time) = self.isf_time.as_mut() {
+                isf_time.time = update.since_start.secs() as _;
+                isf_time.time_delta = update.since_last.secs() as _;
+            }
+        } else {
+            self.update_uniforms(device, encoder, size, num_samples);
+        }
+
+        self.update_shaders(app, device, encoder, size, num_samples, path_changed);
     }
 
     /// Fetch current GPU program.
@@ -390,7 +512,7 @@ impl ProgramStore {
         self.program_index = selected;
 
         let folder_name = self.get_folder_name()?;
-        let config = &self.config.as_ref()?;
+        let config = self.config.clone()?;
         let folder_config = config.folders.get(&folder_name).unwrap();
 
         let program_config = match folder_config.programs.get(name) {
@@ -401,25 +523,15 @@ impl ProgramStore {
             }
         };
 
-        self.current_program = Some(program::Program::new(
-            program_config.clone(),
-            folder_name.clone(),
-        ));
-
-        let current_subscriptions =
-            uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
-        self.buffer_store.configure(
+        self.configure_program(
             app,
             device,
             encoder,
-            &current_subscriptions,
-            &program_config.config,
-            size,
+            program_config,
+            folder_name,
             num_samples,
+            size,
         );
-
-        self.current_subscriptions = Some(current_subscriptions);
-        self.error = None;
 
         Some(true)
     }

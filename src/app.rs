@@ -124,6 +124,7 @@ impl Model {
     pub fn encode_update(
         &mut self,
         app: &App,
+        update: Update,
         window: &Ref<'_, Window>,
         device: &wgpu::Device,
         num_samples: u32,
@@ -138,10 +139,7 @@ impl Model {
         }
 
         self.program_store
-            .update_uniforms(device, &mut encoder, self.size, num_samples);
-
-        self.program_store
-            .update_shaders(app, device, &mut encoder, num_samples, self.size);
+            .encode_update(app, update, device, &mut encoder, self.size, num_samples);
 
         if self.resized {
             let msaa_samples = window.msaa_samples();
