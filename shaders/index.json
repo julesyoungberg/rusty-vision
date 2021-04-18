@@ -1,9 +1,10 @@
 {
-  "default": "collabs",
+  "default": "isf",
   "folders": [
     "basic",
     "collabs",
     "fractals",
+    "isf",
     "kaleidoscopes",
     "patterns",
     "video",

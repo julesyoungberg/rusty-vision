@@ -241,14 +241,13 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
 
 /// Draw the state of the app to the frame
 fn draw(model: &app::Model, frame: &Frame) {
-    let mut encoder = frame.command_encoder();
-
     let multipass = match &model.program_store.current_subscriptions {
         Some(s) => s.multipass,
         None => false,
     };
 
     if multipass {
+        let mut encoder = frame.command_encoder();
         model
             .texture_reshaper
             .encode_render_pass(frame.texture_view(), &mut *encoder);
@@ -258,6 +257,7 @@ fn draw(model: &app::Model, frame: &Frame) {
         if let Some(isf_pipeline) = &model.program_store.isf_pipeline {
             isf_pipeline.encode_to_frame(&frame, model.program_store.isf_time.unwrap());
         } else {
+            let mut encoder = frame.command_encoder();
             model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
         }
     }

@@ -1,0 +1,17 @@
+{
+  "default": "basic",
+  "programs": {
+    "basic": {
+      "pipeline": {
+        "frag": "basic.fs"
+      },
+      "isf": true
+    },
+    "image": {
+      "pipeline": {
+        "frag": "image.fs"
+      },
+      "isf": true
+    }
+  }
+}

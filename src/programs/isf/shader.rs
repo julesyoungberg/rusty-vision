@@ -149,13 +149,14 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
         // ISF provided short-hand for retrieving image color.
         vec4 IMG_PIXEL(texture2D img, vec2 px_coord) {
             ivec2 s = IMG_SIZE(img);
-            vec2 norm_px_coord = vec2(px_coord.x / float(s.x), px_coord.y / float(s.y));
+            vec2 norm_px_coord = vec2(px_coord.x / float(s.x), 1.0 - px_coord.y / float(s.y));
             return IMG_NORM_PIXEL(img, px_coord);
         }
 
         // ISF provided short-hand for retrieving image color.
         vec4 IMG_THIS_NORM_PIXEL(texture2D img) {
-            return IMG_NORM_PIXEL(img, isf_FragNormCoord);
+            vec2 c = vec2(isf_FragNormCoord.x, 1.0 - isf_FragNormCoord.y);
+            return IMG_NORM_PIXEL(img, c);
         }
 
         // ISF provided short-hand for retrieving image color.
@@ -280,6 +281,19 @@ pub fn compile_shader(
     (module, compile_err)
 }
 
+/// Compile a regular, non-ISF shader.
+///
+/// This is used for compiling the vertex shaders.
+pub fn compile_inline_shader(
+    device: &wgpu::Device,
+    code: &str,
+) -> (Option<wgpu::ShaderModule>, Option<ShaderError>) {
+    let res = hotglsl::compile_str(code, hotglsl::ShaderType::Vertex).map_err(From::from);
+    let (bytes, compile_err) = util::split_result(res);
+    let module = bytes.map(|b| wgpu::shader_from_spirv_bytes(device, &b));
+    (module, compile_err)
+}
+
 #[derive(Debug)]
 pub enum ShaderSource {
     Path(PathBuf),
@@ -326,9 +340,8 @@ impl Shader {
 
     /// Create the default vertex shader for ISF fragment shaders.
     pub fn vertex_default(device: &wgpu::Device) -> Self {
-        let vs = include_bytes!("shaders/vert.spv");
-        let module = Some(wgpu::shader_from_spirv_bytes(device, vs));
-        let error = None;
+        let vs = include_str!("shaders/default.vs");
+        let (module, error) = compile_inline_shader(device, vs);
         let source = ShaderSource::HardCoded;
         Shader {
             source,
