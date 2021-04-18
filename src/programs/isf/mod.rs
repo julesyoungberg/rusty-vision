@@ -2,7 +2,6 @@
 
 use isf;
 use nannou::prelude::*;
-use nannou::wgpu::BufferInitDescriptor;
 use std::path::{Path, PathBuf};
 use threadpool::ThreadPool;
 
@@ -119,11 +118,7 @@ fn create_pipeline_layout(
     device: &wgpu::Device,
     bind_group_layouts: &[&wgpu::BindGroupLayout],
 ) -> wgpu::PipelineLayout {
-    let desc = wgpu::PipelineLayoutDescriptor {
-        label: None,
-        bind_group_layouts,
-        push_constant_ranges: &[],
-    };
+    let desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
     device.create_pipeline_layout(&desc)
 }
 
@@ -156,7 +151,7 @@ impl IsfPipeline {
         images_path: &Path,
     ) -> Self {
         let isf_res = util::read_isf_from_path(&fs_path);
-        let (isf, isf_error) = util::split_result(isf_res);
+        let (isf, error) = util::split_result(isf_res);
 
         // Create the shaders
         let fs = shader::Shader::fragment_from_path(device, fs_path);
@@ -200,16 +195,10 @@ impl IsfPipeline {
         let isf_input_uniforms: data::IsfInputUniforms = [0u32; 128];
         let isf_input_uniforms_bytes = isf_input_uniforms_as_bytes(&isf_input_uniforms);
         let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-        let isf_uniform_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: &isf_uniforms_bytes,
-            usage: uniforms_usage,
-        });
-        let isf_inputs_uniform_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: &isf_input_uniforms_bytes,
-            usage: uniforms_usage,
-        });
+        let isf_uniform_buffer =
+            device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
+        let isf_inputs_uniform_buffer =
+            device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
 
         // Prepare the bind group layouts.
         let isf_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
@@ -262,16 +251,12 @@ impl IsfPipeline {
         // The quad vertex buffer.
         let vertices_bytes = vertices_as_bytes(&VERTICES[..]);
         let vertex_usage = wgpu::BufferUsage::VERTEX;
-        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: vertices_bytes,
-            usage: vertex_usage,
-        });
+        let vertex_buffer = device.create_buffer_with_data(vertices_bytes, vertex_usage);
 
         Self {
             isf,
             isf_data,
-            isf_err,
+            isf_err: error,
             image_loader,
             vs,
             fs,
@@ -436,11 +421,7 @@ impl IsfPipeline {
             };
             let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
             let usage = wgpu::BufferUsage::COPY_SRC;
-            let new_buffer = device.create_buffer_init(&BufferInitDescriptor {
-                label: None,
-                contents: &isf_uniforms_bytes,
-                usage,
-            });
+            let new_buffer = device.create_buffer_with_data(&isf_uniforms_bytes, usage);
             let size = isf_uniforms_bytes.len() as wgpu::BufferAddress;
             encoder.copy_buffer_to_buffer(&new_buffer, 0, &self.isf_uniform_buffer, 0, size);
 
@@ -454,7 +435,7 @@ impl IsfPipeline {
                 .color_attachment(dst_texture, |color| color)
                 .begin(encoder);
             render_pass.set_pipeline(pipeline);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
             render_pass.set_bind_group(0, &self.isf_bind_group, &[]);
             render_pass.set_bind_group(1, &self.isf_inputs_bind_group, &[]);
             render_pass.set_bind_group(2, &self.isf_textures_bind_group, &[]);

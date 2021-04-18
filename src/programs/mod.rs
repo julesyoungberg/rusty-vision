@@ -286,7 +286,8 @@ impl ProgramStore {
         self.current_program = Some(current_program);
 
         // get subscriptions and initialize
-        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
+        let current_subscriptions =
+            uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
         self.buffer_store.configure(
             app,
             device,
@@ -405,7 +406,8 @@ impl ProgramStore {
             folder_name.clone(),
         ));
 
-        let current_subscriptions = uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
+        let current_subscriptions =
+            uniforms::get_subscriptions(&program_config.uniforms.as_ref().unwrap());
         self.buffer_store.configure(
             app,
             device,

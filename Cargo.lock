@@ -1452,8 +1452,7 @@ dependencies = [
 [[package]]
 name = "hotglsl"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0838d22d76d20794a418e1a658c2264d5ba425ad1bd3afdfb254ec5aa4dacb5e"
+source = "git+https://github.com/nannou-org/hotglsl?branch=master#0066deaf2d428ffe73e697c7ec7f2e5af74571e4"
 dependencies = [
  "glsl-to-spirv",
  "notify 5.0.0-pre.6",
