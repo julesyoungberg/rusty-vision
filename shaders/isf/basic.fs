@@ -1,11 +1,11 @@
 /*{
-        "DESCRIPTION": "demonstrates the use of float-type inputs",
-        "CREDIT": "by zoidberg",
-        "ISFVSN": "2.0",
-        "CATEGORIES": [
-                "TEST-GLSL FX"
-        ],
-        "INPUTS": []
+    "DESCRIPTION": "demonstrates the use of float-type inputs",
+    "CREDIT": "by zoidberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [
+        "TEST-GLSL FX"
+    ],
+    "INPUTS": []
 }*/
 
 void main() {

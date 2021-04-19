@@ -297,7 +297,8 @@ impl IsfData {
     }
 }
 
-// Ensure the image state map is up to date.
+/// Ensure the image state map is up to date.
+/// Update the GPU with new data.
 pub fn sync_isf_data(
     device: &wgpu::Device,
     encoder: &mut wgpu::CommandEncoder,
@@ -307,7 +308,7 @@ pub fn sync_isf_data(
     images_path: &Path,
     isf_data: &mut IsfData,
 ) {
-    // Update imported images. first.
+    // Update imported images.
     isf_data
         .imported
         .retain(|name, _| isf.imported.contains_key(name));
@@ -319,7 +320,7 @@ pub fn sync_isf_data(
         state.update(device, encoder, image_loader, img.path.clone());
     }
 
-    // First, check all imported textures are loading.
+    // Check all imported textures are loading.
     isf_data
         .inputs
         .retain(|key, _| isf.inputs.iter().map(|i| &i.name).any(|n| n == key));

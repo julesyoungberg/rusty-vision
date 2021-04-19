@@ -81,6 +81,32 @@ fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
     unsafe { wgpu::bytes::from_slice(data) }
 }
 
+fn float_as_bytes(data: &f32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+fn get_isf_input_uniforms_bytes_vec(
+    isf_opt: &Option<isf::Isf>,
+    isf_data: &data::IsfData,
+) -> Vec<u8> {
+    let isf = match isf_opt {
+        Some(i) => i,
+        None => return vec![],
+    };
+
+    let mut bytes = vec![];
+
+    for input in &isf.inputs {
+        println!("{:?}", input.name);
+        match &input.ty {
+            isf::InputType::Float(val) => bytes.extend(float_as_bytes(&val.default.unwrap())),
+            _ => (),
+        }
+    }
+
+    bytes
+}
+
 // Includes the sampler and then all textures for all images and passes.
 fn create_isf_textures_bind_group_layout(
     device: &wgpu::Device,
@@ -193,8 +219,10 @@ impl IsfPipeline {
             frame_index: 0,
         };
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
-        let isf_input_uniforms: data::IsfInputUniforms = [0u32; 128];
-        let isf_input_uniforms_bytes = isf_input_uniforms_as_bytes(&isf_input_uniforms);
+        // let isf_input_uniforms: data::IsfInputUniforms = [0u32; 128];
+        // let isf_input_uniforms_bytes = isf_input_uniforms_as_bytes(&isf_input_uniforms);
+        let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
+        let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
         let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let isf_uniform_buffer =
             device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
@@ -219,7 +247,7 @@ impl IsfPipeline {
             .buffer::<data::IsfUniforms>(&isf_uniform_buffer, 0..1)
             .build(device, &isf_bind_group_layout);
         let isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
-            .buffer::<data::IsfInputUniforms>(&isf_inputs_uniform_buffer, 0..1)
+            .buffer_bytes(&isf_inputs_uniform_buffer, 0..1)
             .build(device, &isf_inputs_bind_group_layout);
         let isf_textures_bind_group = create_isf_textures_bind_group(
             device,

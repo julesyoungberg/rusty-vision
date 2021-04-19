@@ -1,5 +1,5 @@
 {
-  "default": "basic",
+  "default": "testFloat",
   "programs": {
     "basic": {
       "pipeline": {
@@ -7,9 +7,9 @@
       },
       "isf": true
     },
-    "image": {
+    "testFloat": {
       "pipeline": {
-        "frag": "image.fs"
+        "frag": "test_float.fs"
       },
       "isf": true
     }
