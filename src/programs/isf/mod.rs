@@ -219,8 +219,6 @@ impl IsfPipeline {
             frame_index: 0,
         };
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
-        // let isf_input_uniforms: data::IsfInputUniforms = [0u32; 128];
-        // let isf_input_uniforms_bytes = isf_input_uniforms_as_bytes(&isf_input_uniforms);
         let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
         let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
         let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
