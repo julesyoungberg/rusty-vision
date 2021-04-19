@@ -94,12 +94,13 @@ fn get_isf_input_uniforms_bytes_vec(
         None => return vec![],
     };
 
+    let data_inputs = isf_data.inputs();
     let mut bytes = vec![];
 
     for input in &isf.inputs {
-        println!("{:?}", input.name);
-        match &input.ty {
-            isf::InputType::Float(val) => bytes.extend(float_as_bytes(&val.default.unwrap())),
+        let data = data_inputs.get(&input.name).unwrap();
+        match data {
+            data::IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
             _ => (),
         }
     }
