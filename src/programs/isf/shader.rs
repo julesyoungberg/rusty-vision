@@ -51,11 +51,11 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
     // Create the `IsfData` uniform buffer with time, date, etc.
     let isf_data_str = "
         layout(set = 0, binding = 0) uniform IsfData {
-            int PASSINDEX;
+            vec4 DATE;
             vec2 RENDERSIZE;
+            int PASSINDEX;
             float TIME;
             float TIMEDELTA;
-            vec4 DATE;
             int FRAMEINDEX;
         };
     ";

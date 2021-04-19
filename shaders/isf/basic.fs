@@ -11,7 +11,7 @@
 void main() {
     vec3 color = vec3(0.0);
 
-    color.rg += isf_FragNormCoord;
+    color = vec3(isf_FragNormCoord, sin(TIME) * 0.5 + 0.5);
 
     gl_FragColor = vec4(color, 1.0);
 }

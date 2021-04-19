@@ -376,11 +376,11 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct IsfUniforms {
-    pub pass_index: i32,
+    pub date: [f32; 4],
     pub render_size: [f32; 2],
+    pub pass_index: i32,
     pub time: f32,
     pub time_delta: f32,
-    pub date: [f32; 4],
     pub frame_index: i32,
 }
 

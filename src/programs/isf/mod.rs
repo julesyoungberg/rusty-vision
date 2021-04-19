@@ -413,11 +413,11 @@ impl IsfPipeline {
             // Encode an update for the ISF uniform buffer.
             let [w, h] = self.dst_texture_size;
             let isf_uniforms = data::IsfUniforms {
-                pass_index: 0,
+                date: isf_time.date,
                 render_size: [w as f32, h as f32],
+                pass_index: 0,
                 time: isf_time.time,
                 time_delta: isf_time.time_delta,
-                date: isf_time.date,
                 frame_index: isf_time.frame_index,
             };
             let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
@@ -428,8 +428,8 @@ impl IsfPipeline {
 
             // TODO: Update the inputs.
             let _ = &self.isf_inputs_uniform_buffer;
-            //let size = std::mem::size_of::<IsfInputUniforms>() as wgpu::BufferAddress;
-            //encoder.copy_buffer_to_buffer(&new_buffer, 0, &self.isf_inputs_uniform_buffer, 0, size);
+            // let size = std::mem::size_of::<data::IsfInputUniforms>() as wgpu::BufferAddress;
+            // encoder.copy_buffer_to_buffer(&new_buffer, 0, &self.isf_inputs_uniform_buffer, 0, size);
 
             // Encode the render pass.
             let mut render_pass = wgpu::RenderPassBuilder::new()
