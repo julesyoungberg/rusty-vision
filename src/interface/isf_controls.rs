@@ -26,7 +26,7 @@ pub fn height(model: &mut app::Model) -> f32 {
             isf::InputType::Float(_) | isf::InputType::Long(_) => {
                 height += 35.0;
             }
-            isf::InputType::Point2d(_) => {
+            isf::InputType::Point2d(_) | isf::InputType::Color(_) => {
                 height += 50.0;
             }
             _ => (),
@@ -152,6 +152,61 @@ pub fn update(
                     }
 
                     offset = 92.0;
+                }
+                (data::IsfInputData::Color(val), isf::InputType::Color(input_config)) => {
+                    let min = input_config.min.clone().unwrap_or(vec![0.0, 0.0, 0.0, 0.0]);
+                    let max = input_config.max.clone().unwrap_or(vec![1.0, 1.0, 1.0, 1.0]);
+                    let mut v = *val;
+
+                    let mut label_name = input.name.clone();
+                    label_name.push_str("-label");
+                    let mut r_name = input.name.clone();
+                    r_name.push_str("-r");
+                    let mut g_name = input.name.clone();
+                    g_name.push_str("-g");
+                    let mut b_name = input.name.clone();
+                    b_name.push_str("-b");
+                    let mut a_name = input.name.clone();
+                    a_name.push_str("-a");
+
+                    components::label(input.name.as_str())
+                        .left(offset - 50.0)
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
+
+                    if let Some(value) = components::r_4d_slider(v.red, min[0], max[0])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&r_name).unwrap(), ui)
+                    {
+                        v.red = value;
+                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                    }
+
+                    if let Some(value) = components::g_4d_slider(v.green, min[1], max[1])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&g_name).unwrap(), ui)
+                    {
+                        v.green = value;
+                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                    }
+
+                    if let Some(value) = components::b_4d_slider(v.blue, min[2], max[2])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&b_name).unwrap(), ui)
+                    {
+                        v.blue = value;
+                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                    }
+
+                    if let Some(value) = components::a_4d_slider(v.alpha, min[3], max[3])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&a_name).unwrap(), ui)
+                    {
+                        v.alpha = value;
+                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                    }
+
+                    offset = 145.0;
                 }
                 _ => (),
             };

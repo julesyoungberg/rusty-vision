@@ -83,6 +83,14 @@ pub fn slider_2d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, 
         .border(0.0)
 }
 
+pub fn slider_4d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    widget::Slider::new(val, min, max)
+        .w_h(40.0, 20.0)
+        .label_font_size(10)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+}
+
 pub fn unit_slider(val: f32) -> widget::Slider<'static, f32> {
     slider_3d_small(val, 0.0, 1.0)
 }
@@ -132,4 +140,32 @@ pub fn y_2d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32>
         .rgb(0.3, 0.3, 0.3)
         .right(10.0)
         .label("Y")
+}
+
+pub fn r_4d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_4d_small(val, min, max)
+        .rgb(0.8, 0.3, 0.3)
+        .down(5.0)
+        .label("R")
+}
+
+pub fn g_4d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_4d_small(val, min, max)
+        .rgb(0.3, 0.8, 0.3)
+        .right(10.0)
+        .label("G")
+}
+
+pub fn b_4d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_4d_small(val, min, max)
+        .rgb(0.3, 0.3, 0.8)
+        .right(10.0)
+        .label("B")
+}
+
+pub fn a_4d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_4d_small(val, min, max)
+        .rgb(0.5, 0.5, 0.5)
+        .right(10.0)
+        .label("A")
 }

@@ -76,49 +76,8 @@ fn isf_uniforms_as_bytes(data: &data::IsfUniforms) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
-fn isf_input_uniforms_as_bytes(data: &[u32]) -> &[u8] {
-    unsafe { wgpu::bytes::from_slice(data) }
-}
-
 fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
     unsafe { wgpu::bytes::from_slice(data) }
-}
-
-fn float_as_bytes(data: &f32) -> &[u8] {
-    unsafe { wgpu::bytes::from(data) }
-}
-
-fn long_as_bytes(data: &i32) -> &[u8] {
-    unsafe { wgpu::bytes::from(data) }
-}
-
-fn point_as_bytes(data: &Vector2<f32>) -> &[u8] {
-    unsafe { wgpu::bytes::from(data) }
-}
-
-fn get_isf_input_uniforms_bytes_vec(
-    isf_opt: &Option<isf::Isf>,
-    isf_data: &data::IsfData,
-) -> Vec<u8> {
-    let isf = match isf_opt {
-        Some(i) => i,
-        None => return vec![],
-    };
-
-    let data_inputs = isf_data.inputs();
-    let mut bytes = vec![];
-
-    for input in &isf.inputs {
-        let data = data_inputs.get(&input.name).unwrap();
-        match data {
-            data::IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
-            data::IsfInputData::Long(val) => bytes.extend(long_as_bytes(val)),
-            data::IsfInputData::Point2d(point) => bytes.extend(point_as_bytes(point)),
-            _ => (),
-        }
-    }
-
-    bytes
 }
 
 // Includes the sampler and then all textures for all images and passes.
@@ -249,7 +208,7 @@ impl IsfPipeline {
             .build(device, &isf_bind_group_layout);
 
         println!("creating isf input uniforms");
-        let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
+        let isf_input_uniforms_bytes_vec = data::get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
         let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
         let isf_inputs_uniform_buffer =
             device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
@@ -402,7 +361,7 @@ impl IsfPipeline {
 
         if isf_updated {
             let isf_input_uniforms_bytes_vec =
-                get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
+                data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
             let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
             let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
             self.isf_inputs_uniform_buffer =
@@ -497,7 +456,7 @@ impl IsfPipeline {
 
             // Update the input uniforms
             let isf_input_uniforms_bytes_vec =
-                get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
+                data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
             let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
             let new_buffer = device.create_buffer_with_data(&isf_input_uniforms_bytes, usage);
             let inputs_size = isf_input_uniforms_bytes.len() as wgpu::BufferAddress;
@@ -567,7 +526,15 @@ impl IsfPipeline {
                     let name = input.name.clone();
                     widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
                     widget_ids.insert(name.clone() + "-x", ui.generate_widget_id());
-                    widget_ids.insert(name + "-y", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-y", ui.generate_widget_id());
+                }
+                isf::InputType::Color(_) => {
+                    let name = input.name.clone();
+                    widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-r", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-g", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-b", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-a", ui.generate_widget_id());
                 }
                 _ => (),
             };

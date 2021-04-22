@@ -387,4 +387,41 @@ pub struct IsfUniforms {
     pub frame_index: i32,
 }
 
-pub type IsfInputUniforms = [u32; 128];
+fn float_as_bytes(data: &f32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+fn long_as_bytes(data: &i32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+fn point_as_bytes(data: &Vector2<f32>) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+fn color_as_bytes(data: &LinSrgba) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+pub fn get_isf_input_uniforms_bytes_vec(isf_opt: &Option<isf::Isf>, isf_data: &IsfData) -> Vec<u8> {
+    let isf = match isf_opt {
+        Some(i) => i,
+        None => return vec![],
+    };
+
+    let data_inputs = isf_data.inputs();
+    let mut bytes = vec![];
+
+    for input in &isf.inputs {
+        let data = data_inputs.get(&input.name).unwrap();
+        match data {
+            IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
+            IsfInputData::Long(val) => bytes.extend(long_as_bytes(val)),
+            IsfInputData::Point2d(point) => bytes.extend(point_as_bytes(point)),
+            IsfInputData::Color(color) => bytes.extend(color_as_bytes(color)),
+            _ => (),
+        }
+    }
+
+    bytes
+}

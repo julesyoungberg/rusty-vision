@@ -1,9 +1,15 @@
 {
-  "default": "testPoint",
+  "default": "testColor",
   "programs": {
     "basic": {
       "pipeline": {
         "frag": "basic.fs"
+      },
+      "isf": true
+    },
+    "testColor": {
+      "pipeline": {
+        "frag": "test_color.fs"
       },
       "isf": true
     },
