@@ -88,6 +88,7 @@ widget_ids! {
         video_speed,
         fps_container,
         fps,
+        isf_inputs_title,
     }
 }
 
@@ -117,10 +118,6 @@ pub struct Model {
 
 impl Model {
     /// Update app state.
-    /// WARNING: order is very important here.
-    /// The image uniforms use an update flag so other parts of the app know to update.
-    /// This flag is set by the interface and unset by the profram store.
-    /// Update order should be: interface, uniforms, shaders
     pub fn encode_update(
         &mut self,
         app: &App,

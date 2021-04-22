@@ -3,10 +3,12 @@
 #![allow(dead_code)]
 
 use nannou::prelude::*;
+use nannou::ui::prelude::*;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use threadpool::ThreadPool;
 
-mod data;
+pub mod data;
 mod shader;
 mod util;
 
@@ -46,8 +48,9 @@ pub struct IsfTime {
 
 /// A render pipeline designed for hotloading!
 pub struct IsfPipeline {
-    isf: Option<isf::Isf>,
+    pub isf: Option<isf::Isf>,
     pub isf_data: data::IsfData,
+    pub widget_ids: Option<HashMap<String, widget::Id>>,
     isf_err: Option<util::IsfError>,
     image_loader: data::ImageLoader,
     vs: shader::Shader,
@@ -210,6 +213,7 @@ impl IsfPipeline {
         }
 
         // Prepare the uniform buffers.
+        let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let [dst_tex_w, dst_tex_h] = dst_texture_size;
         let isf_uniforms = data::IsfUniforms {
             pass_index: 0,
@@ -219,35 +223,31 @@ impl IsfPipeline {
             date: [0.0; 4],
             frame_index: 0,
         };
+
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
-        let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
-        let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
-        let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
         let isf_uniform_buffer =
             device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
-        let isf_inputs_uniform_buffer =
-            device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
-
-        // Prepare the bind group layouts.
         let isf_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
             .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
             .build(device);
-        let isf_inputs_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
-            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
-            .build(device);
-        let isf_textures_bind_group_layout =
-            create_isf_textures_bind_group_layout(device, &isf_data);
-
-        // Create the sampler.
-        let sampler = wgpu::SamplerBuilder::new().build(device);
-
-        // Create the bind groups
         let isf_bind_group = wgpu::BindGroupBuilder::new()
             .buffer::<data::IsfUniforms>(&isf_uniform_buffer, 0..1)
             .build(device, &isf_bind_group_layout);
+
+        let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
+        let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
+        let isf_inputs_uniform_buffer =
+            device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+        let isf_inputs_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
+            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
+            .build(device);
         let isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
             .buffer_bytes(&isf_inputs_uniform_buffer, 0..1)
             .build(device, &isf_inputs_bind_group_layout);
+
+        let isf_textures_bind_group_layout =
+            create_isf_textures_bind_group_layout(device, &isf_data);
+        let sampler = wgpu::SamplerBuilder::new().build(device);
         let isf_textures_bind_group = create_isf_textures_bind_group(
             device,
             &isf_textures_bind_group_layout,
@@ -285,6 +285,7 @@ impl IsfPipeline {
             isf,
             isf_data,
             isf_err: error,
+            widget_ids: None,
             image_loader,
             vs,
             fs,
@@ -355,6 +356,9 @@ impl IsfPipeline {
                 if self.isf.is_none() {
                     self.isf = new_isf;
                 }
+                // TODO handle changes to inputs
+                // update buffer
+                // recreate pipeline
             }
         }
 
@@ -450,13 +454,28 @@ impl IsfPipeline {
             let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
             let usage = wgpu::BufferUsage::COPY_SRC;
             let new_buffer = device.create_buffer_with_data(&isf_uniforms_bytes, usage);
-            let size = isf_uniforms_bytes.len() as wgpu::BufferAddress;
-            encoder.copy_buffer_to_buffer(&new_buffer, 0, &self.isf_uniform_buffer, 0, size);
+            let uniforms_size = isf_uniforms_bytes.len() as wgpu::BufferAddress;
+            encoder.copy_buffer_to_buffer(
+                &new_buffer,
+                0,
+                &self.isf_uniform_buffer,
+                0,
+                uniforms_size,
+            );
 
-            // TODO: Update the inputs.
-            let _ = &self.isf_inputs_uniform_buffer;
-            // let size = std::mem::size_of::<data::IsfInputUniforms>() as wgpu::BufferAddress;
-            // encoder.copy_buffer_to_buffer(&new_buffer, 0, &self.isf_inputs_uniform_buffer, 0, size);
+            // Update the input uniforms
+            let isf_input_uniforms_bytes_vec =
+                get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
+            let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
+            let new_buffer = device.create_buffer_with_data(&isf_input_uniforms_bytes, usage);
+            let inputs_size = isf_input_uniforms_bytes.len() as wgpu::BufferAddress;
+            encoder.copy_buffer_to_buffer(
+                &new_buffer,
+                0,
+                &self.isf_inputs_uniform_buffer,
+                0,
+                inputs_size,
+            );
 
             // Encode the render pass.
             let mut render_pass = wgpu::RenderPassBuilder::new()
@@ -496,5 +515,26 @@ impl IsfPipeline {
     /// vertex shader.
     pub fn fs_err(&self) -> Option<&shader::ShaderError> {
         self.fs.error.as_ref()
+    }
+
+    /// Generates the widget ids needed for the ISF's inputs.
+    pub fn generate_widget_ids(&mut self, ui: &mut Ui) {
+        let isf = match &self.isf {
+            Some(i) => i,
+            None => return,
+        };
+
+        let mut widget_ids = HashMap::new();
+
+        for input in &isf.inputs {
+            match &input.ty {
+                isf::InputType::Float(_) => {
+                    widget_ids.insert(input.name.clone(), ui.generate_widget_id());
+                }
+                _ => (),
+            };
+        }
+
+        self.widget_ids = Some(widget_ids);
     }
 }

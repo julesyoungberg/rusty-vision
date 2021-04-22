@@ -291,6 +291,11 @@ impl IsfData {
         &self.inputs
     }
 
+    /// The mutable map of all declared inputs.
+    pub fn inputs_mut(&mut self) -> &mut HashMap<InputName, IsfInputData> {
+        &mut self.inputs
+    }
+
     /// The texture stored for each pass.
     pub fn passes(&self) -> &[wgpu::Texture] {
         &self.passes

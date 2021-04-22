@@ -12,6 +12,7 @@ mod components;
 mod errors;
 mod geometry_controls;
 mod image_controls;
+mod isf_controls;
 mod noise_controls;
 mod video_controls;
 
@@ -20,7 +21,7 @@ fn controls_height(model: &mut app::Model) -> f32 {
 
     let subscriptions = match &model.program_store.current_subscriptions {
         Some(s) => s,
-        None => return height,
+        None => return height + isf_controls::height(model),
     };
 
     [
@@ -68,6 +69,15 @@ pub fn update(
 
     if !model.show_controls {
         return;
+    }
+
+    if let Some(isf_pipeline) = &mut model.program_store.isf_pipeline {
+        match isf_pipeline.widget_ids {
+            Some(_) => (),
+            None => {
+                isf_pipeline.generate_widget_ids(&mut model.ui);
+            }
+        };
     }
 
     let ui = &mut model.ui.set_widgets();
@@ -321,6 +331,11 @@ pub fn update(
                 &mut model.program_store.buffer_store.camera_uniforms,
             );
         }
+    } else if let Some(isf_pipeline) = &mut model.program_store.isf_pipeline {
+        //////////////////////////////////////////////////
+        // ISF UI
+        //////////////////////////////////////////////////
+        isf_controls::update(&model.widget_ids, ui, isf_pipeline);
     }
 
     components::container([80.0, 35.0])
