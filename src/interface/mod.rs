@@ -335,7 +335,7 @@ pub fn update(
         //////////////////////////////////////////////////
         // ISF UI
         //////////////////////////////////////////////////
-        isf_controls::update(&model.widget_ids, ui, isf_pipeline);
+        isf_controls::update(&model.widget_ids, ui, isf_pipeline, model.size);
     }
 
     components::container([80.0, 35.0])

@@ -32,6 +32,7 @@ fn model(app: &App) -> app::Model {
     let window = app.window(main_window_id).unwrap();
     let device = window.swap_chain_device();
     let msaa_samples = window.msaa_samples();
+    println!("num msaa samples: {:?}", msaa_samples);
 
     let desc = wgpu::CommandEncoderDescriptor {
         label: Some("nannou_isf_pipeline_new"),

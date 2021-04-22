@@ -36,7 +36,12 @@ pub fn height(model: &mut app::Model) -> f32 {
     height
 }
 
-pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, isf_pipeline: &mut IsfPipeline) {
+pub fn update(
+    widget_ids: &app::WidgetIds,
+    ui: &mut UiCell,
+    isf_pipeline: &mut IsfPipeline,
+    size: Point2,
+) {
     let isf = match &isf_pipeline.isf {
         Some(isf) => isf,
         None => return,
@@ -46,109 +51,110 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, isf_pipeline: &mut I
         return;
     }
 
-    widget::Text::new("ISF Inputs")
-        .rgb(0.9, 0.9, 0.9)
-        .font_size(18)
-        .parent(widget_ids.controls_wrapper)
-        .down(10.0)
-        .set(widget_ids.isf_inputs_title, ui);
+    if let Some(isf_widget_ids) = &isf_pipeline.widget_ids.as_ref() {
+        widget::Text::new("ISF Inputs")
+            .rgb(0.9, 0.9, 0.9)
+            .font_size(18)
+            .parent(widget_ids.controls_wrapper)
+            .down(10.0)
+            .set(widget_ids.isf_inputs_title, ui);
 
-    let isf_widget_ids = &isf_pipeline.widget_ids.as_ref().unwrap();
-    let data_inputs = isf_pipeline.isf_data.inputs_mut();
-    let mut offset = 0.0;
+        let data_inputs = isf_pipeline.isf_data.inputs_mut();
+        let mut offset = 0.0;
 
-    for input in &isf.inputs {
-        let data = data_inputs.get(&input.name).unwrap().clone();
+        for input in &isf.inputs {
+            let data = data_inputs.get(&input.name).unwrap().clone();
 
-        match (data, &input.ty) {
-            (data::IsfInputData::Float(val), isf::InputType::Float(input_config)) => {
-                let widget_id = match isf_widget_ids.get(&input.name) {
-                    Some(id) => id,
-                    None => continue,
-                };
+            match (data, &input.ty) {
+                (data::IsfInputData::Float(val), isf::InputType::Float(input_config)) => {
+                    let widget_id = match isf_widget_ids.get(&input.name) {
+                        Some(id) => id,
+                        None => continue,
+                    };
 
-                if let Some(value) = components::slider(
-                    *val,
-                    input_config.min.unwrap_or(0.0),
-                    input_config.max.unwrap_or(1.0),
-                )
-                .parent(widget_ids.controls_wrapper)
-                .down(10.0)
-                .left(offset)
-                .label(input.name.as_str())
-                .set(*widget_id, ui)
-                {
-                    data_inputs.insert(input.name.clone(), data::IsfInputData::Float(value));
-                }
-
-                offset = 0.0;
-            }
-            (data::IsfInputData::Long(val), isf::InputType::Long(input_config)) => {
-                let widget_id = match isf_widget_ids.get(&input.name) {
-                    Some(id) => id,
-                    None => continue,
-                };
-
-                let min = input_config.min.unwrap_or(0) as f32;
-                let range = input_config.max.unwrap_or(1) as f32 - min;
-
-                if let Some(value) = components::slider((*val as f32 - min) / range, 0.0, 1.0)
+                    if let Some(value) = components::slider(
+                        *val,
+                        input_config.min.unwrap_or(0.0),
+                        input_config.max.unwrap_or(1.0),
+                    )
                     .parent(widget_ids.controls_wrapper)
                     .down(10.0)
-                    .left(offset)
+                    .left(offset - 200.0)
                     .label(input.name.as_str())
                     .set(*widget_id, ui)
-                {
-                    data_inputs.insert(
-                        input.name.clone(),
-                        data::IsfInputData::Long((value * range + min).round() as i32),
-                    );
+                    {
+                        data_inputs.insert(input.name.clone(), data::IsfInputData::Float(value));
+                    }
+
+                    offset = 0.0;
                 }
+                (data::IsfInputData::Long(val), isf::InputType::Long(input_config)) => {
+                    let widget_id = match isf_widget_ids.get(&input.name) {
+                        Some(id) => id,
+                        None => continue,
+                    };
 
-                offset = 0.0;
-            }
-            (data::IsfInputData::Point2d(val), isf::InputType::Point2d(input_config)) => {
-                let min = input_config.min.unwrap_or([0.0, 0.0]);
-                let max = input_config.max.unwrap_or([1.0, 1.0]);
-                let mut v = *val;
+                    let min = input_config.min.unwrap_or(0) as f32;
+                    let range = input_config.max.unwrap_or(1) as f32 - min;
 
-                let mut label_name = input.name.clone();
-                label_name.push_str("-label");
-                let mut x_name = input.name.clone();
-                x_name.push_str("-x");
-                let mut y_name = input.name.clone();
-                y_name.push_str("-y");
+                    if let Some(value) = components::slider((*val as f32 - min) / range, 0.0, 1.0)
+                        .parent(widget_ids.controls_wrapper)
+                        .down(10.0)
+                        .left(offset - 200.0)
+                        .label(input.name.as_str())
+                        .set(*widget_id, ui)
+                    {
+                        data_inputs.insert(
+                            input.name.clone(),
+                            data::IsfInputData::Long((value * range + min).round() as i32),
+                        );
+                    }
 
-                components::label(input.name.as_str())
-                    .left(offset - 43.0)
-                    .parent(widget_ids.controls_wrapper)
-                    .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
-
-                if let Some(value) = components::x_2d_slider(v[0], min[0], max[0])
-                    .parent(widget_ids.controls_wrapper)
-                    .set(*isf_widget_ids.get(&x_name).unwrap(), ui)
-                {
-                    v[0] = value;
-                    data_inputs.insert(
-                        input.name.clone(),
-                        data::IsfInputData::Point2d(vec2(v[0], v[1])),
-                    );
+                    offset = 0.0;
                 }
+                (data::IsfInputData::Point2d(val), isf::InputType::Point2d(input_config)) => {
+                    let min = input_config.min.unwrap_or([0.0, 0.0]);
+                    let max = input_config.max.unwrap_or([size[0] * 2.0, size[1] * 2.0]);
+                    let mut v = *val;
 
-                if let Some(value) = components::y_2d_slider(v[1], min[1], max[1])
-                    .parent(widget_ids.controls_wrapper)
-                    .set(*isf_widget_ids.get(&y_name).unwrap(), ui)
-                {
-                    v[1] = value;
-                    data_inputs.insert(
-                        input.name.clone(),
-                        data::IsfInputData::Point2d(vec2(v[0], v[1])),
-                    );
+                    let mut label_name = input.name.clone();
+                    label_name.push_str("-label");
+                    let mut x_name = input.name.clone();
+                    x_name.push_str("-x");
+                    let mut y_name = input.name.clone();
+                    y_name.push_str("-y");
+
+                    components::label(input.name.as_str())
+                        .left(offset - 43.0)
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
+
+                    if let Some(value) = components::x_2d_slider(v[0], min[0], max[0])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&x_name).unwrap(), ui)
+                    {
+                        v[0] = value;
+                        data_inputs.insert(
+                            input.name.clone(),
+                            data::IsfInputData::Point2d(vec2(v[0], v[1])),
+                        );
+                    }
+
+                    if let Some(value) = components::y_2d_slider(v[1], min[1], max[1])
+                        .parent(widget_ids.controls_wrapper)
+                        .set(*isf_widget_ids.get(&y_name).unwrap(), ui)
+                    {
+                        v[1] = value;
+                        data_inputs.insert(
+                            input.name.clone(),
+                            data::IsfInputData::Point2d(vec2(v[0], v[1])),
+                        );
+                    }
+
+                    offset = 92.0;
                 }
-
-                offset = 92.0;
-            }
-            _ => (),
-        };
+                _ => (),
+            };
+        }
     }
 }
