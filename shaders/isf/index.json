@@ -1,5 +1,5 @@
 {
-  "default": "testFloat",
+  "default": "testLong",
   "programs": {
     "basic": {
       "pipeline": {
@@ -10,6 +10,12 @@
     "testFloat": {
       "pipeline": {
         "frag": "test_float.fs"
+      },
+      "isf": true
+    },
+    "testLong": {
+      "pipeline": {
+        "frag": "test_long.fs"
       },
       "isf": true
     }

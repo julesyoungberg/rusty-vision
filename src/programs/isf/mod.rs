@@ -88,6 +88,10 @@ fn float_as_bytes(data: &f32) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
+fn long_as_bytes(data: &i32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
 fn get_isf_input_uniforms_bytes_vec(
     isf_opt: &Option<isf::Isf>,
     isf_data: &data::IsfData,
@@ -104,6 +108,7 @@ fn get_isf_input_uniforms_bytes_vec(
         let data = data_inputs.get(&input.name).unwrap();
         match data {
             data::IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
+            data::IsfInputData::Long(val) => bytes.extend(long_as_bytes(val)),
             _ => (),
         }
     }
@@ -238,6 +243,7 @@ impl IsfPipeline {
             .buffer::<data::IsfUniforms>(&isf_uniform_buffer, 0..1)
             .build(device, &isf_bind_group_layout);
 
+        println!("creating isf input uniforms");
         let isf_input_uniforms_bytes_vec = get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
         let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
         let isf_inputs_uniform_buffer =
@@ -246,6 +252,7 @@ impl IsfPipeline {
         let isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
             .buffer_bytes(&isf_inputs_uniform_buffer, 0..1)
             .build(device, &isf_inputs_bind_group_layout);
+        println!("created isf input uniforms");
 
         let isf_textures_bind_group_layout =
             create_isf_textures_bind_group_layout(device, &isf_data);
@@ -548,7 +555,7 @@ impl IsfPipeline {
 
         for input in &isf.inputs {
             match &input.ty {
-                isf::InputType::Float(_) => {
+                isf::InputType::Float(_) | isf::InputType::Long(_) => {
                     widget_ids.insert(input.name.clone(), ui.generate_widget_id());
                 }
                 _ => (),

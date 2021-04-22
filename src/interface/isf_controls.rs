@@ -22,7 +22,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 
     for input in &isf.inputs {
         match &input.ty {
-            isf::InputType::Float(_) => {
+            isf::InputType::Float(_) | isf::InputType::Long(_) => {
                 height += 35.0;
             }
             _ => (),
@@ -77,6 +77,27 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, isf_pipeline: &mut I
                 .set(*widget_id, ui)
                 {
                     data_inputs.insert(input.name.clone(), data::IsfInputData::Float(value));
+                }
+            }
+            data::IsfInputData::Long(val) => {
+                let input_config = match &input.ty {
+                    isf::InputType::Long(c) => c,
+                    _ => continue,
+                };
+
+                let min = input_config.min.unwrap_or(0) as f32;
+                let range = input_config.max.unwrap_or(1) as f32 - min;
+
+                if let Some(value) = components::slider((*val as f32 - min) / range, 0.0, 1.0)
+                    .parent(widget_ids.controls_wrapper)
+                    .down(10.0)
+                    .label(input.name.as_str())
+                    .set(*widget_id, ui)
+                {
+                    data_inputs.insert(
+                        input.name.clone(),
+                        data::IsfInputData::Long((value * range + min).round() as i32),
+                    );
                 }
             }
             _ => (),
