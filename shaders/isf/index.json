@@ -1,5 +1,5 @@
 {
-  "default": "testLong",
+  "default": "testPoint",
   "programs": {
     "basic": {
       "pipeline": {
@@ -16,6 +16,12 @@
     "testLong": {
       "pipeline": {
         "frag": "test_long.fs"
+      },
+      "isf": true
+    },
+    "testPoint": {
+      "pipeline": {
+        "frag": "test_point.fs"
       },
       "isf": true
     }

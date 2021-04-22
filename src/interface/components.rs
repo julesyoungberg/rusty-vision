@@ -67,7 +67,7 @@ pub fn slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
         .border(0.0)
 }
 
-pub fn slider_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+pub fn slider_3d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
     widget::Slider::new(val, min, max)
         .w_h(60.0, 20.0)
         .label_font_size(10)
@@ -75,8 +75,16 @@ pub fn slider_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32
         .border(0.0)
 }
 
+pub fn slider_2d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    widget::Slider::new(val, min, max)
+        .w_h(92.0, 20.0)
+        .label_font_size(10)
+        .label_rgb(1.0, 1.0, 1.0)
+        .border(0.0)
+}
+
 pub fn unit_slider(val: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, 0.0, 1.0)
+    slider_3d_small(val, 0.0, 1.0)
 }
 
 pub fn red_slider(val: f32) -> widget::Slider<'static, f32> {
@@ -92,22 +100,36 @@ pub fn blue_slider(val: f32) -> widget::Slider<'static, f32> {
 }
 
 pub fn x_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
+    slider_3d_small(val, min, max)
         .rgb(0.3, 0.3, 0.3)
         .down(5.0)
         .label("X")
 }
 
 pub fn y_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
+    slider_3d_small(val, min, max)
         .rgb(0.3, 0.3, 0.3)
         .right(10.0)
         .label("Y")
 }
 
 pub fn z_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
-    slider_small(val, min, max)
+    slider_3d_small(val, min, max)
         .rgb(0.3, 0.3, 0.3)
         .right(10.0)
         .label("Z")
+}
+
+pub fn x_2d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_2d_small(val, min, max)
+        .rgb(0.3, 0.3, 0.3)
+        .down(5.0)
+        .label("X")
+}
+
+pub fn y_2d_slider(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
+    slider_2d_small(val, min, max)
+        .rgb(0.3, 0.3, 0.3)
+        .right(10.0)
+        .label("Y")
 }

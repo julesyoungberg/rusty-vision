@@ -92,6 +92,10 @@ fn long_as_bytes(data: &i32) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
+fn point_as_bytes(data: &Vector2<f32>) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
 fn get_isf_input_uniforms_bytes_vec(
     isf_opt: &Option<isf::Isf>,
     isf_data: &data::IsfData,
@@ -109,6 +113,7 @@ fn get_isf_input_uniforms_bytes_vec(
         match data {
             data::IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
             data::IsfInputData::Long(val) => bytes.extend(long_as_bytes(val)),
+            data::IsfInputData::Point2d(point) => bytes.extend(point_as_bytes(point)),
             _ => (),
         }
     }
@@ -557,6 +562,12 @@ impl IsfPipeline {
             match &input.ty {
                 isf::InputType::Float(_) | isf::InputType::Long(_) => {
                     widget_ids.insert(input.name.clone(), ui.generate_widget_id());
+                }
+                isf::InputType::Point2d(_) => {
+                    let name = input.name.clone();
+                    widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
+                    widget_ids.insert(name.clone() + "-x", ui.generate_widget_id());
+                    widget_ids.insert(name + "-y", ui.generate_widget_id());
                 }
                 _ => (),
             };
