@@ -1,4 +1,3 @@
-use isf;
 use nannou::ui::prelude::*;
 
 use crate::app;
@@ -15,7 +14,7 @@ pub fn height(model: &mut app::Model) -> f32 {
         None => return 0.0,
     };
 
-    if isf.inputs.len() == 0 {
+    if isf.inputs.is_empty() {
         return 0.0;
     }
 
@@ -39,7 +38,7 @@ pub fn update(widget_ids: &app::WidgetIds, ui: &mut UiCell, isf_pipeline: &mut I
         None => return,
     };
 
-    if isf.inputs.len() == 0 {
+    if isf.inputs.is_empty() {
         return;
     }
 

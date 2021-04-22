@@ -189,11 +189,11 @@ impl IsfInputData {
                     .clone()
                     .or_else(|| c.min.clone())
                     .unwrap_or_default();
-                let r = v.get(0).cloned().unwrap_or_default();
-                let g = v.get(1).cloned().unwrap_or_default();
-                let b = v.get(2).cloned().unwrap_or_default();
-                let a = v.get(3).cloned().unwrap_or_default();
-                IsfInputData::Color(lin_srgba(r, g, b, a))
+                let red = v.get(0).cloned().unwrap_or_default();
+                let green = v.get(1).cloned().unwrap_or_default();
+                let blue = v.get(2).cloned().unwrap_or_default();
+                let alpha = v.get(3).cloned().unwrap_or_default();
+                IsfInputData::Color(lin_srgba(red, green, blue, alpha))
             }
             // For the input images, it's up to us how we want to source them. Perhaps
             // `assets/images/`?  For now we'll black images.
@@ -228,8 +228,7 @@ impl IsfInputData {
     /// This is useful for checking to see if the user has changed the type of data associated with
     /// the name.
     pub fn ty_matches(&self, ty: &isf::InputType) -> bool {
-        match (self, ty) {
-            (IsfInputData::Event { .. }, isf::InputType::Event)
+        matches!((self, ty), (IsfInputData::Event { .. }, isf::InputType::Event)
             | (IsfInputData::Bool(_), isf::InputType::Bool(_))
             | (IsfInputData::Long(_), isf::InputType::Long(_))
             | (IsfInputData::Float(_), isf::InputType::Float(_))
@@ -237,9 +236,7 @@ impl IsfInputData {
             | (IsfInputData::Color(_), isf::InputType::Color(_))
             | (IsfInputData::Image(_), isf::InputType::Image)
             | (IsfInputData::Audio { .. }, isf::InputType::Audio(_))
-            | (IsfInputData::AudioFft { .. }, isf::InputType::AudioFft(_)) => true,
-            _ => false,
-        }
+            | (IsfInputData::AudioFft { .. }, isf::InputType::AudioFft(_)))
     }
 
     /// Update an existing instance ISF input data instance with the given input.
