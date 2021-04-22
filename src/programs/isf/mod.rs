@@ -170,6 +170,12 @@ fn create_render_pipeline(
         .build(device)
 }
 
+fn build_uniform_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
+    wgpu::BindGroupLayoutBuilder::new()
+        .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
+        .build(device)
+}
+
 impl IsfPipeline {
     pub fn new(
         device: &wgpu::Device,
@@ -227,9 +233,7 @@ impl IsfPipeline {
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
         let isf_uniform_buffer =
             device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
-        let isf_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
-            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
-            .build(device);
+        let isf_bind_group_layout = build_uniform_bind_group_layout(device);
         let isf_bind_group = wgpu::BindGroupBuilder::new()
             .buffer::<data::IsfUniforms>(&isf_uniform_buffer, 0..1)
             .build(device, &isf_bind_group_layout);
@@ -238,9 +242,7 @@ impl IsfPipeline {
         let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
         let isf_inputs_uniform_buffer =
             device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
-        let isf_inputs_bind_group_layout = wgpu::BindGroupLayoutBuilder::new()
-            .uniform_buffer(wgpu::ShaderStage::FRAGMENT, false)
-            .build(device);
+        let isf_inputs_bind_group_layout = build_uniform_bind_group_layout(device);
         let isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
             .buffer_bytes(&isf_inputs_uniform_buffer, 0..1)
             .build(device, &isf_inputs_bind_group_layout);
@@ -333,6 +335,7 @@ impl IsfPipeline {
 
         // Attempt to recompile touched shaders.
         let mut shader_recompiled = false;
+        let mut isf_updated = false;
         for path in touched_shaders {
             let path = path.as_ref();
             if self.vs.source.as_path() == Some(&path) {
@@ -353,12 +356,12 @@ impl IsfPipeline {
                 let isf_res = util::read_isf_from_path(&path);
                 let (new_isf, new_isf_err) = util::split_result(isf_res);
                 self.isf_err = new_isf_err;
-                if self.isf.is_none() {
-                    self.isf = new_isf;
+                if self.isf.is_none() || !new_isf.is_none() {
+                    if self.isf != new_isf {
+                        isf_updated = true;
+                        self.isf = new_isf;
+                    }
                 }
-                // TODO handle changes to inputs
-                // update buffer
-                // recreate pipeline
             }
         }
 
@@ -385,6 +388,20 @@ impl IsfPipeline {
             &mut self.isf_data,
         );
 
+        if isf_updated {
+            let isf_input_uniforms_bytes_vec =
+                get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
+            let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
+            let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
+            self.isf_inputs_uniform_buffer =
+                device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+            self.isf_inputs_bind_group_layout = build_uniform_bind_group_layout(device);
+            self.isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
+                .buffer_bytes(&self.isf_inputs_uniform_buffer, 0..1)
+                .build(device, &self.isf_inputs_bind_group_layout);
+            self.widget_ids = None;
+        }
+
         // UPDATE TEXTURE BIND GROUP
         // -------------------------
 
@@ -400,6 +417,9 @@ impl IsfPipeline {
                 &self.sampler,
                 &self.isf_data,
             );
+        }
+
+        if isf_updated || texture_count_changed {
             self.layout = create_pipeline_layout(
                 device,
                 &[
@@ -413,7 +433,7 @@ impl IsfPipeline {
         // UPDATE RENDER PIPELINE
         // ----------------------
 
-        if shader_recompiled || texture_count_changed {
+        if shader_recompiled || texture_count_changed || isf_updated {
             if let (Some(vs_mod), Some(fs_mod)) = (self.vs.module.as_ref(), self.fs.module.as_ref())
             {
                 self.render_pipeline = Some(create_render_pipeline(
