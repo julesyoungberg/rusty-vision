@@ -51,8 +51,8 @@ pub struct IsfPipeline {
     pub isf: Option<isf::Isf>,
     pub isf_data: data::IsfData,
     pub widget_ids: Option<HashMap<String, widget::Id>>,
-    isf_err: Option<util::IsfError>,
-    image_loader: data::ImageLoader,
+    pub isf_err: Option<util::IsfError>,
+    pub image_loader: data::ImageLoader,
     vs: shader::Shader,
     fs: shader::Shader,
     sampler: wgpu::Sampler,
@@ -524,7 +524,7 @@ impl IsfPipeline {
                 isf::InputType::Float(_) => {
                     widget_ids.insert(name, ui.generate_widget_id());
                 }
-                isf::InputType::Long { .. } => {
+                isf::InputType::Long { .. } | isf::InputType::Image { .. } => {
                     widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
                     widget_ids.insert(name, ui.generate_widget_id());
                 }

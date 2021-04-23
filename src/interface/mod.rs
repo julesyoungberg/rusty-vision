@@ -335,7 +335,14 @@ pub fn update(
         //////////////////////////////////////////////////
         // ISF UI
         //////////////////////////////////////////////////
-        isf_controls::update(&model.widget_ids, ui, isf_pipeline, model.size);
+        isf_controls::update(
+            device,
+            encoder,
+            &model.widget_ids,
+            ui,
+            isf_pipeline,
+            model.size,
+        );
     }
 
     components::container([80.0, 35.0])

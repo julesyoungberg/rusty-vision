@@ -26,7 +26,10 @@ pub fn height(model: &mut app::Model) -> f32 {
             isf::InputType::Float(_) => {
                 height += 35.0;
             }
-            isf::InputType::Long(_) | isf::InputType::Point2d(_) | isf::InputType::Color(_) => {
+            isf::InputType::Long(_)
+            | isf::InputType::Point2d(_)
+            | isf::InputType::Color(_)
+            | isf::InputType::Image { .. } => {
                 height += 50.0;
             }
             _ => (),
@@ -37,6 +40,8 @@ pub fn height(model: &mut app::Model) -> f32 {
 }
 
 pub fn update(
+    device: &wgpu::Device,
+    encoder: &mut wgpu::CommandEncoder,
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
     isf_pipeline: &mut IsfPipeline,
@@ -63,7 +68,7 @@ pub fn update(
         let mut offset = 0.0;
 
         for input in &isf.inputs {
-            let data = data_inputs.get(&input.name).unwrap().clone();
+            let data = data_inputs.get_mut(&input.name).unwrap();
 
             match (data, &input.ty) {
                 (data::IsfInputData::Float(val), isf::InputType::Float(input_config)) => {
@@ -123,6 +128,50 @@ pub fn update(
                     }
 
                     offset = 0.0;
+                }
+                (data::IsfInputData::Image(image_input), isf::InputType::Image) => {
+                    let widget_id = match isf_widget_ids.get(&input.name) {
+                        Some(id) => id,
+                        None => continue,
+                    };
+
+                    let mut label_name = input.name.clone();
+                    label_name.push_str("-label");
+
+                    components::label(input.name.as_str())
+                        .left(offset - 65.0)
+                        .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
+
+                    let labels = &["image", "video", "webcam"];
+                    let selected = match &image_input.source {
+                        data::ImageSource::Image(_) => 0,
+                        data::ImageSource::Video(_) => 1,
+                        data::ImageSource::Webcam(_) => 2,
+                        _ => 0,
+                    };
+
+                    if let Some(index) = components::drop_down(labels, selected)
+                        .parent(widget_ids.controls_wrapper)
+                        .down(5.0)
+                        .set(*widget_id, ui)
+                    {
+                        match labels[index] {
+                            "image" => {
+                                image_input.select_image(
+                                    device,
+                                    encoder,
+                                    &isf_pipeline.image_loader,
+                                );
+                            }
+                            "video" => {
+                                image_input.select_video(device);
+                            }
+                            "webcam" => {
+                                image_input.start_webcam(device, size);
+                            }
+                            _ => {}
+                        };
+                    }
                 }
                 (data::IsfInputData::Point2d(val), isf::InputType::Point2d(input_config)) => {
                     let min = input_config.min.unwrap_or([0.0, 0.0]);

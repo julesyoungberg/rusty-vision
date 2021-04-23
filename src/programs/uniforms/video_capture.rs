@@ -2,6 +2,7 @@ use nannou::image;
 use nannou::prelude::*;
 use opencv::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
+use std::fmt;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::SystemTime;
 use std::{thread, time};
@@ -16,6 +17,18 @@ enum Message {
     SetSpeed(f32),
     Unpause(()),
 }
+
+pub struct VideoConsumer {
+    consumer: Consumer<Vec<Vec<opencv::core::Vec3b>>>,
+}
+
+impl fmt::Debug for VideoConsumer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "VideoConsumer")
+    }
+}
+
+#[derive(Debug)]
 pub struct VideoCapture {
     pub error: Option<String>,
     pub running: bool,
@@ -27,7 +40,7 @@ pub struct VideoCapture {
     message_channel_tx: Sender<Message>,
     error_channel_rx: Receiver<String>,
     frame_data: Vec<Vec<opencv::core::Vec3b>>,
-    video_consumer: Consumer<Vec<Vec<opencv::core::Vec3b>>>,
+    video_consumer: VideoConsumer,
 }
 
 impl VideoCapture {
@@ -132,7 +145,9 @@ impl VideoCapture {
             frame_data: vec![],
             running: true,
             speed,
-            video_consumer,
+            video_consumer: VideoConsumer {
+                consumer: video_consumer,
+            },
             video_size,
             video_texture,
         }
@@ -164,7 +179,7 @@ impl VideoCapture {
             return;
         }
 
-        let popped = self.video_consumer.pop();
+        let popped = self.video_consumer.consumer.pop();
         if let Some(d) = popped {
             self.frame_data = d;
         }

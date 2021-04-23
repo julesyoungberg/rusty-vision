@@ -1,14 +1,18 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
-#![allow(dead_code)]
+// #![allow(dead_code)]
 
 use nannou::image;
 use nannou::prelude::*;
+use opencv::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use thiserror::Error;
 use threadpool::ThreadPool;
+use tinyfiledialogs::open_file_dialog;
+
+use crate::programs::uniforms::video_capture::VideoCapture;
 
 pub const DEFAULT_AUDIO_SAMPLE_COUNT: u32 = 64;
 pub const DEFAULT_AUDIO_FFT_COLUMNS: u32 = 64;
@@ -106,6 +110,104 @@ impl ImageState {
 }
 
 #[derive(Debug)]
+pub enum ImageSource {
+    None,
+    Image(ImageState),
+    Video(VideoCapture),
+    Webcam(VideoCapture),
+}
+
+#[derive(Debug)]
+pub struct ImageInput {
+    pub source: ImageSource,
+}
+
+impl ImageInput {
+    fn new() -> Self {
+        Self {
+            source: ImageSource::None,
+        }
+    }
+
+    fn end_sessions(&mut self) {
+        match &mut self.source {
+            ImageSource::Video(v) => v.end_session(),
+            ImageSource::Webcam(v) => v.end_session(),
+            _ => (),
+        };
+    }
+
+    pub fn load_image(
+        &mut self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        image_loader: &ImageLoader,
+        path: PathBuf,
+    ) {
+        self.end_sessions();
+        let mut image_source = ImageState::None;
+        image_source.update(device, encoder, image_loader, path);
+        self.source = ImageSource::Image(image_source);
+    }
+
+    pub fn select_image(
+        &mut self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        image_loader: &ImageLoader,
+    ) {
+        let filepath = match open_file_dialog("Load Image", "~", Some((&["*.jpg", "*.png"], ""))) {
+            Some(path) => path,
+            None => return,
+        };
+
+        println!("selected image: {:?}", filepath);
+
+        self.load_image(device, encoder, image_loader, PathBuf::from(filepath));
+    }
+
+    pub fn select_video(&mut self, device: &wgpu::Device) {
+        let filepath = match open_file_dialog(
+            "Load Video",
+            "~",
+            Some((&["*.mp4", "*.avi", "*.mov", "*.mpeg", "*.flv", "*.wmv"], "")),
+        ) {
+            Some(filepath) => filepath,
+            None => return,
+        };
+
+        println!("selected video: {:?}", filepath);
+
+        self.end_sessions();
+
+        let capture =
+            opencv::videoio::VideoCapture::from_file(&filepath, opencv::videoio::CAP_ANY).unwrap();
+
+        let video_capture = VideoCapture::new(device, capture, 1.0);
+
+        self.source = ImageSource::Video(video_capture);
+    }
+
+    pub fn start_webcam(&mut self, device: &wgpu::Device, size: Point2) {
+        println!("selected webcam");
+
+        self.end_sessions();
+
+        let mut capture = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
+        capture
+            .set(opencv::videoio::CAP_PROP_FRAME_WIDTH, size[0] as f64)
+            .ok();
+        capture
+            .set(opencv::videoio::CAP_PROP_FRAME_HEIGHT, size[1] as f64)
+            .ok();
+
+        let video_capture = VideoCapture::new(device, capture, 1.0);
+
+        self.source = ImageSource::Webcam(video_capture);
+    }
+}
+
+#[derive(Debug)]
 pub enum IsfInputData {
     Event {
         happening: bool,
@@ -118,7 +220,7 @@ pub enum IsfInputData {
     Float(f32),
     Point2d(Point2),
     Color(LinSrgba),
-    Image(ImageState),
+    Image(ImageInput),
     Audio {
         samples: Vec<f32>,
         texture: wgpu::Texture,
@@ -205,11 +307,11 @@ impl IsfInputData {
             // For the input images, it's up to us how we want to source them. Perhaps
             // `assets/images/`?  For now we'll black images.
             isf::InputType::Image => {
-                let mut image_state = ImageState::None;
+                let mut image_input = ImageInput::new();
                 if let Some(img_path) = image_paths(images_path).next() {
-                    image_state.update(device, encoder, image_loader, img_path);
+                    image_input.load_image(device, encoder, image_loader, img_path);
                 }
-                IsfInputData::Image(image_state)
+                IsfInputData::Image(image_input)
             }
             isf::InputType::Audio(a) => {
                 let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
@@ -262,9 +364,17 @@ impl IsfInputData {
             (IsfInputData::Float(_), isf::InputType::Float(_)) => {}
             (IsfInputData::Point2d(_), isf::InputType::Point2d(_)) => {}
             (IsfInputData::Color(_), isf::InputType::Color(_)) => {}
-            (IsfInputData::Image(ref mut state), isf::InputType::Image) => {
-                if let Some(img_path) = image_paths(images_path).next() {
-                    state.update(device, encoder, image_loader, img_path);
+            (IsfInputData::Image(ref mut image_input), isf::InputType::Image) => {
+                match image_input.source {
+                    ImageSource::Image(_) | ImageSource::None => {
+                        if let Some(img_path) = image_paths(images_path).next() {
+                            image_input.load_image(device, encoder, image_loader, img_path);
+                        }
+                    }
+                    ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
+                        video.update();
+                        video.update_texture(device, encoder);
+                    }
                 }
             }
             (IsfInputData::Audio { .. }, isf::InputType::Audio(_)) => {}
@@ -370,8 +480,14 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
         .inputs
         .values()
         .filter_map(|input_data| match input_data {
-            IsfInputData::Image(ref img_state) => match *img_state {
-                ImageState::Ready(Ok(ref data)) => Some(&data.texture),
+            IsfInputData::Image(ref img_input) => match &img_input.source {
+                ImageSource::Image(ref image_state) => match &image_state {
+                    ImageState::Ready(Ok(ref data)) => Some(&data.texture),
+                    _ => None,
+                },
+                ImageSource::Video(ref video) | ImageSource::Webcam(ref video) => {
+                    Some(&video.video_texture)
+                }
                 _ => None,
             },
             IsfInputData::Audio { ref texture, .. }

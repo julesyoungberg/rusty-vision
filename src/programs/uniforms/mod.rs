@@ -15,7 +15,7 @@ pub mod image;
 pub mod multipass;
 pub mod noise;
 pub mod video;
-mod video_capture;
+pub mod video_capture;
 pub mod webcam;
 
 use base::{UniformBuffers, UniformBuffersMethods};
