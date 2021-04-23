@@ -111,7 +111,10 @@ pub enum IsfInputData {
         happening: bool,
     },
     Bool(bool),
-    Long(i32),
+    Long {
+        value: i32,
+        selected: usize,
+    },
     Float(f32),
     Point2d(Point2),
     Color(LinSrgba),
@@ -173,7 +176,11 @@ impl IsfInputData {
                     .or(n.min)
                     .or_else(|| n.values.first().cloned())
                     .unwrap_or_default();
-                IsfInputData::Long(init)
+                let index = n.values.iter().position(|v| *v == init).unwrap_or(0);
+                IsfInputData::Long {
+                    value: init,
+                    selected: index,
+                }
             }
             isf::InputType::Float(f) => {
                 let init = f.default.or(f.min).unwrap_or_default();
@@ -230,7 +237,7 @@ impl IsfInputData {
     pub fn ty_matches(&self, ty: &isf::InputType) -> bool {
         matches!((self, ty), (IsfInputData::Event { .. }, isf::InputType::Event)
             | (IsfInputData::Bool(_), isf::InputType::Bool(_))
-            | (IsfInputData::Long(_), isf::InputType::Long(_))
+            | (IsfInputData::Long { .. }, isf::InputType::Long(_))
             | (IsfInputData::Float(_), isf::InputType::Float(_))
             | (IsfInputData::Point2d(_), isf::InputType::Point2d(_))
             | (IsfInputData::Color(_), isf::InputType::Color(_))
@@ -251,7 +258,7 @@ impl IsfInputData {
         match (self, &input.ty) {
             (IsfInputData::Event { .. }, isf::InputType::Event) => (),
             (IsfInputData::Bool(_), isf::InputType::Bool(_)) => (),
-            (IsfInputData::Long(_), isf::InputType::Long(_)) => {}
+            (IsfInputData::Long { .. }, isf::InputType::Long(_)) => {}
             (IsfInputData::Float(_), isf::InputType::Float(_)) => {}
             (IsfInputData::Point2d(_), isf::InputType::Point2d(_)) => {}
             (IsfInputData::Color(_), isf::InputType::Color(_)) => {}
@@ -391,7 +398,7 @@ fn float_as_bytes(data: &f32) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
-fn long_as_bytes(data: &i32) -> &[u8] {
+fn int_as_bytes(data: &i32) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
@@ -416,7 +423,7 @@ pub fn get_isf_input_uniforms_bytes_vec(isf_opt: &Option<isf::Isf>, isf_data: &I
         let data = data_inputs.get(&input.name).unwrap();
         match data {
             IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
-            IsfInputData::Long(val) => bytes.extend(long_as_bytes(val)),
+            IsfInputData::Long { value, .. } => bytes.extend(int_as_bytes(value)),
             IsfInputData::Point2d(point) => bytes.extend(point_as_bytes(point)),
             IsfInputData::Color(color) => bytes.extend(color_as_bytes(color)),
             _ => (),

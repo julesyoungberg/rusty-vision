@@ -518,18 +518,22 @@ impl IsfPipeline {
         let mut widget_ids = HashMap::new();
 
         for input in &isf.inputs {
+            let name = input.name.clone();
+
             match &input.ty {
-                isf::InputType::Float(_) | isf::InputType::Long(_) => {
-                    widget_ids.insert(input.name.clone(), ui.generate_widget_id());
+                isf::InputType::Float(_) => {
+                    widget_ids.insert(name, ui.generate_widget_id());
+                }
+                isf::InputType::Long { .. } => {
+                    widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
+                    widget_ids.insert(name, ui.generate_widget_id());
                 }
                 isf::InputType::Point2d(_) => {
-                    let name = input.name.clone();
                     widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
                     widget_ids.insert(name.clone() + "-x", ui.generate_widget_id());
                     widget_ids.insert(name.clone() + "-y", ui.generate_widget_id());
                 }
                 isf::InputType::Color(_) => {
-                    let name = input.name.clone();
                     widget_ids.insert(name.clone() + "-label", ui.generate_widget_id());
                     widget_ids.insert(name.clone() + "-r", ui.generate_widget_id());
                     widget_ids.insert(name.clone() + "-g", ui.generate_widget_id());

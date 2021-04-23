@@ -1,29 +1,37 @@
 /*{
-    "DESCRIPTION": "demonstrates the use of float-type inputs",
+    "DESCRIPTION": "",
     "CREDIT": "by zoidberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [
-        "TEST-GLSL FX"
-    ],
+    "CATEGORIES": [ "TEST-GLSL FX" ],
     "INPUTS": [
         {
             "NAME": "inputImage",
             "TYPE": "image"
         },
         {
-            "NAME": "level",
-            "TYPE": "long",
-            "DEFAULT": 0,
-            "MIN": 0,
-            "MAX": 1000
+            "NAME": "longInputIsPopUpButton",
+            "VALUES": [
+                0,
+                1,
+                2
+            ],
+            "LABELS": [
+                "red",
+                "green",
+                "blue"
+            ],
+            "DEFAULT": 1,
+            "TYPE": "long"
         }
     ]
 }*/
 
 void main() {
-    // vec4 srcPixel = IMG_THIS_PIXEL(inputImage);
-    // float luma = (srcPixel.r + srcPixel.g + srcPixel.b) / 3.0;
-    // vec4 dstPixel = (luma > level) ? srcPixel : vec4(0, 0, 0, 1);
-    // gl_FragColor = dstPixel;
-    gl_FragColor = vec4(float(level) / 1000.0);
+    vec4 srcPixel = IMG_THIS_PIXEL(inputImage);
+    if (longInputIsPopUpButton == 0)
+        gl_FragColor = srcPixel.rrra;
+    else if (longInputIsPopUpButton == 1)
+        gl_FragColor = srcPixel.ggga;
+    else if (longInputIsPopUpButton == 2)
+        gl_FragColor = srcPixel.bbba;
 }

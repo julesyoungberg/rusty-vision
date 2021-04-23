@@ -23,10 +23,10 @@ pub fn height(model: &mut app::Model) -> f32 {
 
     for input in &isf.inputs {
         match &input.ty {
-            isf::InputType::Float(_) | isf::InputType::Long(_) => {
+            isf::InputType::Float(_) => {
                 height += 35.0;
             }
-            isf::InputType::Point2d(_) | isf::InputType::Color(_) => {
+            isf::InputType::Long(_) | isf::InputType::Point2d(_) | isf::InputType::Color(_) => {
                 height += 50.0;
             }
             _ => (),
@@ -88,25 +88,37 @@ pub fn update(
 
                     offset = 0.0;
                 }
-                (data::IsfInputData::Long(val), isf::InputType::Long(input_config)) => {
+                (data::IsfInputData::Long { selected, .. }, isf::InputType::Long(input_config)) => {
                     let widget_id = match isf_widget_ids.get(&input.name) {
                         Some(id) => id,
                         None => continue,
                     };
 
-                    let min = input_config.min.unwrap_or(0) as f32;
-                    let range = input_config.max.unwrap_or(1) as f32 - min;
+                    let mut label_name = input.name.clone();
+                    label_name.push_str("-label");
 
-                    if let Some(value) = components::slider((*val as f32 - min) / range, 0.0, 1.0)
+                    components::label(input.name.as_str())
                         .parent(widget_ids.controls_wrapper)
-                        .down(10.0)
-                        .left(offset - 200.0)
-                        .label(input.name.as_str())
+                        .left(offset - 140.0)
+                        .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
+
+                    let labels = input_config
+                        .labels
+                        .iter()
+                        .map(|l| l.as_str())
+                        .collect::<Vec<&str>>();
+
+                    if let Some(index) = components::drop_down(&labels[..], *selected)
+                        .parent(widget_ids.controls_wrapper)
+                        .down(5.0)
                         .set(*widget_id, ui)
                     {
                         data_inputs.insert(
                             input.name.clone(),
-                            data::IsfInputData::Long((value * range + min).round() as i32),
+                            data::IsfInputData::Long {
+                                value: input_config.values[index],
+                                selected: index,
+                            },
                         );
                     }
 
