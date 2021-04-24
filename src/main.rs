@@ -195,16 +195,10 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
     model.encode_update(app, update, &window, device, num_samples);
 
     if model.program_store.is_multipass() {
-        // reset pass index
-        model
-            .program_store
-            .buffer_store
-            .multipass_uniforms
-            .data
-            .pass_index = 0;
+        model.program_store.reset_pass_index();
 
         // get number of passes
-        let passes = model.program_store.buffer_store.multipass_uniforms.passes;
+        let passes = model.program_store.num_passes();
 
         // encode a render pass for each pass of the shader
         for i in 0..passes {
@@ -226,28 +220,16 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
                 .textures()[i as usize];
             util::copy_texture(&mut encoder, &model.texture, pass_texture);
 
-            // increment pass index
-            model
-                .program_store
-                .buffer_store
-                .multipass_uniforms
-                .data
-                .pass_index += 1;
-
             // finish pass
             window.swap_chain_queue().submit(&[encoder.finish()]);
+            model.program_store.increment_pass_index();
         }
     }
 }
 
 /// Draw the state of the app to the frame
 fn draw(model: &app::Model, frame: &Frame) {
-    let multipass = match &model.program_store.current_subscriptions {
-        Some(s) => s.multipass,
-        None => false,
-    };
-
-    if multipass {
+    if model.program_store.is_multipass() {
         let mut encoder = frame.command_encoder();
         model
             .texture_reshaper

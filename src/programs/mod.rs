@@ -643,4 +643,28 @@ impl ProgramStore {
             None => false,
         }
     }
+
+    pub fn num_passes(&mut self) -> u32 {
+        if let Some(ref isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.isf_data.passes().len() as u32
+        } else {
+            self.buffer_store.multipass_uniforms.passes as u32
+        }
+    }
+
+    pub fn reset_pass_index(&mut self) {
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.pass_index = 0;
+        } else {
+            self.buffer_store.multipass_uniforms.data.pass_index = 0;
+        }
+    }
+
+    pub fn increment_pass_index(&mut self) {
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.pass_index += 1;
+        } else {
+            self.buffer_store.multipass_uniforms.data.pass_index += 1;
+        }
+    }
 }
