@@ -107,7 +107,7 @@ impl BufferStore {
         let audio_features_uniforms = audio_features::AudioFeaturesUniforms::new(device);
         buffers.add(device, "audio_features", &audio_features_uniforms);
 
-        let audio_fft_uniforms = audio_fft::AudioFftUniforms::new(device);
+        let audio_fft_uniforms = audio_fft::AudioFftUniforms::new(device, None);
         buffers.add(device, "audio_fft", &audio_fft_uniforms);
 
         let camera_uniforms = camera::CameraUniforms::new();

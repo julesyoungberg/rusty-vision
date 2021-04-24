@@ -315,14 +315,9 @@ impl IsfInputData {
                 audio.start_session(audio_source);
                 return IsfInputData::Audio(audio);
             }
-            isf::InputType::AudioFft(_) => {
-                // let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
-                // let columns = vec![0.0; n_columns as usize];
-                // let size = [n_columns, 1];
-                // let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
-                // let texture = create_black_texture(device, encoder, size, format);
-                // IsfInputData::AudioFft { columns, texture }
-                let mut audio_fft = AudioFftUniforms::new(device);
+            isf::InputType::AudioFft(a) => {
+                let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
+                let mut audio_fft = AudioFftUniforms::new(device, Some(n_columns as usize));
                 audio_fft.start_session(audio_source);
                 return IsfInputData::AudioFft(audio_fft);
             }

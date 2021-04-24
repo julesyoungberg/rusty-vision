@@ -10,12 +10,13 @@ use crate::programs::uniforms::audio_source;
 use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
-const SPECTRUM_SIZE: usize = 32;
+const DEFAULT_SPECTRUM_SIZE: usize = 32;
 const WINDOW_SIZE: usize = 1024;
 
 pub struct AudioFftUniforms {
     pub smoothing: f32,
     pub spectrum_texture: wgpu::Texture,
+    pub spectrum_size: usize,
 
     audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
@@ -35,11 +36,22 @@ impl Bufferable for AudioFftUniforms {
     }
 }
 
+fn float_as_bytes(data: &f32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+fn floats_as_byte_vec(data: &Vec<f32>) -> Vec<u8> {
+    let mut bytes = vec![];
+    data.iter().for_each(|f| bytes.extend(float_as_bytes(f)));
+    bytes
+}
+
 impl AudioFftUniforms {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, spectrum_size_opt: Option<usize>) -> Self {
+        let spectrum_size = spectrum_size_opt.unwrap_or(DEFAULT_SPECTRUM_SIZE);
         let spectrum_texture = util::create_texture(
             device,
-            [SPECTRUM_SIZE as u32, 1],
+            [spectrum_size as u32, 1],
             wgpu::TextureFormat::R32Float,
         );
 
@@ -49,7 +61,8 @@ impl AudioFftUniforms {
             smoothing: 0.5,
             spectrum_consumer: None,
             spectrum_texture,
-            spectrum: vec![0.0; SPECTRUM_SIZE],
+            spectrum: vec![0.0; spectrum_size],
+            spectrum_size,
         }
     }
 
@@ -76,10 +89,11 @@ impl AudioFftUniforms {
         // create a ring buffer for spectrum results
         let ring_buffer = RingBuffer::<Vec<f32>>::new(2);
         let (mut producer, consumer) = ring_buffer.split();
-        producer.push(vec![0.0; SPECTRUM_SIZE]).unwrap();
+        producer.push(vec![0.0; self.spectrum_size]).unwrap();
         self.spectrum_consumer = Some(consumer);
 
-        let spec_group_size = (WINDOW_SIZE / 2) / SPECTRUM_SIZE;
+        let spec_group_size = (WINDOW_SIZE / 2) / self.spectrum_size;
+        let spectrum_size = self.spectrum_size.clone();
 
         self.fft_thread = Some(thread::spawn(move || {
             let mut frames = vec![];
@@ -113,8 +127,8 @@ impl AudioFftUniforms {
                             .collect::<Vec<f32>>();
 
                         // downsample the spectrum
-                        let mut reduced_spectrum = vec![0.0; SPECTRUM_SIZE];
-                        for i in 0..SPECTRUM_SIZE {
+                        let mut reduced_spectrum = vec![0.0; spectrum_size];
+                        for i in 0..spectrum_size {
                             let mut sum = 0.0;
                             for j in 0..spec_group_size {
                                 sum += spectrum[(i * spec_group_size) + j];
@@ -150,7 +164,7 @@ impl AudioFftUniforms {
             self.spectrum_consumer = Some(c);
 
             if let Some(f) = popped {
-                for (i, &sample) in f.iter().enumerate().take(SPECTRUM_SIZE) {
+                for (i, &sample) in f.iter().enumerate().take(self.spectrum_size) {
                     self.spectrum[i] = audio_source::lerp(self.spectrum[i], sample, self.smoothing);
                 }
             }
@@ -158,9 +172,8 @@ impl AudioFftUniforms {
     }
 
     pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
-        let mut spectrum = [0.0; SPECTRUM_SIZE];
-        spectrum[..SPECTRUM_SIZE].clone_from_slice(&self.spectrum[..SPECTRUM_SIZE]);
+        let bytes = floats_as_byte_vec(&self.spectrum);
         self.spectrum_texture
-            .upload_data(device, encoder, bytemuck::bytes_of(&spectrum));
+            .upload_data(device, encoder, &bytes[..]);
     }
 }
