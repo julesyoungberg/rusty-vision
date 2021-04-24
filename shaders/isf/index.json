@@ -1,5 +1,5 @@
 {
-  "default": "testAudioFFT",
+  "default": "testMultipass",
   "programs": {
     "basic": {
       "pipeline": {
@@ -34,6 +34,12 @@
     "testLong": {
       "pipeline": {
         "frag": "test_long.fs"
+      },
+      "isf": true
+    },
+    "testMultipass": {
+      "pipeline": {
+        "frag": "test_multipass.fs"
       },
       "isf": true
     },

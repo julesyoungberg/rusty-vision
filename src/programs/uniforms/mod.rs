@@ -184,7 +184,6 @@ impl BufferStore {
         self.audio_features_uniforms
             .end_session(&mut self.audio_source);
         self.audio_fft_uniforms.end_session(&mut self.audio_source);
-        self.audio_source.end_session();
     }
 
     /// Set default uniforms for current selected program.

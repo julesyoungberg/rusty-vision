@@ -61,12 +61,12 @@ pub struct IsfPipeline {
     fs: shader::Shader,
     sampler: wgpu::Sampler,
     isf_uniform_buffer: wgpu::Buffer,
-    isf_inputs_uniform_buffer: wgpu::Buffer,
     isf_bind_group_layout: wgpu::BindGroupLayout,
-    isf_inputs_bind_group_layout: wgpu::BindGroupLayout,
-    isf_textures_bind_group_layout: wgpu::BindGroupLayout,
     isf_bind_group: wgpu::BindGroup,
-    isf_inputs_bind_group: wgpu::BindGroup,
+    isf_inputs_uniform_buffer: Option<wgpu::Buffer>,
+    isf_inputs_bind_group_layout: Option<wgpu::BindGroupLayout>,
+    isf_inputs_bind_group: Option<wgpu::BindGroup>,
+    isf_textures_bind_group_layout: wgpu::BindGroupLayout,
     isf_textures_bind_group: wgpu::BindGroup,
     layout: wgpu::PipelineLayout,
     render_pipeline: Option<wgpu::RenderPipeline>,
@@ -217,27 +217,22 @@ impl IsfPipeline {
             frame_index: 0,
         };
 
+        let mut bind_group_layouts = vec![];
+
+        println!("creating isf uniforms");
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
         let isf_uniform_buffer =
             device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
         let isf_bind_group_layout = build_uniform_bind_group_layout(device);
+        bind_group_layouts.push(&isf_bind_group_layout);
         let isf_bind_group = wgpu::BindGroupBuilder::new()
             .buffer::<data::IsfUniforms>(&isf_uniform_buffer, 0..1)
             .build(device, &isf_bind_group_layout);
 
-        println!("creating isf input uniforms");
-        let isf_input_uniforms_bytes_vec = data::get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
-        let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
-        let isf_inputs_uniform_buffer =
-            device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
-        let isf_inputs_bind_group_layout = build_uniform_bind_group_layout(device);
-        let isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
-            .buffer_bytes(&isf_inputs_uniform_buffer, 0..1)
-            .build(device, &isf_inputs_bind_group_layout);
-        println!("created isf input uniforms");
-
+        println!("creating isf textures");
         let isf_textures_bind_group_layout =
             create_isf_textures_bind_group_layout(device, &isf_data);
+        bind_group_layouts.push(&isf_textures_bind_group_layout);
         let sampler = wgpu::SamplerBuilder::new().build(device);
         let isf_textures_bind_group = create_isf_textures_bind_group(
             device,
@@ -246,15 +241,29 @@ impl IsfPipeline {
             &isf_data,
         );
 
+        println!("creating isf input uniforms");
+        let isf_input_uniforms_bytes_vec = data::get_isf_input_uniforms_bytes_vec(&isf, &isf_data);
+        let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
+        let mut isf_inputs_uniform_buffer = None;
+        let mut isf_inputs_bind_group_layout = None;
+        let mut isf_inputs_bind_group = None;
+
+        if !isf_input_uniforms_bytes.is_empty() {
+            let uniform_buffer =
+                device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+            let bind_group_layout = build_uniform_bind_group_layout(device);
+            let bind_group = wgpu::BindGroupBuilder::new()
+                .buffer_bytes(&uniform_buffer, 0..1)
+                .build(device, &bind_group_layout);
+
+            isf_inputs_uniform_buffer = Some(uniform_buffer);
+            isf_inputs_bind_group_layout = Some(bind_group_layout);
+            isf_inputs_bind_group = Some(bind_group);
+            bind_group_layouts.push(isf_inputs_bind_group_layout.as_ref().unwrap());
+        }
+
         // Create the render pipeline.
-        let layout = create_pipeline_layout(
-            device,
-            &[
-                &isf_bind_group_layout,
-                &isf_inputs_bind_group_layout,
-                &isf_textures_bind_group_layout,
-            ],
-        );
+        let layout = create_pipeline_layout(device, &bind_group_layouts);
         let render_pipeline = match (vs.module.as_ref(), fs.module.as_ref()) {
             (Some(vs_mod), Some(fs_mod)) => Some(create_render_pipeline(
                 device,
@@ -378,18 +387,30 @@ impl IsfPipeline {
             &mut self.isf_data,
         );
 
+        // rebuild input buffer if isf config updated
         if isf_updated {
             let isf_input_uniforms_bytes_vec =
                 data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
             let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
-            let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-            self.isf_inputs_uniform_buffer =
-                device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
-            self.isf_inputs_bind_group_layout = build_uniform_bind_group_layout(device);
-            self.isf_inputs_bind_group = wgpu::BindGroupBuilder::new()
-                .buffer_bytes(&self.isf_inputs_uniform_buffer, 0..1)
-                .build(device, &self.isf_inputs_bind_group_layout);
+
+            self.isf_inputs_uniform_buffer = None;
+            self.isf_inputs_bind_group_layout = None;
+            self.isf_inputs_bind_group = None;
             self.widget_ids = None;
+
+            if !isf_input_uniforms_bytes.is_empty() {
+                let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
+                let uniform_buffer =
+                    device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+                let bind_group_layout = build_uniform_bind_group_layout(device);
+                let bind_group = wgpu::BindGroupBuilder::new()
+                    .buffer_bytes(&uniform_buffer, 0..1)
+                    .build(device, &bind_group_layout);
+
+                self.isf_inputs_uniform_buffer = Some(uniform_buffer);
+                self.isf_inputs_bind_group_layout = Some(bind_group_layout);
+                self.isf_inputs_bind_group = Some(bind_group);
+            }
         }
 
         // UPDATE TEXTURE BIND GROUP
@@ -410,14 +431,16 @@ impl IsfPipeline {
         }
 
         if isf_updated || texture_count_changed || self.updated {
-            self.layout = create_pipeline_layout(
-                device,
-                &[
-                    &self.isf_bind_group_layout,
-                    &self.isf_inputs_bind_group_layout,
-                    &self.isf_textures_bind_group_layout,
-                ],
-            );
+            let mut bind_group_layouts = vec![
+                &self.isf_bind_group_layout,
+                &self.isf_textures_bind_group_layout,
+            ];
+
+            if let Some(ref isf_inputs_bind_group_layout) = self.isf_inputs_bind_group_layout {
+                bind_group_layouts.push(isf_inputs_bind_group_layout);
+            }
+
+            self.layout = create_pipeline_layout(device, &bind_group_layouts);
         }
 
         // UPDATE RENDER PIPELINE
@@ -476,18 +499,14 @@ impl IsfPipeline {
             );
 
             // Update the input uniforms
-            let isf_input_uniforms_bytes_vec =
-                data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
-            let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
-            let new_buffer = device.create_buffer_with_data(&isf_input_uniforms_bytes, usage);
-            let inputs_size = isf_input_uniforms_bytes.len() as wgpu::BufferAddress;
-            encoder.copy_buffer_to_buffer(
-                &new_buffer,
-                0,
-                &self.isf_inputs_uniform_buffer,
-                0,
-                inputs_size,
-            );
+            if let Some(ref uniform_buffer) = self.isf_inputs_uniform_buffer {
+                let isf_input_uniforms_bytes_vec =
+                    data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
+                let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
+                let new_buffer = device.create_buffer_with_data(&isf_input_uniforms_bytes, usage);
+                let inputs_size = isf_input_uniforms_bytes.len() as wgpu::BufferAddress;
+                encoder.copy_buffer_to_buffer(&new_buffer, 0, &uniform_buffer, 0, inputs_size);
+            }
 
             // Encode the render pass.
             let mut render_pass = wgpu::RenderPassBuilder::new()
@@ -496,8 +515,11 @@ impl IsfPipeline {
             render_pass.set_pipeline(pipeline);
             render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
             render_pass.set_bind_group(0, &self.isf_bind_group, &[]);
-            render_pass.set_bind_group(1, &self.isf_inputs_bind_group, &[]);
-            render_pass.set_bind_group(2, &self.isf_textures_bind_group, &[]);
+            render_pass.set_bind_group(1, &self.isf_textures_bind_group, &[]);
+            if let Some(ref bind_group) = self.isf_inputs_bind_group {
+                render_pass.set_bind_group(2, &bind_group, &[]);
+            }
+
             let vertex_range = 0..VERTICES.len() as u32;
             let instance_range = 0..1;
             render_pass.draw(vertex_range, instance_range);
@@ -570,6 +592,5 @@ impl IsfPipeline {
 
     pub fn end_session(&mut self) {
         self.isf_data.end_session(&mut self.audio_source);
-        self.audio_source.end_session();
     }
 }

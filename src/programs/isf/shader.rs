@@ -60,13 +60,60 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
         };
     ";
 
+    // Create the `img_sampler` binding, used for sampling all input images.
+    let img_sampler_str = "
+        layout(set = 1, binding = 0) uniform sampler img_sampler;
+    ";
+
+    // Create the textures for the "IMPORTED" images.
+    let mut binding = 1;
+    let mut imported_textures = vec![];
+    for name in isf.imported.keys() {
+        let s = format!(
+            "layout(set = 1, binding = {}) uniform texture2D {};\n",
+            binding, name
+        );
+        imported_textures.push(s);
+        binding += 1;
+    }
+
+    // Create the `texture2D` bindings for image, audio and audioFFT inputs.
+    let mut input_textures = vec![];
+    for input in &isf.inputs {
+        match input.ty {
+            isf::InputType::Image | isf::InputType::Audio(_) | isf::InputType::AudioFft(_) => {}
+            _ => continue,
+        }
+        let s = format!(
+            "layout(set = 1, binding = {}) uniform texture2D {};\n",
+            binding, input.name
+        );
+        input_textures.push(s);
+        binding += 1;
+    }
+
+    // Now create textures for the `PASSES`.
+    let mut pass_textures = vec![];
+    for pass in &isf.passes {
+        let target = match pass.target {
+            None => continue,
+            Some(ref t) => t,
+        };
+        let s = format!(
+            "layout(set = 1, binding = {}) uniform texture2D {};\n",
+            binding, target
+        );
+        pass_textures.push(s);
+        binding += 1;
+    }
+
     // Create the `IsfDataInputs` uniform buffer with a field for each event, float, long, bool,
     // point2d and color.
     let isf_data_input_str = match inputs_require_isf_data_input(&isf.inputs) {
         false => None,
         true => {
             let mut isf_data_input_string = "
-                layout(set = 1, binding = 0) uniform IsfDataInputs {\n
+                layout(set = 2, binding = 0) uniform IsfDataInputs {\n
             "
             .to_string();
             for input in &isf.inputs {
@@ -86,53 +133,6 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
             Some(isf_data_input_string)
         }
     };
-
-    // Create the `img_sampler` binding, used for sampling all input images.
-    let img_sampler_str = "
-        layout(set = 2, binding = 0) uniform sampler img_sampler;
-    ";
-
-    // Create the textures for the "IMPORTED" images.
-    let mut binding = 1;
-    let mut imported_textures = vec![];
-    for name in isf.imported.keys() {
-        let s = format!(
-            "layout(set = 2, binding = {}) uniform texture2D {};\n",
-            binding, name
-        );
-        imported_textures.push(s);
-        binding += 1;
-    }
-
-    // Create the `texture2D` bindings for image, audio and audioFFT inputs.
-    let mut input_textures = vec![];
-    for input in &isf.inputs {
-        match input.ty {
-            isf::InputType::Image | isf::InputType::Audio(_) | isf::InputType::AudioFft(_) => {}
-            _ => continue,
-        }
-        let s = format!(
-            "layout(set = 2, binding = {}) uniform texture2D {};\n",
-            binding, input.name
-        );
-        input_textures.push(s);
-        binding += 1;
-    }
-
-    // Now create textures for the `PASSES`.
-    let mut pass_textures = vec![];
-    for pass in &isf.passes {
-        let target = match pass.target {
-            None => continue,
-            Some(ref t) => t,
-        };
-        let s = format!(
-            "layout(set = 2, binding = {}) uniform texture2D {};\n",
-            binding, target
-        );
-        pass_textures.push(s);
-        binding += 1;
-    }
 
     // Image functions.
     let img_fns_str = "
@@ -169,11 +169,11 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
     let mut s = String::new();
     s.push_str(&frag_norm_coord_str);
     s.push_str(&isf_data_str);
-    s.extend(isf_data_input_str);
     s.push_str(&img_sampler_str);
     s.extend(imported_textures);
     s.extend(input_textures);
     s.extend(pass_textures);
+    s.extend(isf_data_input_str);
     s.push_str(&img_fns_str);
     s
 }

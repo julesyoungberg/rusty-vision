@@ -483,7 +483,7 @@ pub fn sync_isf_data(
         keep
     });
 
-    // Update inptu data
+    // Update input data
     for input in &isf.inputs {
         let input_data = isf_data
             .inputs
