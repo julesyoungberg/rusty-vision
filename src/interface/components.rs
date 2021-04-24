@@ -7,6 +7,12 @@ pub fn container(dimensions: [f64; 2]) -> widget::BorderedRectangle {
         .border(1.0)
 }
 
+pub fn wrapper(dimensions: [f64; 2]) -> widget::BorderedRectangle {
+    widget::BorderedRectangle::new(dimensions)
+        .rgba(0.1, 0.1, 0.1, 1.0)
+        .border(0.0)
+}
+
 pub fn text(text: &str) -> widget::Text<'_> {
     widget::Text::new(text).rgb(0.9, 0.9, 0.9).font_size(12)
 }
@@ -77,7 +83,7 @@ pub fn slider_3d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, 
 
 pub fn slider_2d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
     widget::Slider::new(val, min, max)
-        .w_h(92.0, 20.0)
+        .w_h(95.0, 20.0)
         .label_font_size(10)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)
@@ -85,7 +91,7 @@ pub fn slider_2d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, 
 
 pub fn slider_4d_small(val: f32, min: f32, max: f32) -> widget::Slider<'static, f32> {
     widget::Slider::new(val, min, max)
-        .w_h(40.0, 20.0)
+        .w_h(42.5, 20.0)
         .label_font_size(10)
         .label_rgb(1.0, 1.0, 1.0)
         .border(0.0)

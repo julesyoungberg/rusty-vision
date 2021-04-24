@@ -41,6 +41,7 @@ widget_ids! {
         color2_label,
         color3_label,
         toggle_controls_hint,
+        controls_container,
         controls_wrapper,
         rotation1_label,
         rotation1_x,

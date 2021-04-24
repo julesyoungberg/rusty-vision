@@ -82,19 +82,24 @@ pub fn update(
 
     let ui = &mut model.ui.set_widgets();
     /////////////////////////
-    // controls wrapper
+    // controls container
     let mut controls_wrapper =
-        components::container([220.0, height as f64]).top_left_with_margin(10.0);
+        components::container([220.0, height as f64 + 20.0]).top_left_with_margin(10.0);
     if scroll {
         controls_wrapper = controls_wrapper.scroll_kids_vertically();
     }
-    controls_wrapper.set(model.widget_ids.controls_wrapper, ui);
+    controls_wrapper.set(model.widget_ids.controls_container, ui);
+
+    components::wrapper([200.0, height as f64])
+        .parent(model.widget_ids.controls_container)
+        .top_left_with_margin(10.0)
+        .set(model.widget_ids.controls_wrapper, ui);
 
     /////////////////////////
     // hint
     components::text_small(&"Press 'h' to hide".to_string())
         .parent(model.widget_ids.controls_wrapper)
-        .top_left_with_margin(10.0)
+        .top_left()
         .set(model.widget_ids.toggle_controls_hint, ui);
 
     /////////////////////////
@@ -151,8 +156,6 @@ pub fn update(
     }
 
     if let Some(subscriptions) = &model.program_store.current_subscriptions {
-        let mut left = -200.0;
-
         //////////////////////////////////////////////////
         // Color Controls
         //////////////////////////////////////////////////
@@ -173,7 +176,6 @@ pub fn update(
                     ui,
                     &mut model.program_store.buffer_store.color_uniforms,
                 );
-                left = -60.0;
             }
         }
 
@@ -184,15 +186,13 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
-                .left(left as f64)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Geometry")
                 .set(model.widget_ids.geometry_folder, ui)
             {
                 println!("toggle geometry controls");
                 model.ui_show_geometry = !model.ui_show_geometry;
             }
-
-            left = 0.0;
 
             if model.ui_show_geometry {
                 geometry_controls::update(
@@ -210,7 +210,7 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
-                .left(left as f64)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Audio Features")
                 .set(model.widget_ids.audio_features_folder, ui)
             {
@@ -234,6 +234,7 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Audio FFT")
                 .set(model.widget_ids.audio_fft_folder, ui)
             {
@@ -257,6 +258,7 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Noise")
                 .set(model.widget_ids.noise_folder, ui)
             {
@@ -280,6 +282,7 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Image")
                 .set(model.widget_ids.image_folder, ui)
             {
@@ -304,6 +307,7 @@ pub fn update(
             for _click in components::button_big()
                 .parent(model.widget_ids.controls_wrapper)
                 .down(20.0)
+                .align_left_of(model.widget_ids.controls_wrapper)
                 .label("Video")
                 .set(model.widget_ids.video_folder, ui)
             {

@@ -65,7 +65,6 @@ pub fn update(
             .set(widget_ids.isf_inputs_title, ui);
 
         let data_inputs = isf_pipeline.isf_data.inputs_mut();
-        let mut offset = 0.0;
 
         for input in &isf.inputs {
             let data = data_inputs.get_mut(&input.name).unwrap();
@@ -84,14 +83,12 @@ pub fn update(
                     )
                     .parent(widget_ids.controls_wrapper)
                     .down(10.0)
-                    .left(offset - 200.0)
+                    .align_left_of(widget_ids.controls_wrapper)
                     .label(input.name.as_str())
                     .set(*widget_id, ui)
                     {
                         data_inputs.insert(input.name.clone(), data::IsfInputData::Float(value));
                     }
-
-                    offset = 0.0;
                 }
                 (data::IsfInputData::Long { selected, .. }, isf::InputType::Long(input_config)) => {
                     let widget_id = match isf_widget_ids.get(&input.name) {
@@ -104,7 +101,7 @@ pub fn update(
 
                     components::label(input.name.as_str())
                         .parent(widget_ids.controls_wrapper)
-                        .left(offset - 140.0)
+                        .align_left_of(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
                     let labels = input_config
@@ -126,8 +123,6 @@ pub fn update(
                             },
                         );
                     }
-
-                    offset = 0.0;
                 }
                 (data::IsfInputData::Image(image_input), isf::InputType::Image) => {
                     let widget_id = match isf_widget_ids.get(&input.name) {
@@ -139,7 +134,7 @@ pub fn update(
                     label_name.push_str("-label");
 
                     components::label(input.name.as_str())
-                        .left(offset - 65.0)
+                        .align_left_of(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
                     let labels = &["image", "video", "webcam"];
@@ -187,7 +182,7 @@ pub fn update(
                     y_name.push_str("-y");
 
                     components::label(input.name.as_str())
-                        .left(offset - 43.0)
+                        .align_left_of(widget_ids.controls_wrapper)
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
@@ -212,8 +207,6 @@ pub fn update(
                             data::IsfInputData::Point2d(vec2(v[0], v[1])),
                         );
                     }
-
-                    offset = 92.0;
                 }
                 (data::IsfInputData::Color(val), isf::InputType::Color(input_config)) => {
                     let min = input_config
@@ -238,7 +231,7 @@ pub fn update(
                     a_name.push_str("-a");
 
                     components::label(input.name.as_str())
-                        .left(offset - 50.0)
+                        .align_left_of(widget_ids.controls_wrapper)
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
@@ -273,8 +266,6 @@ pub fn update(
                         v.alpha = value;
                         data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
                     }
-
-                    offset = 130.0;
                 }
                 _ => (),
             };
