@@ -154,9 +154,18 @@ impl Model {
     pub fn encode_render_pass(
         &self,
         device: &wgpu::Device,
-        texture_view: &wgpu::TextureView,
         encoder: &mut wgpu::CommandEncoder,
+        texture_view: &wgpu::TextureView,
     ) {
+        if let Some(isf_pipeline) = &self.program_store.isf_pipeline {
+            isf_pipeline.encode_render_pass(
+                device,
+                encoder,
+                texture_view,
+                self.program_store.isf_time.unwrap(),
+            );
+        }
+
         // get render pipeline for current pass
         let render_pipeline = match self.program_store.current_pipeline() {
             Some(pipeline) => pipeline,

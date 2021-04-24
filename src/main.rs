@@ -216,7 +216,7 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
 
             // draw to model texture
             let texture_view = model.texture.view().build();
-            model.encode_render_pass(device, &texture_view, &mut encoder);
+            model.encode_render_pass(device, &mut encoder, &texture_view);
 
             // copy image into pass texture
             let pass_texture = model
@@ -254,13 +254,8 @@ fn draw(model: &app::Model, frame: &Frame) {
             .encode_render_pass(frame.texture_view(), &mut *encoder);
     } else {
         let device = frame.device_queue_pair().device();
-
-        if let Some(isf_pipeline) = &model.program_store.isf_pipeline {
-            isf_pipeline.encode_to_frame(&frame, model.program_store.isf_time.unwrap());
-        } else {
-            let mut encoder = frame.command_encoder();
-            model.encode_render_pass(device, frame.texture_view(), &mut *encoder);
-        }
+        let mut encoder = frame.command_encoder();
+        model.encode_render_pass(device, &mut *encoder, frame.texture_view());
     }
 }
 
