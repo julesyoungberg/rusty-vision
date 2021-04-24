@@ -5,6 +5,7 @@
 use nannou::image;
 use nannou::prelude::*;
 use opencv::prelude::*;
+use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
@@ -450,6 +451,47 @@ impl IsfData {
     }
 }
 
+pub fn evaluate_dimension_equation(
+    equation: &String,
+    base_size: [u32; 2],
+    isf_data: &mut IsfData,
+) -> Option<u32> {
+    let re = Regex::new(r"\$(\w+)").unwrap();
+    let subbed_equation = re
+        .replace_all(equation.as_str(), |captures: &regex::Captures| {
+            let var_name = &captures[1];
+
+            match var_name {
+                "WIDTH" => return format!("{}", base_size[0]),
+                "HEIGHT" => return format!("{}", base_size[1]),
+                _ => (),
+            };
+
+            if let Some(input) = isf_data.inputs.get(var_name) {
+                match input {
+                    IsfInputData::Float(val) => {
+                        return format!("{}", val);
+                    }
+                    IsfInputData::Long { value, .. } => {
+                        return format!("{}", value);
+                    }
+                    _ => (),
+                };
+            }
+
+            return String::from("0");
+        })
+        .to_string();
+
+    match mexprp::eval::<f64>(subbed_equation.as_str()) {
+        Ok(result) => match result {
+            mexprp::Answer::Single(val) => Some(val.round() as u32),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// Ensure the image state map is up to date.
 /// Update the GPU with new data.
 pub fn sync_isf_data(
@@ -509,16 +551,55 @@ pub fn sync_isf_data(
     }
 
     // Prepare the textures that will be written to for passes.
-    isf_data.passes.resize_with(isf.passes.len(), || {
-        let texture = wgpu::TextureBuilder::new()
-            .format(Frame::TEXTURE_FORMAT)
-            .size(output_attachment_size)
-            .usage(default_isf_texture_usage())
-            .build(device);
-        let data = vec![0u8; texture.size_bytes()];
-        texture.upload_data(device, encoder, &data);
-        texture
-    });
+    isf_data.passes = isf
+        .passes
+        .iter()
+        .enumerate()
+        .map(|(index, p)| {
+            let mut width = output_attachment_size[0];
+            let mut height = output_attachment_size[1];
+
+            if let Some(width_eq) = &p.width {
+                if let Some(w) =
+                    evaluate_dimension_equation(width_eq, output_attachment_size, isf_data)
+                {
+                    width = w;
+                }
+            }
+
+            if let Some(height_eq) = &p.height {
+                if let Some(h) =
+                    evaluate_dimension_equation(height_eq, output_attachment_size, isf_data)
+                {
+                    height = h;
+                }
+            }
+
+            // if a texture already exists and the size hasn't changed, return that
+            if let Some(pass_texture) = isf_data.passes.get(index) {
+                let size = pass_texture.size();
+                if size[0] == width && size[1] == height {
+                    if !p.persistent {
+                        // clear the texture if it isn't persistent
+                        let data = vec![0u8; pass_texture.size_bytes()];
+                        pass_texture.upload_data(device, encoder, &data);
+                    }
+
+                    return pass_texture.clone();
+                }
+            }
+
+            // create a new texture
+            let texture = wgpu::TextureBuilder::new()
+                .format(Frame::TEXTURE_FORMAT)
+                .size([width, height])
+                .usage(default_isf_texture_usage())
+                .build(device);
+            let data = vec![0u8; texture.size_bytes()];
+            texture.upload_data(device, encoder, &data);
+            texture
+        })
+        .collect::<Vec<wgpu::Texture>>();
 }
 
 // All textures stored within the `IsfData` instance in the order that they should be declared in

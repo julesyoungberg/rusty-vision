@@ -11,6 +11,7 @@ bytemuck = { version = "1.4", features = [ "derive" ] }
 isf = "0.1.0"
 half = "1.7.1"
 hotglsl = { git = "https://github.com/nannou-org/hotglsl", branch = "master" }
+mexprp = "0.3.0"
 nannou = "0.15"
 notify = "4.0.12"
 opencv = {version = "0.49", features = ["clang-runtime"]}
