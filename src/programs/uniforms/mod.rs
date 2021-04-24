@@ -414,4 +414,10 @@ impl BufferStore {
         self.video_uniforms.updated = false;
         self.webcam_uniforms.updated = false;
     }
+
+    pub fn end_session(&mut self) {
+        self.end_audio_session();
+        self.video_uniforms.end_session();
+        self.webcam_uniforms.end_session();
+    }
 }

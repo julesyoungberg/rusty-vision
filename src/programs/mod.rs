@@ -171,6 +171,7 @@ impl ProgramStore {
     ) {
         if let Some(isf) = program_config.isf {
             if isf {
+                self.buffer_store.end_session();
                 self.configure_isf_program(
                     app,
                     device,

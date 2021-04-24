@@ -385,6 +385,18 @@ impl IsfInputData {
             (data, _) => *data = Self::new(device, encoder, image_loader, images_path, input),
         }
     }
+
+    fn end_session(&mut self) {
+        match self {
+            IsfInputData::Image(ref mut image_input) => match &mut image_input.source {
+                ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
+                    video.end_session();
+                }
+                _ => (),
+            },
+            _ => (),
+        }
+    }
 }
 
 pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
@@ -418,6 +430,12 @@ impl IsfData {
     /// The texture stored for each pass.
     pub fn passes(&self) -> &[wgpu::Texture] {
         &self.passes
+    }
+
+    pub fn end_session(&mut self) {
+        self.inputs.iter_mut().for_each(|(_, input)| {
+            input.end_session();
+        });
     }
 }
 
