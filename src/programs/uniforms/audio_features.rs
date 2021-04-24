@@ -269,8 +269,10 @@ impl AudioFeaturesUniforms {
         true
     }
 
-    pub fn end_session(&mut self) {
+    pub fn end_session(&mut self, audio_source: &mut audio_source::AudioSource) {
         self.error = None;
+
+        audio_source.unsubscribe(String::from("audio_features"));
 
         if let Some(channel) = &self.audio_channel_tx {
             channel.send(audio_source::AudioMessage::Close).unwrap();
@@ -295,12 +297,12 @@ impl AudioFeaturesUniforms {
         audio_source::lerp(prev, next, self.smoothing)
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, audio_source: &mut audio_source::AudioSource) {
         // check the error channel for errors
         if let Ok(err) = self.error_channel_rx.as_ref().unwrap().try_recv() {
             println!("Audio error: {:?}", err);
             self.error = Some(err);
-            self.end_session();
+            self.end_session(audio_source);
             return;
         }
 

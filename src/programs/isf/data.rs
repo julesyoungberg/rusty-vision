@@ -12,6 +12,9 @@ use thiserror::Error;
 use threadpool::ThreadPool;
 use tinyfiledialogs::open_file_dialog;
 
+use crate::programs::uniforms::audio::AudioUniforms;
+use crate::programs::uniforms::audio_fft::AudioFftUniforms;
+use crate::programs::uniforms::audio_source::AudioSource;
 use crate::programs::uniforms::video_capture::VideoCapture;
 
 pub const DEFAULT_AUDIO_SAMPLE_COUNT: u32 = 64;
@@ -209,26 +212,15 @@ impl ImageInput {
 
 #[derive(Debug)]
 pub enum IsfInputData {
-    Event {
-        happening: bool,
-    },
+    Event { happening: bool },
     Bool(bool),
-    Long {
-        value: i32,
-        selected: usize,
-    },
+    Long { value: i32, selected: usize },
     Float(f32),
     Point2d(Point2),
     Color(LinSrgba),
     Image(ImageInput),
-    Audio {
-        samples: Vec<f32>,
-        texture: wgpu::Texture,
-    },
-    AudioFft {
-        columns: Vec<f32>,
-        texture: wgpu::Texture,
-    },
+    Audio(AudioUniforms),
+    AudioFft(AudioFftUniforms),
 }
 
 /// Given a path to a directory, produces the paths of all images within it.
@@ -267,6 +259,7 @@ impl IsfInputData {
         encoder: &mut wgpu::CommandEncoder,
         image_loader: &ImageLoader,
         images_path: &Path,
+        audio_source: &mut AudioSource,
         input: &isf::Input,
     ) -> Self {
         match &input.ty {
@@ -311,21 +304,27 @@ impl IsfInputData {
                 }
                 IsfInputData::Image(image_input)
             }
-            isf::InputType::Audio(a) => {
-                let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
-                let samples = vec![0.0; n_samples as usize];
-                let size = [n_samples, 1];
-                let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
-                let texture = create_black_texture(device, encoder, size, format);
-                IsfInputData::Audio { samples, texture }
+            isf::InputType::Audio(_) => {
+                // let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
+                // let samples = vec![0.0; n_samples as usize];
+                // let size = [n_samples, 1];
+                // let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
+                // let texture = create_black_texture(device, encoder, size, format);
+                // IsfInputData::Audio { samples, texture }
+                let mut audio = AudioUniforms::new(device);
+                audio.start_session(audio_source);
+                return IsfInputData::Audio(audio);
             }
-            isf::InputType::AudioFft(a) => {
-                let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
-                let columns = vec![0.0; n_columns as usize];
-                let size = [n_columns, 1];
-                let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
-                let texture = create_black_texture(device, encoder, size, format);
-                IsfInputData::AudioFft { columns, texture }
+            isf::InputType::AudioFft(_) => {
+                // let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
+                // let columns = vec![0.0; n_columns as usize];
+                // let size = [n_columns, 1];
+                // let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
+                // let texture = create_black_texture(device, encoder, size, format);
+                // IsfInputData::AudioFft { columns, texture }
+                let mut audio_fft = AudioFftUniforms::new(device);
+                audio_fft.start_session(audio_source);
+                return IsfInputData::AudioFft(audio_fft);
             }
         }
     }
@@ -342,8 +341,8 @@ impl IsfInputData {
             | (IsfInputData::Point2d(_), isf::InputType::Point2d(_))
             | (IsfInputData::Color(_), isf::InputType::Color(_))
             | (IsfInputData::Image(_), isf::InputType::Image)
-            | (IsfInputData::Audio { .. }, isf::InputType::Audio(_))
-            | (IsfInputData::AudioFft { .. }, isf::InputType::AudioFft(_)))
+            | (IsfInputData::Audio(_), isf::InputType::Audio(_))
+            | (IsfInputData::AudioFft(_), isf::InputType::AudioFft(_)))
     }
 
     /// Update an existing instance ISF input data instance with the given input.
@@ -353,6 +352,7 @@ impl IsfInputData {
         encoder: &mut wgpu::CommandEncoder,
         image_loader: &ImageLoader,
         images_path: &Path,
+        audio_source: &mut AudioSource,
         input: &isf::Input,
     ) {
         match (self, &input.ty) {
@@ -380,13 +380,28 @@ impl IsfInputData {
                     }
                 }
             }
-            (IsfInputData::Audio { .. }, isf::InputType::Audio(_)) => {}
-            (IsfInputData::AudioFft { .. }, isf::InputType::AudioFft(_)) => {}
-            (data, _) => *data = Self::new(device, encoder, image_loader, images_path, input),
+            (IsfInputData::Audio(audio), isf::InputType::Audio(_)) => {
+                audio.update();
+                audio.update_texture(device, encoder);
+            }
+            (IsfInputData::AudioFft(audio_fft), isf::InputType::AudioFft(_)) => {
+                audio_fft.update();
+                audio_fft.update_texture(device, encoder);
+            }
+            (data, _) => {
+                *data = Self::new(
+                    device,
+                    encoder,
+                    image_loader,
+                    images_path,
+                    audio_source,
+                    input,
+                )
+            }
         }
     }
 
-    fn end_session(&mut self) {
+    fn end_session(&mut self, audio_source: &mut AudioSource) {
         match self {
             IsfInputData::Image(ref mut image_input) => match &mut image_input.source {
                 ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
@@ -394,6 +409,12 @@ impl IsfInputData {
                 }
                 _ => (),
             },
+            IsfInputData::Audio(audio) => {
+                audio.end_session(audio_source);
+            }
+            IsfInputData::AudioFft(audio_fft) => {
+                audio_fft.end_session(audio_source);
+            }
             _ => (),
         }
     }
@@ -432,9 +453,9 @@ impl IsfData {
         &self.passes
     }
 
-    pub fn end_session(&mut self) {
+    pub fn end_session(&mut self, audio_source: &mut AudioSource) {
         self.inputs.iter_mut().for_each(|(_, input)| {
-            input.end_session();
+            input.end_session(audio_source);
         });
     }
 }
@@ -448,6 +469,7 @@ pub fn sync_isf_data(
     output_attachment_size: [u32; 2],
     image_loader: &ImageLoader,
     images_path: &Path,
+    audio_source: &mut AudioSource,
     isf_data: &mut IsfData,
 ) {
     // Update imported images.
@@ -462,18 +484,38 @@ pub fn sync_isf_data(
         state.update(device, encoder, image_loader, img.path.clone());
     }
 
-    // Check all imported textures are loading.
-    isf_data
-        .inputs
-        .retain(|key, _| isf.inputs.iter().map(|i| &i.name).any(|n| n == key));
+    // Remove old inputs - do any cleanup here
+    isf_data.inputs.retain(|key, input| {
+        let keep = isf.inputs.iter().map(|i| &i.name).any(|n| n == key);
+        if !keep {
+            input.end_session(audio_source);
+        }
+        keep
+    });
+
+    // Update inptu data
     for input in &isf.inputs {
         let input_data = isf_data
             .inputs
             .entry(input.name.clone())
             .or_insert_with(|| {
-                IsfInputData::new(device, encoder, image_loader, images_path, input)
+                IsfInputData::new(
+                    device,
+                    encoder,
+                    image_loader,
+                    images_path,
+                    audio_source,
+                    input,
+                )
             });
-        input_data.update(device, encoder, image_loader, images_path, input);
+        input_data.update(
+            device,
+            encoder,
+            image_loader,
+            images_path,
+            audio_source,
+            input,
+        );
     }
 
     // Prepare the textures that will be written to for passes.
@@ -513,8 +555,8 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
                 }
                 _ => None,
             },
-            IsfInputData::Audio { ref texture, .. }
-            | IsfInputData::AudioFft { ref texture, .. } => Some(texture),
+            IsfInputData::Audio(audio) => Some(&audio.audio_texture),
+            IsfInputData::AudioFft(audio_fft) => Some(&audio_fft.spectrum_texture),
             _ => None,
         });
     let passes = isf_data.passes.iter();

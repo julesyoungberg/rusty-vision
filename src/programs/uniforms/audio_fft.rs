@@ -1,6 +1,7 @@
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
 use rustfft::{num_complex::Complex, FftPlanner};
+use std::fmt;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
@@ -14,12 +15,18 @@ const WINDOW_SIZE: usize = 1024;
 
 pub struct AudioFftUniforms {
     pub smoothing: f32,
+    pub spectrum_texture: wgpu::Texture,
 
     audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
     spectrum_consumer: Option<Consumer<Vec<f32>>>,
-    spectrum_texture: wgpu::Texture,
     spectrum: Vec<f32>,
+}
+
+impl fmt::Debug for AudioFftUniforms {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AudioFftUniforms")
+    }
 }
 
 impl Bufferable for AudioFftUniforms {
@@ -125,7 +132,9 @@ impl AudioFftUniforms {
         }));
     }
 
-    pub fn end_session(&mut self) {
+    pub fn end_session(&mut self, audio_source: &mut audio_source::AudioSource) {
+        audio_source.unsubscribe(String::from("audio_fft"));
+
         if let Some(channel) = &self.audio_channel_tx {
             channel.send(audio_source::AudioMessage::Close).unwrap();
         }

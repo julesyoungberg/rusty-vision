@@ -185,6 +185,12 @@ impl ProgramStore {
             }
         }
 
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline
+                .isf_data
+                .end_session(&mut isf_pipeline.audio_source);
+        }
+
         self.isf_pipeline = None;
         self.isf_time = None;
 

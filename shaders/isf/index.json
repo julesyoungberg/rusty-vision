@@ -1,9 +1,21 @@
 {
-  "default": "testLong",
+  "default": "testAudioFFT",
   "programs": {
     "basic": {
       "pipeline": {
         "frag": "basic.fs"
+      },
+      "isf": true
+    },
+    "testAudio": {
+      "pipeline": {
+        "frag": "test_audio.fs"
+      },
+      "isf": true
+    },
+    "testAudioFFT": {
+      "pipeline": {
+        "frag": "test_audiofft.fs"
       },
       "isf": true
     },

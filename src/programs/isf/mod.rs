@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use threadpool::ThreadPool;
 
+use crate::programs::uniforms::audio_source::AudioSource;
+
 pub mod data;
 mod shader;
 mod util;
@@ -54,6 +56,7 @@ pub struct IsfPipeline {
     pub isf_err: Option<util::IsfError>,
     pub image_loader: data::ImageLoader,
     pub updated: bool,
+    pub audio_source: AudioSource,
     vs: shader::Shader,
     fs: shader::Shader,
     sampler: wgpu::Sampler,
@@ -146,6 +149,17 @@ fn build_uniform_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayo
         .build(device)
 }
 
+fn has_audio_inputs(isf: isf::Isf) -> bool {
+    for input in isf.inputs {
+        match input.ty {
+            isf::InputType::Audio(_) | isf::InputType::AudioFft(_) => return true,
+            _ => (),
+        }
+    }
+
+    false
+}
+
 impl IsfPipeline {
     pub fn new(
         device: &wgpu::Device,
@@ -174,6 +188,8 @@ impl IsfPipeline {
         let threadpool = ThreadPool::default();
         let image_loader = data::ImageLoader { threadpool };
 
+        let mut audio_source = AudioSource::new();
+
         // Initialise the ISF imported images, input data and passes
         let mut isf_data = data::IsfData::default();
         if let Some(ref isf) = isf {
@@ -184,6 +200,7 @@ impl IsfPipeline {
                 dst_texture_size,
                 &image_loader,
                 &images_path,
+                &mut audio_source,
                 &mut isf_data,
             );
         }
@@ -261,6 +278,7 @@ impl IsfPipeline {
             isf_err: error,
             widget_ids: None,
             updated: false,
+            audio_source,
             image_loader,
             vs,
             fs,
@@ -356,6 +374,7 @@ impl IsfPipeline {
             self.dst_texture_size,
             &self.image_loader,
             images_path,
+            &mut self.audio_source,
             &mut self.isf_data,
         );
 

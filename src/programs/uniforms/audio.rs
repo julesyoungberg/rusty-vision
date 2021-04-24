@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 use ringbuf::{Consumer, RingBuffer};
+use std::fmt;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
@@ -8,11 +9,18 @@ use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
 pub struct AudioUniforms {
+    pub audio_texture: wgpu::Texture,
+
     audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     audio_consumer: Option<Consumer<Vec<f32>>>,
-    audio_texture: wgpu::Texture,
     audio_thread: Option<std::thread::JoinHandle<()>>,
     frame: Vec<f32>,
+}
+
+impl fmt::Debug for AudioUniforms {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AudioUniforms")
+    }
 }
 
 impl Bufferable for AudioUniforms {
@@ -34,7 +42,7 @@ impl AudioUniforms {
             audio_consumer: None,
             audio_texture,
             audio_thread: None,
-            frame: vec![],
+            frame: vec![0.0; audio_source::FRAME_SIZE],
         }
     }
 
@@ -51,16 +59,20 @@ impl AudioUniforms {
         self.audio_thread = Some(thread::spawn(move || {
             for msg in audio_channel_rx.iter() {
                 match msg {
-                    audio_source::AudioMessage::Data(frame) => producer.push(frame).ok().unwrap(),
+                    audio_source::AudioMessage::Data(frame) => {
+                        producer.push(frame).ok();
+                    }
                     audio_source::AudioMessage::Close | audio_source::AudioMessage::Error(_) => {
-                        break
+                        break;
                     }
                 }
             }
         }));
     }
 
-    pub fn end_session(&mut self) {
+    pub fn end_session(&mut self, audio_source: &mut audio_source::AudioSource) {
+        audio_source.unsubscribe(String::from("audio"));
+
         if let Some(channel) = &self.audio_channel_tx {
             channel.send(audio_source::AudioMessage::Close).unwrap();
         }
@@ -76,8 +88,10 @@ impl AudioUniforms {
             self.audio_consumer = Some(c);
 
             if let Some(f) = popped {
-                self.frame[..audio_source::FRAME_SIZE]
-                    .clone_from_slice(&f[..audio_source::FRAME_SIZE]);
+                if f.len() > 0 {
+                    self.frame[..audio_source::FRAME_SIZE]
+                        .clone_from_slice(&f[..audio_source::FRAME_SIZE]);
+                }
             }
         };
     }

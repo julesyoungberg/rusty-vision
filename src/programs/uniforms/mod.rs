@@ -5,7 +5,7 @@ use crate::programs::config;
 pub mod audio;
 pub mod audio_features;
 pub mod audio_fft;
-mod audio_source;
+pub mod audio_source;
 pub mod base;
 pub mod camera;
 pub mod color;
@@ -180,10 +180,11 @@ impl BufferStore {
     }
 
     pub fn end_audio_session(&mut self) {
+        self.audio_uniforms.end_session(&mut self.audio_source);
+        self.audio_features_uniforms
+            .end_session(&mut self.audio_source);
+        self.audio_fft_uniforms.end_session(&mut self.audio_source);
         self.audio_source.end_session();
-        self.audio_uniforms.end_session();
-        self.audio_features_uniforms.end_session();
-        self.audio_fft_uniforms.end_session();
     }
 
     /// Set default uniforms for current selected program.
@@ -253,7 +254,7 @@ impl BufferStore {
         }
 
         if subscriptions.audio_features {
-            self.audio_features_uniforms.update();
+            self.audio_features_uniforms.update(&mut self.audio_source);
         }
 
         if subscriptions.audio_fft {
