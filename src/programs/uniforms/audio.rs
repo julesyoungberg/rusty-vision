@@ -8,6 +8,7 @@ use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
 pub struct AudioUniforms {
+    audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     audio_consumer: Option<Consumer<Vec<f32>>>,
     audio_texture: wgpu::Texture,
     audio_thread: Option<std::thread::JoinHandle<()>>,
@@ -29,6 +30,7 @@ impl AudioUniforms {
         );
 
         Self {
+            audio_channel_tx: None,
             audio_consumer: None,
             audio_texture,
             audio_thread: None,
@@ -36,8 +38,10 @@ impl AudioUniforms {
         }
     }
 
-    pub fn start_session(&mut self) -> Sender<audio_source::AudioMessage> {
+    pub fn start_session(&mut self, audio_source: &mut audio_source::AudioSource) {
         let (audio_channel_tx, audio_channel_rx) = channel();
+        audio_source.subscribe(String::from("audio"), audio_channel_tx.clone());
+        self.audio_channel_tx = Some(audio_channel_tx);
 
         let ring_buffer = RingBuffer::<Vec<f32>>::new(2);
         let (mut producer, consumer) = ring_buffer.split();
@@ -48,15 +52,19 @@ impl AudioUniforms {
             for msg in audio_channel_rx.iter() {
                 match msg {
                     audio_source::AudioMessage::Data(frame) => producer.push(frame).ok().unwrap(),
-                    audio_source::AudioMessage::Close(()) => break,
+                    audio_source::AudioMessage::Close | audio_source::AudioMessage::Error(_) => {
+                        break
+                    }
                 }
             }
         }));
-
-        audio_channel_tx
     }
 
     pub fn end_session(&mut self) {
+        if let Some(channel) = &self.audio_channel_tx {
+            channel.send(audio_source::AudioMessage::Close).unwrap();
+        }
+
         if let Some(handle) = self.audio_thread.take() {
             handle.join().unwrap();
         }

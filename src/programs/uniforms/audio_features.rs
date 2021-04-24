@@ -38,8 +38,6 @@ pub struct AudioFeaturesUniforms {
     pub error: Option<String>,
     pub smoothing: f32,
 
-    audio_channel_rx: Option<Receiver<audio_source::AudioMessage>>,
-    error_channel_tx: Option<Sender<String>>,
     error_channel_rx: Option<Receiver<String>>,
     recv_thread: Option<std::thread::JoinHandle<()>>,
     feature_consumer: Option<Consumer<serde_json::Value>>,
@@ -64,10 +62,8 @@ impl AudioFeaturesUniforms {
             util::create_texture(device, [NUM_MFCCS as u32, 1], wgpu::TextureFormat::R32Float);
 
         Self {
-            audio_channel_rx: None,
             audio_channel_tx: None,
             error_channel_rx: None,
-            error_channel_tx: None,
             data: Data {
                 dissonance: 0.0,
                 energy: 0.0,
@@ -103,19 +99,14 @@ impl AudioFeaturesUniforms {
         }
     }
 
-    pub fn create_channels(&mut self) -> (Sender<audio_source::AudioMessage>, Sender<String>) {
+    pub fn start_session(&mut self, audio_source: &mut audio_source::AudioSource) -> bool {
         let (audio_channel_tx, audio_channel_rx) = channel();
-        self.audio_channel_rx = Some(audio_channel_rx);
+        audio_source.subscribe(String::from("audio_features"), audio_channel_tx.clone());
         self.audio_channel_tx = Some(audio_channel_tx.clone());
 
         let (error_channel_tx, error_channel_rx) = channel();
         self.error_channel_rx = Some(error_channel_rx);
-        self.error_channel_tx = Some(error_channel_tx.clone());
 
-        (audio_channel_tx, error_channel_tx)
-    }
-
-    pub fn start_session(&mut self, sample_rate: f32) -> bool {
         // create websocket client
         let client_builder = match ClientBuilder::new(CONNECTION) {
             Ok(client) => client,
@@ -158,7 +149,7 @@ impl AudioFeaturesUniforms {
                     "spectral_contrast",
                     "tristimulus",
                 ],
-                "sample_rate": sample_rate,
+                "sample_rate": audio_source.sample_rate,
                 "hop_size": 512, // happens to be cpal's buffer size
                 "memory": 4, // rember 4 frames including current
             }
@@ -200,10 +191,10 @@ impl AudioFeaturesUniforms {
             }
         };
 
-        let audio_channel_rx = self.audio_channel_rx.take().unwrap();
         // sender thread
         // forward audio from the audio thread to mirlin
         // check the close channel for messages to end the session
+        let error_channel_tx2 = error_channel_tx.clone();
         self.send_thread = Some(thread::spawn(move || {
             'sender: for message in audio_channel_rx.iter() {
                 match message {
@@ -221,7 +212,11 @@ impl AudioFeaturesUniforms {
                             }
                         }
                     }
-                    audio_source::AudioMessage::Close(()) => break 'sender,
+                    audio_source::AudioMessage::Close => break 'sender,
+                    audio_source::AudioMessage::Error(error) => {
+                        error_channel_tx2.send(error).unwrap();
+                        break;
+                    }
                 }
             }
 
@@ -235,7 +230,6 @@ impl AudioFeaturesUniforms {
         feature_producer.push(json!(null)).unwrap();
         self.feature_consumer = Some(feature_consumer);
 
-        let error_channel_tx = self.error_channel_tx.clone().unwrap();
         // listen for messages from server, push to ring buffer
         self.recv_thread = Some(thread::spawn(move || {
             for raw in receiver.incoming_messages() {
@@ -277,6 +271,10 @@ impl AudioFeaturesUniforms {
 
     pub fn end_session(&mut self) {
         self.error = None;
+
+        if let Some(channel) = &self.audio_channel_tx {
+            channel.send(audio_source::AudioMessage::Close).unwrap();
+        }
 
         // join the sender thread
         if let Some(handle) = self.send_thread.take() {

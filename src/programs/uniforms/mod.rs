@@ -156,37 +156,26 @@ impl BufferStore {
     }
 
     pub fn start_audio_session(&mut self, subscriptions: &UniformSubscriptions) {
-        let mut audio_channels = vec![];
-        let mut error_channels = vec![];
+        if !(subscriptions.audio || subscriptions.audio_fft || subscriptions.audio_features) {
+            return;
+        }
+
+        if !self.audio_source.start_session() {
+            return;
+        }
 
         if subscriptions.audio {
-            audio_channels.push(self.audio_uniforms.start_session());
+            self.audio_uniforms.start_session(&mut self.audio_source);
         }
 
         if subscriptions.audio_features {
-            let (audio_channel, error_channel) = self.audio_features_uniforms.create_channels();
-            audio_channels.push(audio_channel);
-            error_channels.push(error_channel);
+            self.audio_features_uniforms
+                .start_session(&mut self.audio_source);
         }
 
         if subscriptions.audio_fft {
-            audio_channels.push(self.audio_fft_uniforms.start_session());
-        }
-
-        if !audio_channels.is_empty()
-            && !self
-                .audio_source
-                .start_session(audio_channels, error_channels)
-        {
-            self.end_audio_session();
-        }
-
-        if subscriptions.audio_features
-            && !self
-                .audio_features_uniforms
-                .start_session(self.audio_source.sample_rate)
-        {
-            self.end_audio_session();
+            self.audio_fft_uniforms
+                .start_session(&mut self.audio_source);
         }
     }
 

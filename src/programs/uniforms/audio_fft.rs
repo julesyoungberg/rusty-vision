@@ -15,6 +15,7 @@ const WINDOW_SIZE: usize = 1024;
 pub struct AudioFftUniforms {
     pub smoothing: f32,
 
+    audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
     spectrum_consumer: Option<Consumer<Vec<f32>>>,
     spectrum_texture: wgpu::Texture,
@@ -36,6 +37,7 @@ impl AudioFftUniforms {
         );
 
         Self {
+            audio_channel_tx: None,
             fft_thread: None,
             smoothing: 0.5,
             spectrum_consumer: None,
@@ -54,8 +56,10 @@ impl AudioFftUniforms {
         }
     }
 
-    pub fn start_session(&mut self) -> Sender<audio_source::AudioMessage> {
+    pub fn start_session(&mut self, audio_source: &mut audio_source::AudioSource) {
         let (audio_channel_tx, audio_channel_rx) = channel();
+        audio_source.subscribe(String::from("audio_fft"), audio_channel_tx.clone());
+        self.audio_channel_tx = Some(audio_channel_tx);
 
         // setup the FFT
         let mut planner = FftPlanner::<f32>::new();
@@ -113,15 +117,19 @@ impl AudioFftUniforms {
 
                         producer.push(reduced_spectrum).ok();
                     }
-                    audio_source::AudioMessage::Close(()) => break,
+                    audio_source::AudioMessage::Close | audio_source::AudioMessage::Error(_) => {
+                        break
+                    }
                 }
             }
         }));
-
-        audio_channel_tx
     }
 
     pub fn end_session(&mut self) {
+        if let Some(channel) = &self.audio_channel_tx {
+            channel.send(audio_source::AudioMessage::Close).unwrap();
+        }
+
         if let Some(handle) = self.fft_thread.take() {
             handle.join().unwrap();
         }
