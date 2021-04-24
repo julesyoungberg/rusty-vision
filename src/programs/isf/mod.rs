@@ -329,11 +329,9 @@ impl IsfPipeline {
                 let isf_res = util::read_isf_from_path(&path);
                 let (new_isf, new_isf_err) = util::split_result(isf_res);
                 self.isf_err = new_isf_err;
-                if self.isf.is_none() || !new_isf.is_none() {
-                    if self.isf != new_isf {
-                        isf_updated = true;
-                        self.isf = new_isf;
-                    }
+                if (self.isf.is_none() || new_isf.is_some()) && self.isf != new_isf {
+                    isf_updated = true;
+                    self.isf = new_isf;
                 }
             }
         }

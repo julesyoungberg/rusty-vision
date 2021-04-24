@@ -216,8 +216,14 @@ pub fn update(
                     offset = 92.0;
                 }
                 (data::IsfInputData::Color(val), isf::InputType::Color(input_config)) => {
-                    let min = input_config.min.clone().unwrap_or(vec![0.0, 0.0, 0.0, 0.0]);
-                    let max = input_config.max.clone().unwrap_or(vec![1.0, 1.0, 1.0, 1.0]);
+                    let min = input_config
+                        .min
+                        .clone()
+                        .unwrap_or_else(|| vec![0.0, 0.0, 0.0, 0.0]);
+                    let max = input_config
+                        .max
+                        .clone()
+                        .unwrap_or_else(|| vec![1.0, 1.0, 1.0, 1.0]);
                     let mut v = *val;
 
                     let mut label_name = input.name.clone();
