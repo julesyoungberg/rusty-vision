@@ -274,7 +274,7 @@ pub fn update(
                         data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
                     }
 
-                    offset = 145.0;
+                    offset = 130.0;
                 }
                 _ => (),
             };
