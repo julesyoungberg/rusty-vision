@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 };
 
 layout(set = 1, binding = 0) uniform sampler webcam_sampler;
-layout(set = 1, binding = 1) uniform utexture2D webcam;
+layout(set = 1, binding = 1) uniform texture2D webcam;
 layout(set = 1, binding = 2) uniform WebcamUniforms {
     vec2 video_size;
 };
@@ -21,6 +21,11 @@ layout(set = 1, binding = 2) uniform WebcamUniforms {
 
 vec3 rand3(vec3 p);
 vec3 hsv2rgb(vec3 c);
+
+vec3 webcam_color(in vec2 coord) {
+    vec2 c = vec2(coord.x, 1.0 - coord.y);
+    return texture(sampler2D(webcam, webcam_sampler), fract(c)).rgb;
+}
 
 vec3 get_point(vec3 coord) {
     vec3 point = rand3(coord);
@@ -78,7 +83,7 @@ void main() {
     
     vec2 g_point = m_point.xy;
     vec2 coord = g_point / scale;
-    vec3 color = texture(usampler2D(webcam, webcam_sampler), coord).xyz / 255.0;
+    vec3 color = webcam_color(coord);
     // color = mix(vec3(0), color, smoothstep(0.01, 0.02, m_edge_dist));
     color *= (1.0 - m_dist) * 1.1;
     

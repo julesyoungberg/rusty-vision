@@ -14,7 +14,7 @@ layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
 layout(set = 1, binding = 1) uniform texture2D spectrum;
 
 layout(set = 2, binding = 0) uniform sampler video_sampler;
-layout(set = 2, binding = 1) uniform utexture2D video;
+layout(set = 2, binding = 1) uniform texture2D video;
 layout(set = 2, binding = 2) uniform VideoUniforms {
     vec2 video_size;
 };
@@ -45,7 +45,7 @@ float rand_range(in vec2 seed, in float mn, in float mx);
 vec3 rgb2hsv(in vec3 c);
 
 vec4 video_color(vec2 p) {
-    return texture(usampler2D(video, video_sampler), p) / 255.0;
+    return texture(sampler2D(video, video_sampler), p);
 }
 
 float spectrum_strength(float start, float end) {

@@ -28,6 +28,17 @@ impl fmt::Debug for VideoConsumer {
     }
 }
 
+fn float_as_bytes(data: &f32) -> [u8; 2] {
+    half::f16::from_f32(*data).to_ne_bytes()
+}
+
+fn floats_as_byte_vec(data: &[f32]) -> Vec<u8> {
+    let mut bytes = vec![];
+    data.iter()
+        .for_each(|f| bytes.extend(float_as_bytes(f).iter()));
+    bytes
+}
+
 #[derive(Debug)]
 pub struct VideoCapture {
     pub error: Option<String>,
@@ -62,7 +73,7 @@ impl VideoCapture {
         let video_texture = util::create_texture(
             device,
             [width as u32, height as u32],
-            wgpu::TextureFormat::Rgba8Uint,
+            wgpu::TextureFormat::Rgba16Float,
         );
 
         // setup ring buffer
@@ -198,14 +209,20 @@ impl VideoCapture {
         let height = self.video_size.y as u32;
 
         let image = image::ImageBuffer::from_fn(width, height, |x, y| {
-            let pixel = self.frame_data[(height - y - 1) as usize][(width - x - 1) as usize];
+            let pixel = self.frame_data[y as usize][(width - x - 1) as usize];
             // convert from BGR to RGB
-            image::Rgba([pixel[2], pixel[1], pixel[0], std::u8::MAX])
+            image::Rgba([
+                pixel[2] as f32 / 255.0,
+                pixel[1] as f32 / 255.0,
+                pixel[0] as f32 / 255.0,
+                1.0,
+            ])
         });
 
         let flat_samples = image.as_flat_samples();
+        let byte_vec = floats_as_byte_vec(flat_samples.as_slice());
         self.video_texture
-            .upload_data(device, encoder, &flat_samples.as_slice());
+            .upload_data(device, encoder, &byte_vec[..]);
     }
 
     pub fn pause(&mut self) {

@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 };
 
 layout(set = 1, binding = 0) uniform sampler video_sampler;
-layout(set = 1, binding = 1) uniform utexture2D video;
+layout(set = 1, binding = 1) uniform texture2D video;
 layout(set = 1, binding = 2) uniform VideoUniforms {
     vec2 video_size;
 };
@@ -19,7 +19,7 @@ layout(set = 1, binding = 2) uniform VideoUniforms {
 void main() {
     vec2 st = uv * 0.5 + 0.5;
     
-    vec3 color = texture(usampler2D(video, video_sampler), st).xyz / 255.0;
+    vec3 color = texture(sampler2D(video, video_sampler), st).xyz;
     
 	frag_color = vec4(color, 1.0);
 }

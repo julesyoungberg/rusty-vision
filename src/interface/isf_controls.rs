@@ -30,7 +30,7 @@ pub fn height(model: &mut app::Model) -> f32 {
             | isf::InputType::Point2d(_)
             | isf::InputType::Color(_)
             | isf::InputType::Image { .. } => {
-                height += 50.0;
+                height += 55.0;
             }
             _ => (),
         };
@@ -171,6 +171,7 @@ pub fn update(
                             }
                             _ => {}
                         };
+                        isf_pipeline.updated = true;
                     }
                 }
                 (data::IsfInputData::Point2d(val), isf::InputType::Point2d(input_config)) => {

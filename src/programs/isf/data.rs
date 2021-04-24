@@ -304,8 +304,6 @@ impl IsfInputData {
                 let alpha = v.get(3).cloned().unwrap_or_default();
                 IsfInputData::Color(lin_srgba(red, green, blue, alpha))
             }
-            // For the input images, it's up to us how we want to source them. Perhaps
-            // `assets/images/`?  For now we'll black images.
             isf::InputType::Image => {
                 let mut image_input = ImageInput::new();
                 if let Some(img_path) = image_paths(images_path).next() {
@@ -365,10 +363,15 @@ impl IsfInputData {
             (IsfInputData::Point2d(_), isf::InputType::Point2d(_)) => {}
             (IsfInputData::Color(_), isf::InputType::Color(_)) => {}
             (IsfInputData::Image(ref mut image_input), isf::InputType::Image) => {
-                match image_input.source {
-                    ImageSource::Image(_) | ImageSource::None => {
-                        if let Some(img_path) = image_paths(images_path).next() {
-                            image_input.load_image(device, encoder, image_loader, img_path);
+                match &mut image_input.source {
+                    ImageSource::None => {
+                        if let Some(path) = image_paths(images_path).next() {
+                            image_input.load_image(device, encoder, image_loader, path);
+                        }
+                    }
+                    ImageSource::Image(image_state) => {
+                        if let Some(path) = image_paths(images_path).next() {
+                            image_state.update(device, encoder, image_loader, path);
                         }
                     }
                     ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
@@ -384,13 +387,15 @@ impl IsfInputData {
     }
 }
 
+pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
+
 /// Created directly after successfully parsing an `Isf`.
 ///
 /// `imported` textures can be accessed by the user.
 #[derive(Debug, Default)]
 pub struct IsfData {
     imported: HashMap<ImportName, ImageState>,
-    inputs: HashMap<InputName, IsfInputData>,
+    inputs: IsfDataInputs,
     passes: Vec<wgpu::Texture>,
 }
 
@@ -401,12 +406,12 @@ impl IsfData {
     }
 
     /// The map of all declared inputs.
-    pub fn inputs(&self) -> &HashMap<InputName, IsfInputData> {
+    pub fn inputs(&self) -> &IsfDataInputs {
         &self.inputs
     }
 
     /// The mutable map of all declared inputs.
-    pub fn inputs_mut(&mut self) -> &mut HashMap<InputName, IsfInputData> {
+    pub fn inputs_mut(&mut self) -> &mut IsfDataInputs {
         &mut self.inputs
     }
 

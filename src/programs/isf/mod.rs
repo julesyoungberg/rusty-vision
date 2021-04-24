@@ -53,6 +53,7 @@ pub struct IsfPipeline {
     pub widget_ids: Option<HashMap<String, widget::Id>>,
     pub isf_err: Option<util::IsfError>,
     pub image_loader: data::ImageLoader,
+    pub updated: bool,
     vs: shader::Shader,
     fs: shader::Shader,
     sampler: wgpu::Sampler,
@@ -259,6 +260,7 @@ impl IsfPipeline {
             isf_data,
             isf_err: error,
             widget_ids: None,
+            updated: false,
             image_loader,
             vs,
             fs,
@@ -379,7 +381,7 @@ impl IsfPipeline {
         // If the number of textures have changed, update the bind group and pipeline layout.
         let new_texture_count = data::isf_data_textures(&self.isf_data).count();
         let texture_count_changed = texture_count != new_texture_count;
-        if texture_count_changed {
+        if texture_count_changed || self.updated || isf_updated {
             self.isf_textures_bind_group_layout =
                 create_isf_textures_bind_group_layout(device, &self.isf_data);
             self.isf_textures_bind_group = create_isf_textures_bind_group(
@@ -390,7 +392,7 @@ impl IsfPipeline {
             );
         }
 
-        if isf_updated || texture_count_changed {
+        if isf_updated || texture_count_changed || self.updated {
             self.layout = create_pipeline_layout(
                 device,
                 &[
@@ -404,7 +406,7 @@ impl IsfPipeline {
         // UPDATE RENDER PIPELINE
         // ----------------------
 
-        if shader_recompiled || texture_count_changed || isf_updated {
+        if shader_recompiled || texture_count_changed || isf_updated || self.updated {
             if let (Some(vs_mod), Some(fs_mod)) = (self.vs.module.as_ref(), self.fs.module.as_ref())
             {
                 self.render_pipeline = Some(create_render_pipeline(
@@ -417,6 +419,8 @@ impl IsfPipeline {
                 ));
             }
         }
+
+        self.updated = false;
     }
 
     /// Given an encoder, submits a render pass command for drawing the pipeline to the given

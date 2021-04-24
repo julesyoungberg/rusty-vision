@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform GeneralUniforms {
 };
 
 layout(set = 1, binding = 0) uniform sampler webcam_sampler;
-layout(set = 1, binding = 1) uniform utexture2D webcam;
+layout(set = 1, binding = 1) uniform texture2D webcam;
 layout(set = 1, binding = 2) uniform WebcamUniforms {
     vec2 video_size;
 };
@@ -25,7 +25,8 @@ layout(set = 2, binding = 1) uniform texture2D spectrum;
 const vec3 LIGHT_POS = vec3(0.5, 0.5, -1.0);
 
 vec3 webcam_color(in vec2 coord) {
-    return texture(usampler2D(webcam, webcam_sampler), coord).xyz / 255.0;
+    vec2 c = vec2(coord.x, 1.0 - coord.y);
+    return texture(sampler2D(webcam, webcam_sampler), fract(c)).rgb;
 }
 
 float get_spectrum(float i) {

@@ -1432,6 +1432,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "half"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3378,6 +3384,7 @@ dependencies = [
  "apodize",
  "bytemuck",
  "cpal",
+ "half",
  "hotglsl",
  "isf",
  "nannou",
