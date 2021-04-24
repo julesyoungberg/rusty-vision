@@ -16,12 +16,12 @@ const WINDOW_SIZE: usize = 1024;
 pub struct AudioFftUniforms {
     pub smoothing: f32,
     pub spectrum_texture: wgpu::Texture,
-    pub spectrum_size: usize,
 
     audio_channel_tx: Option<Sender<audio_source::AudioMessage>>,
     fft_thread: Option<std::thread::JoinHandle<()>>,
     spectrum_consumer: Option<Consumer<Vec<f32>>>,
     spectrum: Vec<f32>,
+    spectrum_size: usize,
 }
 
 impl fmt::Debug for AudioFftUniforms {
@@ -34,16 +34,6 @@ impl Bufferable for AudioFftUniforms {
     fn textures(&self) -> Vec<&wgpu::Texture> {
         vec![&self.spectrum_texture]
     }
-}
-
-fn float_as_bytes(data: &f32) -> &[u8] {
-    unsafe { wgpu::bytes::from(data) }
-}
-
-fn floats_as_byte_vec(data: &Vec<f32>) -> Vec<u8> {
-    let mut bytes = vec![];
-    data.iter().for_each(|f| bytes.extend(float_as_bytes(f)));
-    bytes
 }
 
 impl AudioFftUniforms {
@@ -172,7 +162,7 @@ impl AudioFftUniforms {
     }
 
     pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
-        let bytes = floats_as_byte_vec(&self.spectrum);
+        let bytes = util::floats_as_byte_vec(&self.spectrum);
         self.spectrum_texture
             .upload_data(device, encoder, &bytes[..]);
     }

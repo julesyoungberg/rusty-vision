@@ -304,14 +304,9 @@ impl IsfInputData {
                 }
                 IsfInputData::Image(image_input)
             }
-            isf::InputType::Audio(_) => {
-                // let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
-                // let samples = vec![0.0; n_samples as usize];
-                // let size = [n_samples, 1];
-                // let format = DEFAULT_AUDIO_TEXTURE_FORMAT;
-                // let texture = create_black_texture(device, encoder, size, format);
-                // IsfInputData::Audio { samples, texture }
-                let mut audio = AudioUniforms::new(device);
+            isf::InputType::Audio(a) => {
+                let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
+                let mut audio = AudioUniforms::new(device, Some(n_samples as usize));
                 audio.start_session(audio_source);
                 return IsfInputData::Audio(audio);
             }

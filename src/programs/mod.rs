@@ -169,9 +169,13 @@ impl ProgramStore {
         num_samples: u32,
         size: Point2,
     ) {
+        self.buffer_store.end_session();
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.end_session();
+        }
+
         if let Some(isf) = program_config.isf {
             if isf {
-                self.buffer_store.end_session();
                 self.configure_isf_program(
                     app,
                     device,
@@ -183,12 +187,6 @@ impl ProgramStore {
                 );
                 return;
             }
-        }
-
-        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
-            isf_pipeline
-                .isf_data
-                .end_session(&mut isf_pipeline.audio_source);
         }
 
         self.isf_pipeline = None;

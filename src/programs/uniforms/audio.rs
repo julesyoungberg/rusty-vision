@@ -15,6 +15,7 @@ pub struct AudioUniforms {
     audio_consumer: Option<Consumer<Vec<f32>>>,
     audio_thread: Option<std::thread::JoinHandle<()>>,
     frame: Vec<f32>,
+    texture_size: usize,
 }
 
 impl fmt::Debug for AudioUniforms {
@@ -30,10 +31,11 @@ impl Bufferable for AudioUniforms {
 }
 
 impl AudioUniforms {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, num_samples: Option<usize>) -> Self {
+        let texture_size = num_samples.unwrap_or(audio_source::FRAME_SIZE);
         let audio_texture = util::create_texture(
             device,
-            [audio_source::FRAME_SIZE as u32, 1],
+            [texture_size as u32, 1],
             wgpu::TextureFormat::R32Float,
         );
 
@@ -42,7 +44,8 @@ impl AudioUniforms {
             audio_consumer: None,
             audio_texture,
             audio_thread: None,
-            frame: vec![0.0; audio_source::FRAME_SIZE],
+            frame: vec![0.0; texture_size],
+            texture_size,
         }
     }
 
@@ -53,14 +56,27 @@ impl AudioUniforms {
 
         let ring_buffer = RingBuffer::<Vec<f32>>::new(2);
         let (mut producer, consumer) = ring_buffer.split();
-        producer.push(vec![0.0; audio_source::FRAME_SIZE]).unwrap();
+        producer.push(vec![0.0; self.texture_size]).unwrap();
         self.audio_consumer = Some(consumer);
+
+        let texture_size = self.texture_size.clone();
+        let group_size = audio_source::FRAME_SIZE / texture_size;
 
         self.audio_thread = Some(thread::spawn(move || {
             for msg in audio_channel_rx.iter() {
                 match msg {
                     audio_source::AudioMessage::Data(frame) => {
-                        producer.push(frame).ok();
+                        let mut reduced_frame = vec![0.0; texture_size];
+
+                        for i in 0..texture_size {
+                            let mut sum = 0.0;
+                            for j in 0..group_size {
+                                sum += frame[(i * group_size) + j];
+                            }
+                            reduced_frame[i] = sum / group_size as f32;
+                        }
+
+                        producer.push(reduced_frame).ok();
                     }
                     audio_source::AudioMessage::Close | audio_source::AudioMessage::Error(_) => {
                         break;
@@ -89,17 +105,14 @@ impl AudioUniforms {
 
             if let Some(f) = popped {
                 if f.len() > 0 {
-                    self.frame[..audio_source::FRAME_SIZE]
-                        .clone_from_slice(&f[..audio_source::FRAME_SIZE]);
+                    self.frame[..self.texture_size].clone_from_slice(&f[..self.texture_size]);
                 }
             }
         };
     }
 
     pub fn update_texture(&self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder) {
-        let mut frame = [0.0; audio_source::FRAME_SIZE];
-        frame[..audio_source::FRAME_SIZE].clone_from_slice(&self.frame[..audio_source::FRAME_SIZE]);
-        self.audio_texture
-            .upload_data(device, encoder, bytemuck::bytes_of(&frame));
+        let bytes = util::floats_as_byte_vec(&self.frame);
+        self.audio_texture.upload_data(device, encoder, &bytes[..]);
     }
 }

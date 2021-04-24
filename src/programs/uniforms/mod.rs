@@ -101,7 +101,7 @@ impl BufferStore {
         let mut buffers = UniformBuffers::new();
 
         // create uniforms and buffers
-        let audio_uniforms = audio::AudioUniforms::new(device);
+        let audio_uniforms = audio::AudioUniforms::new(device, None);
         buffers.add(device, "audio", &audio_uniforms);
 
         let audio_features_uniforms = audio_features::AudioFeaturesUniforms::new(device);

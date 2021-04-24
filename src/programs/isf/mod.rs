@@ -567,4 +567,9 @@ impl IsfPipeline {
 
         self.widget_ids = Some(widget_ids);
     }
+
+    pub fn end_session(&mut self) {
+        self.isf_data.end_session(&mut self.audio_source);
+        self.audio_source.end_session();
+    }
 }

@@ -169,3 +169,13 @@ pub fn copy_texture(encoder: &mut wgpu::CommandEncoder, src: &wgpu::Texture, dst
     let copy_size = dst.extent();
     encoder.copy_texture_to_texture(src_copy_view, dst_copy_view, copy_size);
 }
+
+pub fn float_as_bytes(data: &f32) -> &[u8] {
+    unsafe { wgpu::bytes::from(data) }
+}
+
+pub fn floats_as_byte_vec(data: &Vec<f32>) -> Vec<u8> {
+    let mut bytes = vec![];
+    data.iter().for_each(|f| bytes.extend(float_as_bytes(f)));
+    bytes
+}
