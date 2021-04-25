@@ -13,6 +13,7 @@
         {
             "TARGET":"bufferVariableNameA",
             "PERSISTENT": true,
+            "FLOAT": true,
             "WIDTH": "$WIDTH/16.0",
             "HEIGHT": "$HEIGHT/16.0"
         },

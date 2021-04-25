@@ -156,7 +156,7 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
 
         // ISF provided short-hand for retrieving image color.
         vec4 IMG_THIS_NORM_PIXEL(texture2D img) {
-            vec2 c = vec2(isf_FragNormCoord.x, 1.0 - isf_FragNormCoord.y);
+            vec2 c = vec2(isf_FragNormCoord.x, isf_FragNormCoord.y);
             return IMG_NORM_PIXEL(img, c);
         }
 

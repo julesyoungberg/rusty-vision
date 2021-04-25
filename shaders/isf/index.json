@@ -1,57 +1,75 @@
 {
-  "default": "testImported",
+  "default": "TestMultipass",
   "programs": {
-    "basic": {
+    "Basic": {
       "pipeline": {
         "frag": "basic.fs"
       },
       "isf": true
     },
-    "testAudio": {
+    "TestAudio": {
       "pipeline": {
         "frag": "test_audio.fs"
       },
       "isf": true
     },
-    "testAudioFFT": {
+    "TestAudioFFT": {
       "pipeline": {
         "frag": "test_audiofft.fs"
       },
       "isf": true
     },
-    "testColor": {
+    "TestColor": {
       "pipeline": {
         "frag": "test_color.fs"
       },
       "isf": true
     },
-    "testFloat": {
+    "TestFloat": {
       "pipeline": {
         "frag": "test_float.fs"
       },
       "isf": true
     },
-    "testImported": {
+    "TestImported": {
       "pipeline": {
         "frag": "test_imported.fs"
       },
       "isf": true
     },
-    "testLong": {
+    "TestLong": {
       "pipeline": {
         "frag": "test_long.fs"
       },
       "isf": true
     },
-    "testMultipass": {
+    "TestMultipass": {
       "pipeline": {
         "frag": "test_multipass.fs"
       },
       "isf": true
     },
-    "testPoint": {
+    "TestPersistent": {
+      "pipeline": {
+        "frag": "test_persistent.fs"
+      },
+      "isf": true
+    },
+    "TestPersistent2": {
+      "pipeline": {
+        "frag": "test_persistent2.fs"
+      },
+      "isf": true
+    },
+    "TestPoint": {
       "pipeline": {
         "frag": "test_point.fs"
+      },
+      "isf": true
+    },
+    "TestTempBuffer": {
+      "pipeline": {
+        "frag": "test_temp_buffer.fs"
       },
       "isf": true
     }
