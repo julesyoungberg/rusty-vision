@@ -90,7 +90,7 @@ impl AudioUniforms {
         audio_source.unsubscribe(String::from("audio"));
 
         if let Some(channel) = &self.audio_channel_tx {
-            channel.send(audio_source::AudioMessage::Close).unwrap();
+            channel.send(audio_source::AudioMessage::Close).ok();
         }
 
         if let Some(handle) = self.audio_thread.take() {

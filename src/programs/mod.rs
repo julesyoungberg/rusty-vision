@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
 
+use crate::programs::uniforms::base::Bufferable;
 use crate::util;
 
 mod config;
@@ -149,6 +150,7 @@ impl ProgramStore {
             [size[0] as u32, size[1] as u32],
             num_samples,
             &media_path,
+            num_samples,
         );
 
         let isf_time = Default::default();
@@ -469,7 +471,7 @@ impl ProgramStore {
             }
 
             let images_path = app.project_path().unwrap().join("media");
-            isf_pipeline.encode_update(device, encoder, &images_path, touched);
+            isf_pipeline.encode_update(device, encoder, &images_path, touched, num_samples);
 
             if let Some(isf_time) = self.isf_time.as_mut() {
                 isf_time.time = update.since_start.secs() as _;
@@ -665,6 +667,18 @@ impl ProgramStore {
             isf_pipeline.pass_index += 1;
         } else {
             self.buffer_store.multipass_uniforms.data.pass_index += 1;
+        }
+    }
+
+    pub fn multipass_textures(&mut self) -> Vec<&wgpu::Texture> {
+        if let Some(ref isf_pipeline) = self.isf_pipeline {
+            isf_pipeline
+                .isf_data
+                .passes()
+                .iter()
+                .collect::<Vec<&wgpu::Texture>>()
+        } else {
+            self.buffer_store.multipass_uniforms.textures()
         }
     }
 }

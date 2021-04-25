@@ -150,7 +150,7 @@ impl Model {
         window.swap_chain_queue().submit(&[encoder.finish()]);
     }
 
-    /// Encode a render pass to a given texture
+    /// Encode a render pass to a given texture.
     pub fn encode_render_pass(
         &self,
         device: &wgpu::Device,
@@ -196,5 +196,35 @@ impl Model {
         let vertex_range = 0..quad_2d::VERTICES.len() as u32;
         let instance_range = 0..1;
         render_pass.draw(vertex_range, instance_range);
+    }
+
+    /// Encode a render pass for each pass.
+    pub fn encode_render_passes(&mut self, window: &Ref<'_, Window>, device: &wgpu::Device) {
+        self.program_store.reset_pass_index();
+        let mut passes = self.program_store.num_passes();
+        if passes == 0 {
+            passes = 1;
+        }
+
+        // encode a render pass for each pass of the shader
+        for i in 0..passes {
+            // setup environment
+            let desc = wgpu::CommandEncoderDescriptor {
+                label: Some("rusty_vision_render_pass"),
+            };
+            let mut encoder = device.create_command_encoder(&desc);
+
+            // draw to model texture
+            let texture_view = self.texture.view().build();
+            self.encode_render_pass(device, &mut encoder, &texture_view);
+
+            // copy image into pass texture
+            let pass_texture = self.program_store.multipass_textures()[i as usize];
+            util::copy_texture(&mut encoder, &self.texture, pass_texture);
+
+            // finish pass
+            window.swap_chain_queue().submit(&[encoder.finish()]);
+            self.program_store.increment_pass_index();
+        }
     }
 }

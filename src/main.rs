@@ -1,5 +1,4 @@
 use nannou::prelude::*;
-use programs::uniforms::base::Bufferable;
 use std::{thread, time};
 
 mod app;
@@ -195,35 +194,7 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
     model.encode_update(app, update, &window, device, num_samples);
 
     if model.program_store.is_multipass() {
-        model.program_store.reset_pass_index();
-
-        // get number of passes
-        let passes = model.program_store.num_passes();
-
-        // encode a render pass for each pass of the shader
-        for i in 0..passes {
-            // setup environment
-            let desc = wgpu::CommandEncoderDescriptor {
-                label: Some("rusty_vision_render_pass"),
-            };
-            let mut encoder = device.create_command_encoder(&desc);
-
-            // draw to model texture
-            let texture_view = model.texture.view().build();
-            model.encode_render_pass(device, &mut encoder, &texture_view);
-
-            // copy image into pass texture
-            let pass_texture = model
-                .program_store
-                .buffer_store
-                .multipass_uniforms
-                .textures()[i as usize];
-            util::copy_texture(&mut encoder, &model.texture, pass_texture);
-
-            // finish pass
-            window.swap_chain_queue().submit(&[encoder.finish()]);
-            model.program_store.increment_pass_index();
-        }
+        model.encode_render_passes(&window, device);
     }
 }
 

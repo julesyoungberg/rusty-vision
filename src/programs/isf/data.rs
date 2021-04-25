@@ -503,6 +503,7 @@ pub fn sync_isf_data(
     images_path: &Path,
     audio_source: &mut AudioSource,
     isf_data: &mut IsfData,
+    num_samples: u32,
 ) {
     // Update imported images.
     isf_data
@@ -594,6 +595,7 @@ pub fn sync_isf_data(
                 .format(Frame::TEXTURE_FORMAT)
                 .size([width, height])
                 .usage(default_isf_texture_usage())
+                .sample_count(num_samples)
                 .build(device);
             let data = vec![0u8; texture.size_bytes()];
             texture.upload_data(device, encoder, &data);

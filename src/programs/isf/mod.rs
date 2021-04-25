@@ -171,6 +171,7 @@ impl IsfPipeline {
         dst_texture_size: [u32; 2],
         dst_sample_count: u32,
         images_path: &Path,
+        num_samples: u32,
     ) -> Self {
         let isf_res = util::read_isf_from_path(&fs_path);
         let (isf, error) = util::split_result(isf_res);
@@ -203,6 +204,7 @@ impl IsfPipeline {
                 &images_path,
                 &mut audio_source,
                 &mut isf_data,
+                num_samples,
             );
         }
 
@@ -328,6 +330,7 @@ impl IsfPipeline {
         encoder: &mut wgpu::CommandEncoder,
         images_path: &Path,
         touched_shaders: I,
+        num_samples: u32,
     ) where
         I: IntoIterator,
         I::Item: AsRef<Path>,
@@ -387,6 +390,7 @@ impl IsfPipeline {
             images_path,
             &mut self.audio_source,
             &mut self.isf_data,
+            num_samples,
         );
 
         // rebuild input buffer if isf config updated
