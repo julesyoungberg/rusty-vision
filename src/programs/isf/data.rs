@@ -1,7 +1,5 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
-// #![allow(dead_code)]
-
 use nannou::image;
 use nannou::prelude::*;
 use opencv::prelude::*;
@@ -558,11 +556,12 @@ pub fn sync_isf_data(
         .imported
         .retain(|name, _| isf.imported.contains_key(name));
     for (key, img) in &isf.imported {
+        let path = images_path.join(img.path.clone());
         let state = isf_data
             .imported
             .entry(key.clone())
             .or_insert(ImageState::None);
-        state.update(device, encoder, image_loader, img.path.clone());
+        state.update(device, encoder, image_loader, path);
     }
 
     // Remove old inputs - do any cleanup here

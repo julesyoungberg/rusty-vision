@@ -1,5 +1,5 @@
 {
-  "default": "testMultipass",
+  "default": "testImported",
   "programs": {
     "basic": {
       "pipeline": {
@@ -28,6 +28,12 @@
     "testFloat": {
       "pipeline": {
         "frag": "test_float.fs"
+      },
+      "isf": true
+    },
+    "testImported": {
+      "pipeline": {
+        "frag": "test_imported.fs"
       },
       "isf": true
     },
