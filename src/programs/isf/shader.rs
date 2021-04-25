@@ -143,14 +143,15 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
 
         // ISF provided short-hand for retrieving image color.
         vec4 IMG_NORM_PIXEL(texture2D img, vec2 norm_px_coord) {
-            return texture(sampler2D(img, img_sampler), norm_px_coord);
+            vec2 c = vec2(norm_px_coord.x, 1.0 - norm_px_coord.y);
+            return texture(sampler2D(img, img_sampler), c);
         }
 
         // ISF provided short-hand for retrieving image color.
         vec4 IMG_PIXEL(texture2D img, vec2 px_coord) {
             ivec2 s = IMG_SIZE(img);
-            vec2 norm_px_coord = vec2(px_coord.x / float(s.x), 1.0 - px_coord.y / float(s.y));
-            return IMG_NORM_PIXEL(img, px_coord);
+            vec2 norm_px_coord = vec2(px_coord.x / float(s.x), px_coord.y / float(s.y));
+            return IMG_NORM_PIXEL(img, norm_px_coord);
         }
 
         // ISF provided short-hand for retrieving image color.

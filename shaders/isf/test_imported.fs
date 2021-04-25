@@ -13,7 +13,7 @@
     ],
     "IMPORTED": {
         "blendImage": {
-            "PATH": "fractal2.png"
+            "PATH": "yama.png"
         }
     }
 }*/

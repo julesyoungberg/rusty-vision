@@ -86,6 +86,7 @@ impl ImageState {
             ImageState::None => {
                 let (tx, rx) = mpsc::channel();
                 image_loader.threadpool.execute(move || {
+                    println!("loading {:?}", img_path);
                     let img_res = image::open(img_path)
                         .map(|img| img.to_rgba8())
                         .map_err(|err| err.into());
@@ -102,6 +103,7 @@ impl ImageState {
                         );
                         ImageData { image, texture }
                     });
+                    println!("loaded: {:?}", img_path);
                     ImageState::Ready(res)
                 }
                 _ => return,
