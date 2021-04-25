@@ -631,11 +631,19 @@ impl ProgramStore {
         if let Some(current_subscriptions) = &self.current_subscriptions {
             self.buffer_store.pause(current_subscriptions);
         }
+
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.pause();
+        }
     }
 
     pub fn unpause(&mut self) {
         if let Some(current_subscriptions) = &self.current_subscriptions {
             self.buffer_store.unpause(current_subscriptions);
+        }
+
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.unpause();
         }
     }
 

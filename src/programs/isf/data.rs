@@ -409,6 +409,42 @@ impl IsfInputData {
             _ => (),
         }
     }
+
+    fn pause(&mut self, audio_source: &mut AudioSource) {
+        match self {
+            IsfInputData::Image(ref mut image_input) => match &mut image_input.source {
+                ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
+                    video.pause();
+                }
+                _ => (),
+            },
+            IsfInputData::Audio(audio) => {
+                audio.end_session(audio_source);
+            }
+            IsfInputData::AudioFft(audio_fft) => {
+                audio_fft.end_session(audio_source);
+            }
+            _ => (),
+        }
+    }
+
+    fn unpause(&mut self, audio_source: &mut AudioSource) {
+        match self {
+            IsfInputData::Image(ref mut image_input) => match &mut image_input.source {
+                ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
+                    video.unpause();
+                }
+                _ => (),
+            },
+            IsfInputData::Audio(audio) => {
+                audio.start_session(audio_source);
+            }
+            IsfInputData::AudioFft(audio_fft) => {
+                audio_fft.start_session(audio_source);
+            }
+            _ => (),
+        }
+    }
 }
 
 pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
@@ -448,6 +484,18 @@ impl IsfData {
         self.inputs.iter_mut().for_each(|(_, input)| {
             input.end_session(audio_source);
         });
+    }
+
+    pub fn pause(&mut self, audio_source: &mut AudioSource) {
+        self.inputs
+            .iter_mut()
+            .for_each(|(_, input)| input.pause(audio_source));
+    }
+
+    pub fn unpause(&mut self, audio_source: &mut AudioSource) {
+        self.inputs
+            .iter_mut()
+            .for_each(|(_, input)| input.unpause(audio_source));
     }
 }
 

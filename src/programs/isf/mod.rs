@@ -599,4 +599,12 @@ impl IsfPipeline {
     pub fn end_session(&mut self) {
         self.isf_data.end_session(&mut self.audio_source);
     }
+
+    pub fn pause(&mut self) {
+        self.isf_data.pause(&mut self.audio_source);
+    }
+
+    pub fn unpause(&mut self) {
+        self.isf_data.unpause(&mut self.audio_source);
+    }
 }
