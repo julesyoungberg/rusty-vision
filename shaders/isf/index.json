@@ -1,5 +1,5 @@
 {
-  "default": "TestMultipass",
+  "default": "TestPersistent",
   "programs": {
     "Basic": {
       "pipeline": {

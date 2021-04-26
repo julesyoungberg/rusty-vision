@@ -61,9 +61,7 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
     ";
 
     // Create the `img_sampler` binding, used for sampling all input images.
-    let img_sampler_str = "
-        layout(set = 1, binding = 0) uniform sampler img_sampler;
-    ";
+    let img_sampler_str = "\nlayout(set = 1, binding = 0) uniform sampler img_sampler;\n";
 
     // Create the textures for the "IMPORTED" images.
     let mut binding = 1;
@@ -112,10 +110,8 @@ pub fn glsl_string_from_isf(isf: &isf::Isf) -> String {
     let isf_data_input_str = match inputs_require_isf_data_input(&isf.inputs) {
         false => None,
         true => {
-            let mut isf_data_input_string = "
-                layout(set = 2, binding = 0) uniform IsfDataInputs {\n
-            "
-            .to_string();
+            let mut isf_data_input_string =
+                "\nlayout(set = 2, binding = 0) uniform IsfDataInputs {\n".to_string();
             for input in &isf.inputs {
                 let ty_str = match input.ty {
                     isf::InputType::Event | isf::InputType::Bool(_) => "bool",
@@ -260,6 +256,7 @@ pub fn compile_isf_shader(
         .and_then(|s| isf::parse(&s).map(|isf| (s, isf)).map_err(From::from))
         .and_then(|(old_str, isf)| {
             let isf_str = glsl_string_from_isf(&isf);
+            println!("{}", isf_str);
             let new_str = prefix_isf_glsl_str(&isf_str, old_str);
             let ty = hotglsl::ShaderType::Fragment;
             hotglsl::compile_str(&new_str, ty).map_err(From::from)

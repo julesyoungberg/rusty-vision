@@ -262,6 +262,7 @@ impl IsfInputData {
         images_path: &Path,
         audio_source: &mut AudioSource,
         input: &isf::Input,
+        size: [u32; 2],
     ) -> Self {
         match &input.ty {
             isf::InputType::Event => IsfInputData::Event { happening: false },
@@ -300,9 +301,7 @@ impl IsfInputData {
             }
             isf::InputType::Image => {
                 let mut image_input = ImageInput::new();
-                if let Some(img_path) = image_paths(images_path).next() {
-                    image_input.load_image(device, encoder, image_loader, img_path);
-                }
+                image_input.start_webcam(device, pt2(size[0] as f32, size[1] as f32));
                 IsfInputData::Image(image_input)
             }
             isf::InputType::Audio(a) => {
@@ -345,6 +344,7 @@ impl IsfInputData {
         images_path: &Path,
         audio_source: &mut AudioSource,
         input: &isf::Input,
+        size: [u32; 2],
     ) {
         match (self, &input.ty) {
             (IsfInputData::Event { .. }, isf::InputType::Event) => (),
@@ -387,6 +387,7 @@ impl IsfInputData {
                     images_path,
                     audio_source,
                     input,
+                    size,
                 )
             }
         }
@@ -588,6 +589,7 @@ pub fn sync_isf_data(
                     images_path,
                     audio_source,
                     input,
+                    output_attachment_size,
                 )
             });
         input_data.update(
@@ -597,6 +599,7 @@ pub fn sync_isf_data(
             images_path,
             audio_source,
             input,
+            output_attachment_size,
         );
     }
 
