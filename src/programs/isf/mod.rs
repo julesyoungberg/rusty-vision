@@ -377,11 +377,8 @@ impl IsfPipeline {
             Some(ref isf) => isf,
         };
 
-        // Keep track of whether the number of textures change for our bind groups.
-        let texture_count = data::isf_data_textures(&self.isf_data).count();
-
         // Synchronise the ISF data.
-        data::sync_isf_data(
+        let textures_updated = data::sync_isf_data(
             device,
             encoder,
             isf,
@@ -423,9 +420,7 @@ impl IsfPipeline {
         // -------------------------
 
         // If the number of textures have changed, update the bind group and pipeline layout.
-        let new_texture_count = data::isf_data_textures(&self.isf_data).count();
-        let texture_count_changed = texture_count != new_texture_count;
-        if texture_count_changed || self.updated || isf_updated {
+        if textures_updated || self.updated || isf_updated {
             self.isf_textures_bind_group_layout =
                 create_isf_textures_bind_group_layout(device, &self.isf_data);
             self.isf_textures_bind_group = create_isf_textures_bind_group(
@@ -436,7 +431,7 @@ impl IsfPipeline {
             );
         }
 
-        if isf_updated || texture_count_changed || self.updated {
+        if isf_updated || textures_updated || self.updated {
             let mut bind_group_layouts = vec![
                 &self.isf_bind_group_layout,
                 &self.isf_textures_bind_group_layout,
@@ -452,7 +447,7 @@ impl IsfPipeline {
         // UPDATE RENDER PIPELINE
         // ----------------------
 
-        if shader_recompiled || texture_count_changed || isf_updated || self.updated {
+        if shader_recompiled || textures_updated || isf_updated || self.updated {
             if let (Some(vs_mod), Some(fs_mod)) = (self.vs.module.as_ref(), self.fs.module.as_ref())
             {
                 self.render_pipeline = Some(create_render_pipeline(

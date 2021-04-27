@@ -50,12 +50,38 @@ pub enum ImageLoadError {
 pub type ImportName = String;
 pub type InputName = String;
 
+#[derive(Debug)]
+pub struct LoadingImage {
+    receiver: mpsc::Receiver<Result<image::RgbaImage, ImageLoadError>>,
+    texture: wgpu::Texture,
+}
+
 /// The state of the image.
 #[derive(Debug)]
 pub enum ImageState {
     None,
-    Loading(mpsc::Receiver<Result<image::RgbaImage, ImageLoadError>>),
+    Loading(LoadingImage),
     Ready(Result<ImageData, ImageLoadError>),
+}
+
+fn default_isf_texture_usage() -> wgpu::TextureUsage {
+    wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED
+}
+
+fn create_black_texture(
+    device: &wgpu::Device,
+    encoder: &mut wgpu::CommandEncoder,
+    size: [u32; 2],
+    format: wgpu::TextureFormat,
+) -> wgpu::Texture {
+    let texture = wgpu::TextureBuilder::new()
+        .usage(default_isf_texture_usage())
+        .size(size)
+        .format(format)
+        .build(device);
+    let data = vec![0u8; texture.size_bytes()];
+    texture.upload_data(device, encoder, &data);
+    texture
 }
 
 impl ImageState {
@@ -81,10 +107,11 @@ impl ImageState {
         encoder: &mut wgpu::CommandEncoder,
         image_loader: &ImageLoader,
         img_path: PathBuf,
-    ) {
-        *self = match *self {
+    ) -> bool {
+        match *self {
             ImageState::None => {
                 let (tx, rx) = mpsc::channel();
+
                 image_loader.threadpool.execute(move || {
                     println!("loading {:?}", img_path);
                     let img_res = image::open(img_path)
@@ -92,23 +119,40 @@ impl ImageState {
                         .map_err(|err| err.into());
                     tx.send(img_res).ok();
                 });
-                ImageState::Loading(rx)
+
+                let texture = create_black_texture(
+                    device,
+                    encoder,
+                    [1 as u32, 1 as u32],
+                    wgpu::TextureFormat::R8Unorm,
+                );
+
+                *self = ImageState::Loading(LoadingImage {
+                    receiver: rx,
+                    texture,
+                });
+
+                return true;
             }
-            ImageState::Loading(ref rx) => match rx.try_recv() {
+            ImageState::Loading(ref loading_image) => match loading_image.receiver.try_recv() {
                 Ok(img_res) => {
                     let usage = wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED;
+
                     let res = img_res.map(|image| {
                         let texture = wgpu::Texture::encode_load_from_image_buffer(
                             device, encoder, usage, &image,
                         );
                         ImageData { image, texture }
                     });
+
                     println!("loaded: {:?}", img_path);
-                    ImageState::Ready(res)
+                    *self = ImageState::Ready(res);
+
+                    return true;
                 }
-                _ => return,
+                _ => return false,
             },
-            ImageState::Ready(_) => return,
+            ImageState::Ready(_) => return false,
         };
     }
 }
@@ -147,11 +191,12 @@ impl ImageInput {
         encoder: &mut wgpu::CommandEncoder,
         image_loader: &ImageLoader,
         path: PathBuf,
-    ) {
+    ) -> bool {
         self.end_sessions();
         let mut image_source = ImageState::None;
-        image_source.update(device, encoder, image_loader, path);
+        let updated = image_source.update(device, encoder, image_loader, path);
         self.source = ImageSource::Image(image_source);
+        return updated;
     }
 
     pub fn select_image(
@@ -231,26 +276,6 @@ fn image_paths(dir: &Path) -> impl Iterator<Item = PathBuf> {
         .filter_map(|res| res.ok())
         .map(|entry| entry.path().to_path_buf())
         .filter(|path| image::image_dimensions(path).ok().is_some())
-}
-
-fn default_isf_texture_usage() -> wgpu::TextureUsage {
-    wgpu::TextureUsage::COPY_DST | wgpu::TextureUsage::SAMPLED
-}
-
-fn create_black_texture(
-    device: &wgpu::Device,
-    encoder: &mut wgpu::CommandEncoder,
-    size: [u32; 2],
-    format: wgpu::TextureFormat,
-) -> wgpu::Texture {
-    let texture = wgpu::TextureBuilder::new()
-        .usage(default_isf_texture_usage())
-        .size(size)
-        .format(format)
-        .build(device);
-    let data = vec![0u8; texture.size_bytes()];
-    texture.upload_data(device, encoder, &data);
-    texture
 }
 
 impl IsfInputData {
@@ -345,7 +370,7 @@ impl IsfInputData {
         audio_source: &mut AudioSource,
         input: &isf::Input,
         size: [u32; 2],
-    ) {
+    ) -> bool {
         match (self, &input.ty) {
             (IsfInputData::Event { .. }, isf::InputType::Event) => (),
             (IsfInputData::Bool(_), isf::InputType::Bool(_)) => (),
@@ -357,12 +382,12 @@ impl IsfInputData {
                 match &mut image_input.source {
                     ImageSource::None => {
                         if let Some(path) = image_paths(images_path).next() {
-                            image_input.load_image(device, encoder, image_loader, path);
+                            return image_input.load_image(device, encoder, image_loader, path);
                         }
                     }
                     ImageSource::Image(image_state) => {
                         if let Some(path) = image_paths(images_path).next() {
-                            image_state.update(device, encoder, image_loader, path);
+                            return image_state.update(device, encoder, image_loader, path);
                         }
                     }
                     ImageSource::Video(ref mut video) | ImageSource::Webcam(ref mut video) => {
@@ -391,6 +416,7 @@ impl IsfInputData {
                 )
             }
         }
+        false
     }
 
     fn end_session(&mut self, audio_source: &mut AudioSource) {
@@ -553,7 +579,9 @@ pub fn sync_isf_data(
     audio_source: &mut AudioSource,
     isf_data: &mut IsfData,
     num_samples: u32,
-) {
+) -> bool {
+    let mut textures_updated = false;
+
     // Update imported images.
     isf_data
         .imported
@@ -564,7 +592,10 @@ pub fn sync_isf_data(
             .imported
             .entry(key.clone())
             .or_insert(ImageState::None);
-        state.update(device, encoder, image_loader, path);
+
+        if state.update(device, encoder, image_loader, path) {
+            textures_updated = true;
+        }
     }
 
     // Remove old inputs - do any cleanup here
@@ -592,7 +623,7 @@ pub fn sync_isf_data(
                     output_attachment_size,
                 )
             });
-        input_data.update(
+        if input_data.update(
             device,
             encoder,
             image_loader,
@@ -600,7 +631,9 @@ pub fn sync_isf_data(
             audio_source,
             input,
             output_attachment_size,
-        );
+        ) {
+            textures_updated = false;
+        }
     }
 
     // Prepare the textures that will be written to for passes.
@@ -654,6 +687,8 @@ pub fn sync_isf_data(
             texture
         })
         .collect::<Vec<wgpu::Texture>>();
+
+    return textures_updated;
 }
 
 // All textures stored within the `IsfData` instance in the order that they should be declared in
@@ -664,8 +699,10 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
             Ok(ref img_data) => Some(&img_data.texture),
             _ => None,
         },
+        ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
         _ => None,
     });
+
     let inputs = isf_data
         .inputs
         .values()
@@ -673,6 +710,7 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
             IsfInputData::Image(ref img_input) => match &img_input.source {
                 ImageSource::Image(ref image_state) => match &image_state {
                     ImageState::Ready(Ok(ref data)) => Some(&data.texture),
+                    ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
                     _ => None,
                 },
                 ImageSource::Video(ref video) | ImageSource::Webcam(ref video) => {
@@ -684,6 +722,7 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
             IsfInputData::AudioFft(audio_fft) => Some(&audio_fft.spectrum_texture),
             _ => None,
         });
+
     let passes = isf_data.passes.iter();
     imported.chain(inputs).chain(passes)
 }
