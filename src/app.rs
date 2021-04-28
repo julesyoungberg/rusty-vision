@@ -215,16 +215,23 @@ impl Model {
             let mut encoder = device.create_command_encoder(&desc);
 
             // draw to model texture
-            let texture_view = self.texture.view().build();
+            let render_texture = self.program_store.get_render_texture(i as usize);
+            let texture_view = render_texture.view().build();
             self.encode_render_pass(device, &mut encoder, &texture_view);
 
             // copy image into pass texture
             let pass_texture = self.program_store.multipass_textures()[i as usize];
-            util::copy_texture(&mut encoder, &self.texture, pass_texture);
+            util::copy_texture(&mut encoder, &render_texture, pass_texture);
 
             // finish pass
             window.swap_chain_queue().submit(&[encoder.finish()]);
             self.program_store.increment_pass_index();
         }
+    }
+
+    pub fn render_texture_to_frame(&self, frame: &Frame) {
+        let mut encoder = frame.command_encoder();
+        let texture_reshaper = self.program_store.get_texture_reshaper();
+        texture_reshaper.encode_render_pass(frame.texture_view(), &mut *encoder);
     }
 }

@@ -40,7 +40,7 @@ fn model(app: &App) -> app::Model {
 
     let (width, height) = window.inner_size_pixels();
     let size = pt2(width as f32, height as f32);
-    let mut program_store = programs::ProgramStore::new(app, device, size);
+    let mut program_store = programs::ProgramStore::new(app, device, size, msaa_samples);
     program_store.configure(app, device, &mut encoder, msaa_samples, size);
     let vertex_buffer = quad_2d::create_vertex_buffer(device);
 
@@ -201,10 +201,7 @@ fn update(app: &App, model: &mut app::Model, update: Update) {
 /// Draw the state of the app to the frame
 fn draw(model: &app::Model, frame: &Frame) {
     if model.program_store.is_multipass() {
-        let mut encoder = frame.command_encoder();
-        model
-            .texture_reshaper
-            .encode_render_pass(frame.texture_view(), &mut *encoder);
+        model.render_texture_to_frame(frame)
     } else {
         let device = frame.device_queue_pair().device();
         let mut encoder = frame.command_encoder();

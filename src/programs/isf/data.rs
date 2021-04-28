@@ -476,6 +476,66 @@ impl IsfInputData {
 
 pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
 
+#[derive(Debug, Clone)]
+pub struct IsfPassTextures {
+    pub uniform_texture: wgpu::Texture,
+    pub render_texture: wgpu::Texture,
+}
+
+impl IsfPassTextures {
+    pub fn new(
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        size: [u32; 2],
+        num_samples: u32,
+    ) -> Self {
+        let render_texture = wgpu::TextureBuilder::new()
+            .format(Frame::TEXTURE_FORMAT)
+            .size(size)
+            .usage(
+                wgpu::TextureUsage::OUTPUT_ATTACHMENT
+                    | wgpu::TextureUsage::COPY_SRC
+                    | wgpu::TextureUsage::COPY_DST,
+            )
+            .sample_count(num_samples)
+            .build(device);
+
+        let uniform_texture = wgpu::TextureBuilder::new()
+            .format(Frame::TEXTURE_FORMAT)
+            .size(size)
+            .usage(default_isf_texture_usage())
+            .sample_count(num_samples)
+            .build(device);
+
+        let data = vec![0u8; uniform_texture.size_bytes()];
+        uniform_texture.upload_data(device, encoder, &data);
+        render_texture.upload_data(device, encoder, &data);
+
+        Self {
+            render_texture,
+            uniform_texture,
+        }
+    }
+
+    pub fn size(&self) -> [u32; 2] {
+        self.uniform_texture.size()
+    }
+
+    pub fn size_bytes(&self) -> usize {
+        self.uniform_texture.size_bytes()
+    }
+
+    pub fn upload_data(
+        &self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        data: &[u8],
+    ) {
+        self.uniform_texture.upload_data(device, encoder, data);
+        self.render_texture.upload_data(device, encoder, data);
+    }
+}
+
 /// Created directly after successfully parsing an `Isf`.
 ///
 /// `imported` textures can be accessed by the user.
@@ -483,7 +543,7 @@ pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
 pub struct IsfData {
     imported: HashMap<ImportName, ImageState>,
     inputs: IsfDataInputs,
-    passes: Vec<wgpu::Texture>,
+    passes: Vec<IsfPassTextures>,
 }
 
 impl IsfData {
@@ -503,7 +563,7 @@ impl IsfData {
     }
 
     /// The texture stored for each pass.
-    pub fn passes(&self) -> &[wgpu::Texture] {
+    pub fn passes(&self) -> &[IsfPassTextures] {
         &self.passes
     }
 
@@ -523,6 +583,17 @@ impl IsfData {
         self.inputs
             .iter_mut()
             .for_each(|(_, input)| input.unpause(audio_source));
+    }
+
+    pub fn get_render_texture(&self, index: usize) -> &wgpu::Texture {
+        &self.passes[index].render_texture
+    }
+
+    pub fn get_final_texture(&self) -> Option<&wgpu::Texture> {
+        match self.passes.last() {
+            Some(last) => Some(&last.uniform_texture),
+            None => None,
+        }
     }
 }
 
@@ -637,56 +708,51 @@ pub fn sync_isf_data(
     }
 
     // Prepare the textures that will be written to for passes.
-    isf_data.passes = isf
-        .passes
-        .iter()
-        .enumerate()
-        .map(|(index, p)| {
-            let mut width = output_attachment_size[0];
-            let mut height = output_attachment_size[1];
+    let mut passes = isf_data.passes().to_owned();
+    isf_data.passes = vec![];
 
-            if let Some(width_eq) = &p.width {
-                if let Some(w) =
-                    evaluate_dimension_equation(width_eq, output_attachment_size, isf_data)
-                {
-                    width = w;
-                }
+    for p in isf.passes.iter() {
+        let mut width = output_attachment_size[0];
+        let mut height = output_attachment_size[1];
+
+        if let Some(width_eq) = &p.width {
+            if let Some(w) = evaluate_dimension_equation(width_eq, output_attachment_size, isf_data)
+            {
+                width = w;
             }
+        }
 
-            if let Some(height_eq) = &p.height {
-                if let Some(h) =
-                    evaluate_dimension_equation(height_eq, output_attachment_size, isf_data)
-                {
-                    height = h;
-                }
+        if let Some(height_eq) = &p.height {
+            if let Some(h) =
+                evaluate_dimension_equation(height_eq, output_attachment_size, isf_data)
+            {
+                height = h;
             }
+        }
 
-            // if a texture already exists and the size hasn't changed, return that
-            if let Some(pass_texture) = isf_data.passes.get(index) {
-                let size = pass_texture.size();
-                if size[0] == width && size[1] == height {
-                    if !p.persistent {
-                        // clear the texture if it isn't persistent
-                        let data = vec![0u8; pass_texture.size_bytes()];
-                        pass_texture.upload_data(device, encoder, &data);
-                    }
-
-                    return pass_texture.clone();
+        // if a texture already exists and the size hasn't changed, return that
+        if passes.len() > 0 {
+            let pass_textures = passes.remove(0);
+            let size = pass_textures.size();
+            if size[0] == width && size[1] == height {
+                if !p.persistent {
+                    // clear the texture if it isn't persistent
+                    let data = vec![0u8; pass_textures.size_bytes()];
+                    pass_textures.upload_data(device, encoder, &data);
                 }
-            }
 
-            // create a new texture
-            let texture = wgpu::TextureBuilder::new()
-                .format(Frame::TEXTURE_FORMAT)
-                .size([width, height])
-                .usage(default_isf_texture_usage())
-                .sample_count(num_samples)
-                .build(device);
-            let data = vec![0u8; texture.size_bytes()];
-            texture.upload_data(device, encoder, &data);
-            texture
-        })
-        .collect::<Vec<wgpu::Texture>>();
+                isf_data.passes.push(pass_textures);
+                continue;
+            }
+        }
+
+        isf_data.passes.push(IsfPassTextures::new(
+            device,
+            encoder,
+            [width, height],
+            num_samples,
+        ));
+    }
 
     return textures_updated;
 }
@@ -723,7 +789,7 @@ pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Text
             _ => None,
         });
 
-    let passes = isf_data.passes.iter();
+    let passes = isf_data.passes.iter().map(|pass| &pass.uniform_texture);
     imported.chain(inputs).chain(passes)
 }
 

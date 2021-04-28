@@ -42,10 +42,12 @@ pub struct ProgramStore {
     shader_watcher: notify::INotifyWatcher,
     #[cfg(target_os = "windows")]
     shader_watcher: notify::ReadDirectoryChangesWatcher,
+    render_texture: wgpu::Texture,
+    texture_reshaper: wgpu::TextureReshaper,
 }
 
 impl ProgramStore {
-    pub fn new(app: &App, device: &wgpu::Device, size: Vector2) -> Self {
+    pub fn new(app: &App, device: &wgpu::Device, size: Vector2, num_samples: u32) -> Self {
         let buffer_store = uniforms::BufferStore::new(device, size);
 
         // setup shader watcher
@@ -55,6 +57,9 @@ impl ProgramStore {
         shader_watcher
             .watch(shader_path.as_str(), RecursiveMode::Recursive)
             .unwrap();
+
+        let render_texture = util::create_app_texture(device, size, num_samples);
+        let texture_reshaper = util::create_texture_reshaper(device, &render_texture, num_samples);
 
         Self {
             buffer_store,
@@ -70,6 +75,8 @@ impl ProgramStore {
             program_index: 0,
             program_names: None,
             shader_watcher,
+            render_texture,
+            texture_reshaper,
         }
     }
 
@@ -648,10 +655,15 @@ impl ProgramStore {
     }
 
     pub fn is_multipass(&self) -> bool {
-        match &self.current_subscriptions {
-            Some(s) => s.multipass,
-            None => false,
+        if let Some(ref subscriptions) = self.current_subscriptions {
+            return subscriptions.multipass;
         }
+
+        if let Some(ref isf_pipeline) = self.isf_pipeline {
+            return isf_pipeline.isf_data.passes().len() > 0;
+        }
+
+        false
     }
 
     pub fn num_passes(&mut self) -> u32 {
@@ -678,15 +690,34 @@ impl ProgramStore {
         }
     }
 
-    pub fn multipass_textures(&mut self) -> Vec<&wgpu::Texture> {
+    pub fn multipass_textures(&self) -> Vec<&wgpu::Texture> {
         if let Some(ref isf_pipeline) = self.isf_pipeline {
             isf_pipeline
                 .isf_data
                 .passes()
                 .iter()
+                .map(|pass| &pass.uniform_texture)
                 .collect::<Vec<&wgpu::Texture>>()
         } else {
             self.buffer_store.multipass_uniforms.textures()
         }
+    }
+
+    pub fn get_render_texture(&self, index: usize) -> &wgpu::Texture {
+        if let Some(isf_pipeline) = &self.isf_pipeline {
+            return isf_pipeline.get_render_texture(index);
+        }
+
+        return &self.render_texture;
+    }
+
+    pub fn get_texture_reshaper(&self) -> &wgpu::TextureReshaper {
+        if let Some(isf_pipeline) = &self.isf_pipeline {
+            if let Some(texture_reshaper) = isf_pipeline.get_texture_reshaper() {
+                return texture_reshaper;
+            }
+        }
+
+        return &self.texture_reshaper;
     }
 }

@@ -1,7 +1,5 @@
 // a fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
-#![allow(dead_code)]
-
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
 use std::collections::HashMap;
@@ -75,6 +73,7 @@ pub struct IsfPipeline {
     dst_format: wgpu::TextureFormat,
     dst_texture_size: [u32; 2],
     dst_sample_count: u32,
+    texture_reshaper: Option<wgpu::TextureReshaper>,
 }
 
 fn isf_uniforms_as_bytes(data: &data::IsfUniforms) -> &[u8] {
@@ -284,6 +283,15 @@ impl IsfPipeline {
         let vertex_usage = wgpu::BufferUsage::VERTEX;
         let vertex_buffer = device.create_buffer_with_data(vertices_bytes, vertex_usage);
 
+        let texture_reshaper = match isf_data.get_final_texture() {
+            Some(texture) => Some(crate::util::create_texture_reshaper(
+                device,
+                &texture,
+                num_samples,
+            )),
+            None => None,
+        };
+
         Self {
             isf,
             isf_data,
@@ -310,6 +318,7 @@ impl IsfPipeline {
             dst_format,
             dst_texture_size,
             dst_sample_count,
+            texture_reshaper,
         }
     }
 
@@ -461,6 +470,15 @@ impl IsfPipeline {
             }
         }
 
+        self.texture_reshaper = match self.isf_data.get_final_texture() {
+            Some(texture) => Some(crate::util::create_texture_reshaper(
+                device,
+                &texture,
+                num_samples,
+            )),
+            None => None,
+        };
+
         self.updated = false;
     }
 
@@ -601,5 +619,13 @@ impl IsfPipeline {
 
     pub fn unpause(&mut self) {
         self.isf_data.unpause(&mut self.audio_source);
+    }
+
+    pub fn get_render_texture(&self, index: usize) -> &wgpu::Texture {
+        self.isf_data.get_render_texture(index)
+    }
+
+    pub fn get_texture_reshaper(&self) -> Option<&wgpu::TextureReshaper> {
+        self.texture_reshaper.as_ref()
     }
 }
