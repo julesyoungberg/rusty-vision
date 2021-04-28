@@ -59,7 +59,7 @@ impl AudioUniforms {
         producer.push(vec![0.0; self.texture_size]).unwrap();
         self.audio_consumer = Some(consumer);
 
-        let texture_size = self.texture_size.clone();
+        let texture_size = self.texture_size;
         let group_size = audio_source::FRAME_SIZE / texture_size;
 
         self.audio_thread = Some(thread::spawn(move || {
@@ -104,7 +104,7 @@ impl AudioUniforms {
             self.audio_consumer = Some(c);
 
             if let Some(f) = popped {
-                if f.len() > 0 {
+                if !f.is_empty() {
                     self.frame[..self.texture_size].clone_from_slice(&f[..self.texture_size]);
                 }
             }

@@ -21,9 +21,8 @@
 }*/
 
 void main() {
-    // vec4 srcPixel = IMG_THIS_PIXEL(inputImage);
-    // float luma = (srcPixel.r + srcPixel.g + srcPixel.b) / 3.0;
-    // vec4 dstPixel = (luma > level) ? srcPixel : vec4(0, 0, 0, 1);
-    // gl_FragColor = dstPixel;
-    gl_FragColor = vec4(level);
+    vec4 srcPixel = IMG_THIS_PIXEL(inputImage);
+    float luma = (srcPixel.r + srcPixel.g + srcPixel.b) / 3.0;
+    vec4 dstPixel = (luma > level) ? srcPixel : vec4(0, 0, 0, 1);
+    gl_FragColor = dstPixel;
 }

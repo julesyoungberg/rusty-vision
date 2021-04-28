@@ -149,17 +149,6 @@ fn build_uniform_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayo
         .build(device)
 }
 
-fn has_audio_inputs(isf: isf::Isf) -> bool {
-    for input in isf.inputs {
-        match input.ty {
-            isf::InputType::Audio(_) | isf::InputType::AudioFft(_) => return true,
-            _ => (),
-        }
-    }
-
-    false
-}
-
 impl IsfPipeline {
     pub fn new(
         device: &wgpu::Device,
@@ -543,15 +532,6 @@ impl IsfPipeline {
             let instance_range = 0..1;
             render_pass.draw(vertex_range, instance_range);
         }
-    }
-
-    /// Encode a render pass command for drawing the output of the pipeline to the given frame.
-    ///
-    /// Uses `encode_render_pass` internally.
-    pub fn encode_to_frame(&self, frame: &Frame, isf_time: IsfTime) {
-        let device = frame.device_queue_pair().device();
-        let mut encoder = frame.command_encoder();
-        self.encode_render_pass(device, &mut *encoder, frame.texture_view(), isf_time);
     }
 
     /// Returns the current compilation error for the vertex shader if there is one.

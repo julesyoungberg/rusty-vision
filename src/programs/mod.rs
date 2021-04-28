@@ -660,7 +660,7 @@ impl ProgramStore {
         }
 
         if let Some(ref isf_pipeline) = self.isf_pipeline {
-            return isf_pipeline.isf_data.passes().len() > 0;
+            return !isf_pipeline.isf_data.passes().is_empty();
         }
 
         false
@@ -708,7 +708,7 @@ impl ProgramStore {
             return isf_pipeline.get_render_texture(index);
         }
 
-        return &self.render_texture;
+        &self.render_texture
     }
 
     pub fn get_texture_reshaper(&self) -> &wgpu::TextureReshaper {
@@ -718,6 +718,6 @@ impl ProgramStore {
             }
         }
 
-        return &self.texture_reshaper;
+        &self.texture_reshaper
     }
 }

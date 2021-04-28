@@ -123,13 +123,10 @@ impl AudioSource {
                         .for_each(|s| s.send(msg.clone()).unwrap());
 
                     // break if error
-                    match msg {
-                        AudioMessage::Error(error) => {
-                            error_channel_tx.send(error).unwrap();
-                            break 'outer;
-                        }
-                        _ => (),
-                    };
+                    if let AudioMessage::Error(error) = msg {
+                        error_channel_tx.send(error).unwrap();
+                        break 'outer;
+                    }
                 }
 
                 // receive message from control thread

@@ -18,7 +18,6 @@ use crate::programs::uniforms::video_capture::VideoCapture;
 
 pub const DEFAULT_AUDIO_SAMPLE_COUNT: u32 = 64;
 pub const DEFAULT_AUDIO_FFT_COLUMNS: u32 = 64;
-pub const DEFAULT_AUDIO_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::R32Float;
 
 /// Handles to both the cpu and gpu representations of the image.
 #[derive(Debug)]
@@ -85,21 +84,6 @@ fn create_black_texture(
 }
 
 impl ImageState {
-    /// Whether or not the texture is currently loading.
-    pub fn is_loading(&self) -> bool {
-        matches!(*self, ImageState::Loading(_))
-    }
-
-    /// If the image has been loaded, provides access to the result.
-    ///
-    /// Returns `None` if the image is still loading or has not started loading.
-    pub fn ready(&self) -> Option<Result<&ImageData, &ImageLoadError>> {
-        match *self {
-            ImageState::Ready(ref res) => Some(res.as_ref()),
-            _ => None,
-        }
-    }
-
     /// Update the image state.
     fn update(
         &mut self,
@@ -123,7 +107,7 @@ impl ImageState {
                 let texture = create_black_texture(
                     device,
                     encoder,
-                    [1 as u32, 1 as u32],
+                    [1_u32, 1_u32],
                     wgpu::TextureFormat::R8Unorm,
                 );
 
@@ -132,7 +116,7 @@ impl ImageState {
                     texture,
                 });
 
-                return true;
+                true
             }
             ImageState::Loading(ref loading_image) => match loading_image.receiver.try_recv() {
                 Ok(img_res) => {
@@ -148,12 +132,12 @@ impl ImageState {
                     println!("loaded: {:?}", img_path);
                     *self = ImageState::Ready(res);
 
-                    return true;
+                    true
                 }
-                _ => return false,
+                _ => false,
             },
-            ImageState::Ready(_) => return false,
-        };
+            ImageState::Ready(_) => false,
+        }
     }
 }
 
@@ -196,7 +180,7 @@ impl ImageInput {
         let mut image_source = ImageState::None;
         let updated = image_source.update(device, encoder, image_loader, path);
         self.source = ImageSource::Image(image_source);
-        return updated;
+        updated
     }
 
     pub fn select_image(
@@ -282,9 +266,6 @@ impl IsfInputData {
     /// Initialise a new `IsfInputData` instance.
     fn new(
         device: &wgpu::Device,
-        encoder: &mut wgpu::CommandEncoder,
-        image_loader: &ImageLoader,
-        images_path: &Path,
         audio_source: &mut AudioSource,
         input: &isf::Input,
         size: [u32; 2],
@@ -333,31 +314,15 @@ impl IsfInputData {
                 let n_samples = a.num_samples.unwrap_or(DEFAULT_AUDIO_SAMPLE_COUNT);
                 let mut audio = AudioUniforms::new(device, Some(n_samples as usize));
                 audio.start_session(audio_source);
-                return IsfInputData::Audio(audio);
+                IsfInputData::Audio(audio)
             }
             isf::InputType::AudioFft(a) => {
                 let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
                 let mut audio_fft = AudioFftUniforms::new(device, Some(n_columns as usize));
                 audio_fft.start_session(audio_source);
-                return IsfInputData::AudioFft(audio_fft);
+                IsfInputData::AudioFft(audio_fft)
             }
         }
-    }
-
-    /// Short-hand for checking that the input type matches the data.
-    ///
-    /// This is useful for checking to see if the user has changed the type of data associated with
-    /// the name.
-    pub fn ty_matches(&self, ty: &isf::InputType) -> bool {
-        matches!((self, ty), (IsfInputData::Event { .. }, isf::InputType::Event)
-            | (IsfInputData::Bool(_), isf::InputType::Bool(_))
-            | (IsfInputData::Long { .. }, isf::InputType::Long(_))
-            | (IsfInputData::Float(_), isf::InputType::Float(_))
-            | (IsfInputData::Point2d(_), isf::InputType::Point2d(_))
-            | (IsfInputData::Color(_), isf::InputType::Color(_))
-            | (IsfInputData::Image(_), isf::InputType::Image)
-            | (IsfInputData::Audio(_), isf::InputType::Audio(_))
-            | (IsfInputData::AudioFft(_), isf::InputType::AudioFft(_)))
     }
 
     /// Update an existing instance ISF input data instance with the given input.
@@ -404,17 +369,7 @@ impl IsfInputData {
                 audio_fft.update();
                 audio_fft.update_texture(device, encoder);
             }
-            (data, _) => {
-                *data = Self::new(
-                    device,
-                    encoder,
-                    image_loader,
-                    images_path,
-                    audio_source,
-                    input,
-                    size,
-                )
-            }
+            (data, _) => *data = Self::new(device, audio_source, input, size),
         }
         false
     }
@@ -598,13 +553,13 @@ impl IsfData {
 }
 
 pub fn evaluate_dimension_equation(
-    equation: &String,
+    equation: &str,
     base_size: [u32; 2],
     isf_data: &mut IsfData,
 ) -> Option<u32> {
     let re = Regex::new(r"\$(\w+)").unwrap();
     let subbed_equation = re
-        .replace_all(equation.as_str(), |captures: &regex::Captures| {
+        .replace_all(equation, |captures: &regex::Captures| {
             let var_name = &captures[1];
 
             match var_name {
@@ -625,7 +580,7 @@ pub fn evaluate_dimension_equation(
                 };
             }
 
-            return String::from("0");
+            String::from("0")
         })
         .to_string();
 
@@ -684,15 +639,7 @@ pub fn sync_isf_data(
             .inputs
             .entry(input.name.clone())
             .or_insert_with(|| {
-                IsfInputData::new(
-                    device,
-                    encoder,
-                    image_loader,
-                    images_path,
-                    audio_source,
-                    input,
-                    output_attachment_size,
-                )
+                IsfInputData::new(device, audio_source, input, output_attachment_size)
             });
         if input_data.update(
             device,
@@ -731,7 +678,7 @@ pub fn sync_isf_data(
         }
 
         // if a texture already exists and the size hasn't changed, return that
-        if passes.len() > 0 {
+        if !passes.is_empty() {
             let pass_textures = passes.remove(0);
             let size = pass_textures.size();
             if size[0] == width && size[1] == height {
@@ -754,20 +701,23 @@ pub fn sync_isf_data(
         ));
     }
 
-    return textures_updated;
+    textures_updated
 }
 
 // All textures stored within the `IsfData` instance in the order that they should be declared in
 // the order expected by the isf textures bind group.
 pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Texture> {
-    let imported = isf_data.imported.values().filter_map(|state| match state {
-        ImageState::Ready(ref img_res) => match img_res {
-            Ok(ref img_data) => Some(&img_data.texture),
+    let imported = isf_data
+        .imported()
+        .values()
+        .filter_map(|state| match state {
+            ImageState::Ready(ref img_res) => match img_res {
+                Ok(ref img_data) => Some(&img_data.texture),
+                _ => None,
+            },
+            ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
             _ => None,
-        },
-        ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
-        _ => None,
-    });
+        });
 
     let inputs = isf_data
         .inputs

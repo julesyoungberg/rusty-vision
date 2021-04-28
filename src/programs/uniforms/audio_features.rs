@@ -102,7 +102,7 @@ impl AudioFeaturesUniforms {
     pub fn start_session(&mut self, audio_source: &mut audio_source::AudioSource) -> bool {
         let (audio_channel_tx, audio_channel_rx) = channel();
         audio_source.subscribe(String::from("audio_features"), audio_channel_tx.clone());
-        self.audio_channel_tx = Some(audio_channel_tx.clone());
+        self.audio_channel_tx = Some(audio_channel_tx);
 
         let (error_channel_tx, error_channel_rx) = channel();
         self.error_channel_rx = Some(error_channel_rx);

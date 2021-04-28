@@ -174,7 +174,7 @@ pub fn float_as_bytes(data: &f32) -> &[u8] {
     unsafe { wgpu::bytes::from(data) }
 }
 
-pub fn floats_as_byte_vec(data: &Vec<f32>) -> Vec<u8> {
+pub fn floats_as_byte_vec(data: &[f32]) -> Vec<u8> {
     let mut bytes = vec![];
     data.iter().for_each(|f| bytes.extend(float_as_bytes(f)));
     bytes

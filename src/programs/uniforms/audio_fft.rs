@@ -83,7 +83,7 @@ impl AudioFftUniforms {
         self.spectrum_consumer = Some(consumer);
 
         let spec_group_size = (WINDOW_SIZE / 2) / self.spectrum_size;
-        let spectrum_size = self.spectrum_size.clone();
+        let spectrum_size = self.spectrum_size;
 
         self.fft_thread = Some(thread::spawn(move || {
             let mut frames = vec![];
