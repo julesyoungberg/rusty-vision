@@ -70,44 +70,27 @@ pub fn update(
     }
 
     let compile_errors = program_store.get_program_errors();
-    if let Some(c_errors) = compile_errors {
-        if c_errors.keys().len() > 0 {
+    if let Some(ref c_errors) = compile_errors {
+        if !c_errors.is_empty() {
             compilation_errors(&widget_ids, ui, &compile_errors.unwrap(), size);
             return;
         }
     }
 
-    if let Some(audio_error) = &program_store.buffer_store.audio_source.error {
-        error_display(&widget_ids, ui, "Audio Error", audio_error.as_str(), size);
-        return;
-    }
+    for (error_type, errors) in program_store.get_data_errors() {
+        if !errors.is_empty() {
+            let msg = errors
+                .iter()
+                .fold("".to_owned(), |msg, error| format!("{}{}\n", msg, error));
 
-    if let Some(audio_error) = &program_store.buffer_store.audio_features_uniforms.error {
-        error_display(
-            &widget_ids,
-            ui,
-            "Audio Features Error",
-            audio_error.as_str(),
-            size,
-        );
-        return;
-    }
+            error_display(
+                &widget_ids,
+                ui,
+                format!("{} Error", error_type).as_str(),
+                msg.as_str(),
+                size,
+            );
 
-    if let Some(image_error) = &program_store.buffer_store.image_uniforms.error {
-        error_display(&widget_ids, ui, "Image Error", image_error.as_str(), size);
-        return;
-    }
-
-    if let Some(capture) = &program_store.buffer_store.video_uniforms.video_capture {
-        if let Some(video_error) = &capture.error {
-            error_display(&widget_ids, ui, "Video Error", video_error.as_str(), size);
-            return;
-        }
-    }
-
-    if let Some(capture) = &program_store.buffer_store.webcam_uniforms.video_capture {
-        if let Some(webcam_error) = &capture.error {
-            error_display(&widget_ids, ui, "Webcam Error", webcam_error.as_str(), size);
             return;
         }
     }

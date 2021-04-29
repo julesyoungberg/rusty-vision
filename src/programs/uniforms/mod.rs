@@ -1,4 +1,5 @@
 use nannou::prelude::*;
+use std::collections::HashMap;
 
 use crate::programs::config;
 
@@ -408,5 +409,35 @@ impl BufferStore {
         self.end_audio_session();
         self.video_uniforms.end_session();
         self.webcam_uniforms.end_session();
+    }
+
+    pub fn get_errors(&self) -> HashMap<String, Vec<String>> {
+        let mut errors = HashMap::new();
+
+        if let Some(audio_error) = self.audio_source.error.clone() {
+            errors.insert(String::from("Audio"), vec![audio_error]);
+        }
+
+        if let Some(audio_error) = self.audio_features_uniforms.error.clone() {
+            errors.insert(String::from("Audio Features"), vec![audio_error]);
+        }
+
+        if let Some(image_error) = self.image_uniforms.error.clone() {
+            errors.insert(String::from("Image"), vec![image_error]);
+        }
+
+        if let Some(ref capture) = self.video_uniforms.video_capture {
+            if let Some(video_error) = capture.error.clone() {
+                errors.insert(String::from("Video"), vec![video_error]);
+            }
+        }
+
+        if let Some(ref capture) = self.webcam_uniforms.video_capture {
+            if let Some(webcam_error) = capture.error.clone() {
+                errors.insert(String::from("Webcam"), vec![webcam_error]);
+            }
+        }
+
+        errors
     }
 }

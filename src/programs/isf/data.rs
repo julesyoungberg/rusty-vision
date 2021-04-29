@@ -139,6 +139,21 @@ impl ImageState {
             ImageState::Ready(_) => false,
         }
     }
+
+    pub fn get_error(&self) -> Option<&ImageLoadError> {
+        match self {
+            ImageState::Ready(result) => match result {
+                Err(error) => Some(error),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+}
+
+pub struct IsfInputError {
+    msg: String,
+    ty: String,
 }
 
 #[derive(Debug)]
@@ -237,6 +252,33 @@ impl ImageInput {
         let video_capture = VideoCapture::new(device, capture, 1.0);
 
         self.source = ImageSource::Webcam(video_capture);
+    }
+
+    pub fn get_error(&self) -> Option<IsfInputError> {
+        match &self.source {
+            ImageSource::Image(image_state) => match image_state.get_error() {
+                Some(error) => Some(IsfInputError {
+                    msg: error.to_string(),
+                    ty: String::from("Image"),
+                }),
+                _ => None,
+            },
+            ImageSource::Video(capture) => match &capture.error {
+                Some(error) => Some(IsfInputError {
+                    msg: error.clone(),
+                    ty: String::from("Video"),
+                }),
+                None => None,
+            },
+            ImageSource::Webcam(capture) => match &capture.error {
+                Some(error) => Some(IsfInputError {
+                    msg: error.clone(),
+                    ty: String::from("Webcam"),
+                }),
+                None => None,
+            },
+            _ => None,
+        }
     }
 }
 
@@ -427,6 +469,13 @@ impl IsfInputData {
             _ => (),
         }
     }
+
+    fn get_error(&self) -> Option<IsfInputError> {
+        match self {
+            IsfInputData::Image(ref image_input) => image_input.get_error(),
+            _ => None,
+        }
+    }
 }
 
 pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
@@ -549,6 +598,27 @@ impl IsfData {
             Some(last) => Some(&last.uniform_texture),
             None => None,
         }
+    }
+
+    pub fn get_errors(&self) -> HashMap<String, Vec<String>> {
+        let mut errors = HashMap::new();
+        let image_key = String::from("Image");
+
+        self.imported.iter().for_each(|(_, image)| {
+            if let Some(error) = image.get_error() {
+                let entry = errors.entry(image_key.clone()).or_insert_with(Vec::new);
+                entry.push(error.to_string());
+            }
+        });
+
+        self.inputs.iter().for_each(|(_, input)| {
+            if let Some(error) = input.get_error() {
+                let entry = errors.entry(error.ty).or_insert_with(Vec::new);
+                entry.push(error.msg);
+            }
+        });
+
+        errors
     }
 }
 

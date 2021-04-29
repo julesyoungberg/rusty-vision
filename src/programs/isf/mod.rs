@@ -54,8 +54,8 @@ pub struct IsfPipeline {
     pub isf_err: Option<util::IsfError>,
     pub image_loader: data::ImageLoader,
     pub updated: bool,
-    pub audio_source: AudioSource,
     pub pass_index: u32,
+    audio_source: AudioSource,
     vs: shader::Shader,
     fs: shader::Shader,
     sampler: wgpu::Sampler,
@@ -548,6 +548,37 @@ impl IsfPipeline {
     /// vertex shader.
     pub fn fs_err(&self) -> Option<&shader::ShaderError> {
         self.fs.error.as_ref()
+    }
+
+    pub fn get_program_errors(&self) -> Option<HashMap<String, String>> {
+        let mut errors = HashMap::new();
+
+        if let Some(vs_error) = self.vs_err() {
+            errors.insert(String::from("Vertex Shader"), vs_error.to_string());
+        }
+
+        if let Some(fs_error) = self.fs_err() {
+            errors.insert(String::from("Fragment Shader"), fs_error.to_string());
+        }
+
+        match errors.len() {
+            0 => None,
+            _ => Some(errors),
+        }
+    }
+
+    pub fn get_audio_error(&self) -> Option<String> {
+        self.audio_source.error.clone()
+    }
+
+    pub fn get_data_errors(&self) -> HashMap<String, Vec<String>> {
+        let mut errors = self.isf_data.get_errors();
+
+        if let Some(error) = self.get_audio_error() {
+            errors.insert(String::from("Audio"), vec![error]);
+        }
+
+        errors
     }
 
     /// Generates the widget ids needed for the ISF's inputs.

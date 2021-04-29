@@ -1,5 +1,6 @@
 use nannou::prelude::*;
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
 use std::time;
@@ -629,9 +630,21 @@ impl ProgramStore {
         )
     }
 
-    pub fn get_program_errors(&self) -> Option<&program::ProgramErrors> {
+    pub fn get_program_errors(&self) -> Option<program::ProgramErrors> {
+        if let Some(ref isf_pipeline) = self.isf_pipeline {
+            return isf_pipeline.get_program_errors();
+        }
+
         let current_program = &self.current_program.as_ref()?;
-        Some(&current_program.errors)
+        Some(current_program.errors.clone())
+    }
+
+    pub fn get_data_errors(&self) -> HashMap<String, Vec<String>> {
+        if let Some(ref isf_pipeline) = self.isf_pipeline {
+            return isf_pipeline.get_data_errors();
+        }
+
+        self.buffer_store.get_errors()
     }
 
     pub fn pause(&mut self) {
