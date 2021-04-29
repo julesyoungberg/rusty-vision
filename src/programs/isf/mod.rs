@@ -362,6 +362,7 @@ impl IsfPipeline {
                 if (self.isf.is_none() || new_isf.is_some()) && self.isf != new_isf {
                     isf_updated = true;
                     self.isf = new_isf;
+                    self.isf_data.end_session(&mut self.audio_source);
                 }
             }
         }
