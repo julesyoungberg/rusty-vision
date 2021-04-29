@@ -361,6 +361,7 @@ impl IsfInputData {
             isf::InputType::AudioFft(a) => {
                 let n_columns = a.num_columns.unwrap_or(DEFAULT_AUDIO_FFT_COLUMNS);
                 let mut audio_fft = AudioFftUniforms::new(device, Some(n_columns as usize));
+                audio_fft.smoothing = 0.0;
                 audio_fft.start_session(audio_source);
                 IsfInputData::AudioFft(audio_fft)
             }
