@@ -11,7 +11,9 @@
         {
             "NAME": "speed",
             "TYPE": "float",
-            "MAX": 10.0
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 15.0
         }
     ],
     "PASSES": [
@@ -26,6 +28,6 @@
 void main() {
     vec4 fresh_pixel = IMG_THIS_PIXEL(input_image);
     vec4 stale_pixel = IMG_THIS_PIXEL(prev_frame);
-    gl_FragColor =
-        mix(stale_pixel, fresh_pixel, float(mod(time, speed) == 0.0));
+    float t = step(0.9, sin(TIME * speed) * 0.5 + 0.5);
+    gl_FragColor = mix(stale_pixel, fresh_pixel, t);
 }

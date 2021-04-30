@@ -34,6 +34,12 @@
         "audio_fft_smoothing": 0.97
       }
     },
+    "Marble": {
+      "pipeline": {
+        "frag": "marble.fs"
+      },
+      "isf": true
+    },
     "shapeScope": {
       "pipeline": {
         "frag": "shapeScope.frag"

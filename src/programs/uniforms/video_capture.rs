@@ -100,13 +100,12 @@ impl VideoCapture {
                             capture
                                 .set(opencv::videoio::CAP_PROP_POS_FRAMES, 0.0)
                                 .unwrap();
-                            continue;
                         }
                     }
                     Err(e) => {
                         println!("Error capturing video frame: {:?}", e);
                         error_channel_tx.send(e.to_string()).unwrap();
-                        break;
+                        break 'capture;
                     }
                 }
 
