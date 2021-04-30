@@ -1,0 +1,24 @@
+{
+  "default": "Blur",
+  "programs": {
+    "Blur": {
+      "pipeline": {
+        "frag": "blur.fs"
+      },
+      "isf": true
+    },
+    "Glitch": {
+      "pipeline": {
+        "frag": "glitch.fs"
+      },
+      "isf": true
+    },
+    "StopMotion": {
+      "pipeline": {
+        "frag": "stop_motion.fs"
+      },
+      "isf": true
+    }
+  }
+}
+  

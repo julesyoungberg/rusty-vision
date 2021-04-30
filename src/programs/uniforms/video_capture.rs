@@ -92,7 +92,7 @@ impl VideoCapture {
             'capture: loop {
                 // read from camera
                 let start_time = clock.elapsed().unwrap().as_secs_f64();
-                let mut frame = opencv::core::Mat::default().unwrap();
+                let mut frame = opencv::core::Mat::default();
                 match capture.read(&mut frame) {
                     Ok(success) => {
                         if !success {

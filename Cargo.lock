@@ -205,7 +205,7 @@ dependencies = [
  "quote 1.0.8",
  "regex",
  "rustc-hash",
- "shlex",
+ "shlex 0.1.1",
 ]
 
 [[package]]
@@ -2561,9 +2561,9 @@ checksum = "2839e79665f131bdb5782e51f2c6c9599c133c6098982a54c794358bf432529c"
 
 [[package]]
 name = "opencv"
-version = "0.49.1"
+version = "0.53.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7af7570b5a4cc0a6cbc003a46bbe7cf586bc01d4024442bcf735d56d5007394b"
+checksum = "95cee3eab117dc13566d69f17ffcdd101317bddaba82351582c9de509e2465b5"
 dependencies = [
  "cc",
  "clang",
@@ -2576,15 +2576,15 @@ dependencies = [
  "opencv-binding-generator",
  "pkg-config",
  "semver 0.11.0",
- "shlex",
+ "shlex 1.0.0",
  "vcpkg",
 ]
 
 [[package]]
 name = "opencv-binding-generator"
-version = "0.23.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b103afeab0c96624c28ced967ad96601601717c1a0a5bbe03ddb6efbb9a7e50b"
+checksum = "9ae9e4a76789e339affb18b881bbd3b89522440c49f5578d5c5070030afb5ecf"
 dependencies = [
  "clang",
  "clang-sys",
@@ -3660,6 +3660,12 @@ name = "shlex"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
+
+[[package]]
+name = "shlex"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42a568c8f2cd051a4d283bd6eb0343ac214c1b0f1ac19f93e1175b2dee38c73d"
 
 [[package]]
 name = "sid"

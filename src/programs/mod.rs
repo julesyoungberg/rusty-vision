@@ -167,6 +167,7 @@ impl ProgramStore {
         self.isf_time = Some(isf_time);
         self.error = None;
         self.current_program = None;
+        self.current_subscriptions = None;
     }
 
     fn configure_program(
@@ -179,7 +180,10 @@ impl ProgramStore {
         num_samples: u32,
         size: Point2,
     ) {
-        self.buffer_store.end_session();
+        if let Some(_) = self.current_subscriptions {
+            self.buffer_store.end_session();
+        }
+
         if let Some(ref mut isf_pipeline) = self.isf_pipeline {
             isf_pipeline.end_session();
         }
