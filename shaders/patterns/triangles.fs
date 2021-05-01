@@ -1,47 +1,71 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT"
+        }
+    ]
+}*/
 
 #define AUDIO_REACTIVE 1
 #define TAU 6.28318530718
 
 const vec2 s = vec2(1, 1.7320508);
 
-//@import util/above_line
-//@import util/line_dist
-//@import util/power_curve
-//@import util/pulse
-//@import util/rand
+bool above_line(vec2 r, vec2 q, vec2 p) {
+    return dot(vec2(q.y - r.y, r.x - q.x), q - p) > 0.0;
+}
 
-bool above_line(vec2 r, vec2 q, vec2 p);
-float line_dist(vec2 p, vec2 a, vec2 b);
-float power_curve(float x, float a, float b);
-float pulse(float c, float w, float x);
-float rand(float n);
-float rand21(vec2 co);
-vec2 rand2(vec2 p);
+float line_dist(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float t = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * t);
+}
+
+// IQ's power curve function
+// https://www.iquilezles.org/www/articles/functions/functions.htm
+float power_curve(float x, float a, float b) {
+    const float k = pow(a + b, a + b) / (pow(a, a) * pow(b, b));
+    return k * pow(x, a) * pow(1.0 - x, b);
+}
+
+// IQ's pulse function
+// https://www.iquilezles.org/www/articles/functions/functions.htm
+float pulse(float c, float w, float x) {
+    x = abs(x - c);
+    if (x > w)
+        return 0.0;
+    x /= w;
+    return 1.0 - x * x * (3.0 - 2.0 * x);
+}
+
+float rand(float n) { return fract(n * 1183.5437 + .42); }
+
+float rand21(vec2 p) {
+    return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec2 rand2(vec2 p) {
+    return fract(
+        sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) *
+        43758.5453);
+}
 
 // shane's hexagonal tiling (https://www.shadertoy.com/view/llSyDh)
 vec4 get_hex(vec2 p) {
     vec4 hc = floor(vec4(p, p - vec2(0.5, 1)) / s.xyxy) + 0.5;
     vec4 h = vec4(p - hc.xy * s, p - (hc.zw + 0.5) * s);
-    return (dot(h.xy, h.xy) < dot(h.zw, h.zw)) ? vec4(h.xy, hc.xy) : vec4(h.zw, hc.zw + vec2(0.5, 1));
+    return (dot(h.xy, h.xy) < dot(h.zw, h.zw))
+               ? vec4(h.xy, hc.xy)
+               : vec4(h.zw, hc.zw + vec2(0.5, 1));
 }
 
-vec2 get_point(vec2 id) {
-    return sin(rand2(id) * time) * 0.15;
-}
+vec2 get_point(vec2 id) { return sin(rand2(id) * TIME) * 0.15; }
 
 float line(vec2 p, vec2 a, vec2 b) {
     float d = line_dist(p, a, b);
@@ -50,8 +74,8 @@ float line(vec2 p, vec2 a, vec2 b) {
 }
 
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st = st * 0.5 + 0.5;
 
     vec3 color = vec3(0);
@@ -134,7 +158,7 @@ void main() {
 
     // shimmer
     float dist = length(tri_coord) * 4.0;
-    float t = dist - time * 6.0 + (tri_coord.x + tri_coord.y) * 2.0;
+    float t = dist - TIME * 6.0 + (tri_coord.x + tri_coord.y) * 2.0;
     float shine = mix(1.0, 2.0, pulse(3.0, 2.0, mod(t, 16.8)));
     color *= shine;
 
@@ -147,11 +171,12 @@ void main() {
     float ti = rand(dot(rnd, rnd) * 0.1);
     float sparkle = 1.0;
     if (AUDIO_REACTIVE == 1) {
-        float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(fract(ti), 0)).x;
+        float intensity =
+            log(IMG_NORM_PIXEL(fft_texture, vec2(fract(ti), 0)).x + 1.0);
         sparkle = intensity + 1.0;
     } else {
         float loop = 30.0;
-        float t2 = time * 0.5 + ti * loop;
+        float t2 = TIME * 0.5 + ti * loop;
         sparkle = mix(1.0, 5.0, max(0.0, power_curve(mod(t2, loop), 2.0, 1.0)));
     }
     color *= sparkle;
@@ -165,5 +190,5 @@ void main() {
     float correction = length(gv - points[6]);
     color -= smoothstep(0.02, 0.0, correction) * 0.1;
 
-    frag_color = vec4(pow(color, vec3(1.5)), 1);
+    gl_FragColor = vec4(pow(color, vec3(1.5)), 1);
 }

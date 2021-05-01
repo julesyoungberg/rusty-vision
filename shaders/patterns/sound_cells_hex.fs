@@ -1,27 +1,29 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT"
+        }
+    ]
+}*/
 
 #define TAU 6.28318530718
 
-//@import util/hsv2rgb
-//@import util/noise
-//@import util/rand
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
-vec3 hsv2rgb(vec3 c);
-float noise2(in vec2 p);
-vec2 rand2(vec2 p);
+vec2 rand2(vec2 p) {
+    return fract(
+        sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) *
+        43758.5453);
+}
 
 const vec2 s = vec2(1, 1.7320508);
 
@@ -29,7 +31,9 @@ const vec2 s = vec2(1, 1.7320508);
 vec4 get_hex(vec2 p) {
     vec4 hc = floor(vec4(p, p - vec2(0.5, 1)) / s.xyxy) + 0.5;
     vec4 h = vec4(p - hc.xy * s, p - (hc.zw + 0.5) * s);
-    return (dot(h.xy, h.xy) < dot(h.zw, h.zw)) ? vec4(h.xy, hc.xy) : vec4(h.zw, hc.zw + vec2(0.5, 1));
+    return (dot(h.xy, h.xy) < dot(h.zw, h.zw))
+               ? vec4(h.xy, hc.xy)
+               : vec4(h.zw, hc.zw + vec2(0.5, 1));
 }
 
 float hex_dist(in vec2 p) {
@@ -39,10 +43,9 @@ float hex_dist(in vec2 p) {
 
 vec2 get_point(vec2 coord) {
     vec2 point = rand2(coord);
-    return vec2(
-        cos(time * 0.5 + point.x * TAU),
-        sin(time * 0.5 + point.y * TAU)
-    ) * 0.3;
+    return vec2(cos(TIME * 0.5 + point.x * TAU),
+                sin(TIME * 0.5 + point.y * TAU)) *
+           0.3;
 }
 
 vec3 voronoi(vec4 coords, vec2 st, float scale) {
@@ -54,8 +57,8 @@ vec3 voronoi(vec4 coords, vec2 st, float scale) {
     vec2 m_coord;
     vec2 m_diff;
 
-    // find the nearest cell center
-    #pragma unroll
+// find the nearest cell center
+#pragma unroll
     for (float i = 0.0; i <= 6.0; i++) {
         vec2 offset = vec2(0);
         if (i < 6.0) {
@@ -81,8 +84,8 @@ vec3 voronoi(vec4 coords, vec2 st, float scale) {
 
     float m_edge_dist = scale;
 
-    //find the nearest edge
-    #pragma unroll
+// find the nearest edge
+#pragma unroll
     for (float i = 0.0; i <= 6.0; i++) {
         vec2 offset = vec2(0);
         if (i < 6.0) {
@@ -119,8 +122,8 @@ float impulse(float x, float k) {
 }
 
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
 
     vec3 color = vec3(0);
 
@@ -132,7 +135,7 @@ void main() {
         scaling = 16.0 - smoothstep(0.5, 0.75, r) * 2.0;
     }
     st *= scaling;
-    st += time;
+    st += TIME;
 
     float scale = 1.0;
     st *= scale;
@@ -146,11 +149,13 @@ void main() {
     // color = mix(vec3(0), color, smoothstep(0.01, 0.02, m_edge_dist));
     // // color += scaling;
     // float radius = 1.0;
-    // color += smoothstep(radius, radius + 0.01, r) - smoothstep(radius + 0.01, radius + 0.02, r);
+    // color += smoothstep(radius, radius + 0.01, r) - smoothstep(radius + 0.01,
+    // radius + 0.02, r);
 
     // map point to 1d value between 0 and 1
     float point_val = fract(dot(m_point, m_point) * 4.38);
-    float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(point_val, 0)).x;
+    float intensity =
+        log(IMG_NORM_PIXEL(fft_texture, vec2(point_val, 0)).x + 1.0);
 
     color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
     color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
@@ -160,5 +165,5 @@ void main() {
     // grid
     // color.r += step(0.48, hex_dist(gv));
 
-    frag_color = vec4(color, 1);
+    gl_FragColor = vec4(color, 1);
 }

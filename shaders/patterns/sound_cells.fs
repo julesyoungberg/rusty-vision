@@ -1,27 +1,32 @@
-#version 450
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT"
+        }
+    ]
+}*/
 
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
-
-//@import util/hsv2rgb
-//@import util/rand
-
-vec3 hsv2rgb(vec3 c);
-vec3 rand3(vec3 p);
+vec3 rand3(vec3 p) {
+    return fract(sin(vec3(dot(p, vec3(127.1, 311.7, 264.9)),
+                          dot(p, vec3(269.5, 183.3, 491.5)),
+                          dot(p, vec3(27.17, 112.61, 57.53)))) *
+                 43758.5453);
+}
 
 vec3 get_point(vec3 coord) {
     vec3 point = rand3(coord);
-    point = sin(time * 0.5 + 6.2831 * point) * 0.5 + 0.5;
+    point = sin(TIME * 0.5 + 6.2831 * point) * 0.5 + 0.5;
     return point;
 }
 
@@ -35,11 +40,8 @@ vec4 voronoi(vec3 p, float scale) {
     vec3 m_diff;
 
     // find the nearest cell center
-    #pragma unroll
     for (int z = -1; z <= 1; z++) {
-        #pragma unroll
         for (int y = -1; y <= 1; y++) {
-            #pragma unroll
             for (int x = -1; x <= 1; x++) {
                 vec3 neighbor = vec3(x, y, z);
                 vec3 coord = i_st + neighbor;
@@ -61,11 +63,8 @@ vec4 voronoi(vec3 p, float scale) {
     float m_edge_dist = scale;
 
     // find the nearest edge
-    #pragma unroll
     for (int z = -1; z <= 1; z++) {
-        #pragma unroll
         for (int y = -1; y <= 1; y++) {
-            #pragma unroll
             for (int x = -1; x <= 1; x++) {
                 vec3 neighbor = vec3(x, y, z);
                 vec3 coord = i_st + neighbor;
@@ -90,22 +89,23 @@ vec4 voronoi(vec3 p, float scale) {
 }
 
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st = st * 0.5 + 0.5;
 
     // Scale
     float scale = 20.0;
     st *= scale;
 
-    vec3 p = vec3(st, time * 0.5);
+    vec3 p = vec3(st, TIME * 0.5);
     vec4 val = voronoi(p, scale);
     vec3 m_point = val.xyz;
     float m_edge_dist = val.w;
 
     // map point to 1d value between 0 and 1
     float point_val = dot(m_point, m_point) * 0.5;
-    float intensity = texture(sampler2D(spectrum, spectrum_sampler), vec2(point_val, 0)).x;
+    float intensity =
+        log(IMG_NORM_PIXEL(fft_texture, vec2(point_val, 0)).x + 1.0);
 
     vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
     color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
@@ -116,5 +116,5 @@ void main() {
     // Draw grid
     // color.r += step(.98, f_st.x) + step(.98, f_st.y);
 
-    frag_color = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }

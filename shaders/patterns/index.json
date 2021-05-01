@@ -1,11 +1,11 @@
 {
-  "default": "triangles",
+  "default": "Flow",
   "programs": {
-    "candyWarp": {
+    "CandyWrap": {
       "pipeline": {
-        "frag": "candyWarp.frag"
+        "frag": "candy_wrap.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
     "eyes": {
       "pipeline": {
@@ -16,23 +16,29 @@
         "audio_fft_smoothing": 0.99
       }
     },
-    "hexagonal1": {
+    "Eyes": {
       "pipeline": {
-        "frag": "hexagonal1.frag"
+        "frag": "eyes.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.85
-      }
+      "isf": true
     },
-    "hexagonal2": {
+    "Flow": {
       "pipeline": {
-        "frag": "hexagonal2.frag"
+        "frag": "flow.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.97
-      }
+      "isf": true
+    },
+    "Hexagonal1": {
+      "pipeline": {
+        "frag": "hexagonal1.fs"
+      },
+      "isf": true
+    },
+    "Hexagonal2": {
+      "pipeline": {
+        "frag": "hexagonal2.fs"
+      },
+      "isf": true
     },
     "Marble": {
       "pipeline": {
@@ -40,92 +46,77 @@
       },
       "isf": true
     },
-    "shapeScope": {
+    "ShapeScope": {
       "pipeline": {
-        "frag": "shapeScope.frag"
+        "frag": "shape_scope.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "soundCells": {
+    "SoundCells": {
       "pipeline": {
-        "frag": "soundCells.frag"
+        "frag": "sound_cells.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.97
-      }
+      "isf": true
     },
-    "soundCellsHex": {
+    "SoundCellsHex": {
       "pipeline": {
-        "frag": "soundCellsHex.frag"
+        "frag": "sound_cells_hex.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.85
-      }
+      "isf": true
     },
-    "space1": {
+    "Space1": {
       "pipeline": {
-        "frag": "space1.frag"
+        "frag": "space1.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "space2": {
+    "Space2": {
       "pipeline": {
-        "frag": "space2.frag"
+        "frag": "space2.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "spaceHex": {
+    "SpaceHex": {
       "pipeline": {
-        "frag": "spaceHex.frag"
+        "frag": "space_hex.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "triangles": {
+    "Triangles": {
       "pipeline": {
-        "frag": "triangles.frag"
+        "frag": "triangles.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.90
-      }
+      "isf": true
     },
-    "truchet1": {
+    "Truchet1": {
       "pipeline": {
-        "frag": "truchet1.frag"
+        "frag": "truchet1.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "truchet2": {
+    "Truchet2": {
       "pipeline": {
-        "frag": "truchet2.frag"
+        "frag": "truchet2.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "universeWithin": {
+    "UniverseWithin": {
       "pipeline": {
-        "frag": "universeWithin.frag"
+        "frag": "universe_within.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.6
-      }
+      "isf": true
     },
-    "voronoiCubes": {
+    "VoronoiCubes": {
       "pipeline": {
-        "frag": "voronoiCubes.frag"
+        "frag": "voronoi_cubes.fs"
       },
-      "uniforms": ["general"]
+      "isf": true
     },
-    "voronoiNested": {
+    "VoronoiNested": {
       "pipeline": {
-        "frag": "voronoiNested.frag"
+        "frag": "voronoi_nested.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.4
-      }
+      "isf": true
     }
   }
 }

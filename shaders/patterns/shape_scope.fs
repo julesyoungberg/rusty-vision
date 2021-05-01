@@ -1,14 +1,10 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": []
+}*/
 
 // based on Square Kaleidoscope by domorin
 // https://www.shadertoy.com/view/3t2XRG
@@ -22,27 +18,29 @@ float sdBox(in vec2 p, in vec2 b) {
 
 float in_square(vec2 uv, float square_size) {
     // Changing this value causes some funky shit
-    float a = time + length(uv) * PI * sin(time * 0.12316);
+    float a = TIME + length(uv) * PI * sin(TIME * 0.12316);
     float s = sin(a);
     float c = cos(a);
     uv *= mat2(c, -s, s, c);
-    return float(uv.x > -square_size && uv.x < square_size && uv.y > -square_size && uv.y < square_size);
+    return float(uv.x > -square_size && uv.x < square_size &&
+                 uv.y > -square_size && uv.y < square_size);
 }
 
 float square(in vec2 st, in float size) {
-    float a = time + length(uv) * sin(time * 0.2) * PI * 0.5;
+    float a = TIME + length(st / RENDERSIZE) * sin(TIME * 0.2) * PI * 0.5;
     float c = cos(a);
     float s = sin(a);
     mat2 rot = mat2(c, -s, s, c);
     st *= rot;
-	return sdBox(st, vec2(size));
+    return sdBox(st, vec2(size));
 }
 
 void main() {
-    vec2 st = uv * resolution / resolution.y;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.x *= RENDERSIZE.x / RENDERSIZE.y;
     st *= 6.0;
 
-    float a = time + length(st) * sin(time * 0.5) * 0.2;
+    float a = TIME + length(st) * sin(TIME * 0.5) * 0.2;
     float c = cos(a);
     float s = sin(a);
     mat2 rot = mat2(c, -s, s, c);
@@ -51,11 +49,11 @@ void main() {
     vec2 f_st = fract(st);
     f_st -= 0.5;
 
-    float size = 0.3 + sin(time * 0.5) * 0.1 * length(st);
+    float size = 0.3 + sin(TIME * 0.5) * 0.1 * length(st);
 
     vec3 color = vec3(0.0);
     float dist = 0.0;
-    
+
     float stp = 0.75;
     for (float y = -stp; y <= stp; y += stp) {
         for (float x = -stp; x <= stp; x += stp) {
@@ -64,7 +62,8 @@ void main() {
         }
     }
 
-    color = 0.5 + sin(time + vec3(dist * 0.25, dist * 2.354126, dist * 13.42)) * 0.5;
+    color = 0.5 +
+            sin(TIME + vec3(dist * 0.25, dist * 2.354126, dist * 13.42)) * 0.5;
 
-	frag_color = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }

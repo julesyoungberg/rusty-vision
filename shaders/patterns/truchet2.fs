@@ -1,21 +1,20 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": []
+}*/
 
 #define PI 3.14159265359
 
 // reference https://www.shadertoy.com/view/llSyDh
 const vec2 s = vec2(1, 1.7320508);
 
-mat2 r2(in float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+mat2 r2(in float a) {
+    float c = cos(a), s = sin(a);
+    return mat2(c, -s, s, c);
+}
 
 float hex_dist(in vec2 p) {
     p = abs(p);
@@ -44,7 +43,7 @@ float hash21(vec2 p) {
 // Polar coordinate of the arc pixel.
 float polar_coord(vec2 q, float dir) {
     // The actual animation. You perform that before polar conversion.
-    q = r2(time * dir) * q;
+    q = r2(TIME * dir) * q;
     // Polar angle.
     float a = atan(q.y, q.x);
     // Wrapping the polar angle.
@@ -52,17 +51,15 @@ float polar_coord(vec2 q, float dir) {
 }
 
 // Dot pattern.
-float dots(in vec2 p) {
-    return length(abs(fract(p) - 0.5));
-}
+float dots(in vec2 p) { return length(abs(fract(p) - 0.5)); }
 
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
 
     vec3 color = vec3(0);
 
-    // st += time * 0.05;
+    // st += TIME * 0.05;
     st *= 6.0;
 
     vec4 coords = hex_coords(st);
@@ -71,7 +68,8 @@ void main() {
     float edge_dist = 0.5 - hex_dist(gv);
 
     float h = hash21(id + 0.001);
-    if (h < 0.5) gv.y *= -1.0;
+    if (h < 0.5)
+        gv.y *= -1.0;
 
     const float r = 1.0;
     const float th = 0.2;
@@ -80,23 +78,24 @@ void main() {
     // Arc one.
     q = gv - vec2(0, r) / s;
     vec3 da = vec3(q, length(q));
-    
+
     // Arc two.
     q = r2(PI * 2.0 / 3.0) * gv - vec2(0, r) / s;
     vec3 db = vec3(q, length(q));
 
-    // Arc three. 
+    // Arc three.
     q = r2(PI * 4.0 / 3.0) * gv - vec2(0, r) / s;
     vec3 dc = vec3(q, length(q));
-    
-    // Compare distance fields, and return the vector used to produce the closest one.
+
+    // Compare distance fields, and return the vector used to produce the
+    // closest one.
     vec3 q3 = (da.z < db.z && da.z < dc.z) ? da : (db.z < dc.z) ? db : dc;
 
     q3.z -= 0.57735 / 2.0 + th / 2.0;
     q3.z = max(q3.z, -th - q3.z);
 
     float d = q3.z;
-    float sd = floor(mod(d * 25.0 - time, 3));
+    float sd = floor(mod(d * 25.0 - TIME, 3));
     // color += sd / 3.0;
 
     vec3 color1 = vec3(0.95, 0.32, 0.06);
@@ -119,7 +118,8 @@ void main() {
 
     // poka dots
     color = mix(color, vec3(0), mask * (1.0 - smoothstep(0.0, 0.02, d2)));
-    color = mix(color, vec3(1.0, 0.4, 0.4), mask * (1.0 - smoothstep(0.0, 0.02, d2 + 0.125)));
+    color = mix(color, vec3(1.0, 0.4, 0.4),
+                mask * (1.0 - smoothstep(0.0, 0.02, d2 + 0.125)));
 
-    frag_color = vec4(color, 1);
+    gl_FragColor = vec4(color, 1);
 }

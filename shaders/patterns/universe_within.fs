@@ -1,31 +1,44 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
-
-//@import util/hsv2rgb
-//@import util/line_dist
-//@import util/rand
-
-vec3 hsv2rgb(vec3 c);
-float line_dist(vec2 p, vec2 a, vec2 b);
-float rand(float n);
-float rand21(vec2 p);
-vec2 rand2(vec2 p);
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT"
+        }
+    ]
+}*/
 
 // based on The Universe Within by BigWings
 // https://www.shadertoy.com/view/lscczl
 // from the Art of Code
+
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+float line_dist(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float t = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * t);
+}
+
+float rand(float n) { return fract(n * 1183.5437 + .42); }
+
+float rand21(vec2 p) {
+    return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec2 rand2(vec2 p) {
+    return fract(
+        sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) *
+        43758.5453);
+}
 
 float line(vec2 p, vec2 a, vec2 b, float strength) {
     float d = line_dist(p, a, b);
@@ -36,12 +49,10 @@ float line(vec2 p, vec2 a, vec2 b, float strength) {
     return m;
 }
 
-vec2 get_point(vec2 id) {
-    return sin(rand2(id) * time) * 0.4;
-}
+vec2 get_point(vec2 id) { return sin(rand2(id) * TIME) * 0.4; }
 
 float get_strength(float i) {
-    return log(texture(sampler2D(spectrum, spectrum_sampler), vec2(i, 0)).x + 1.0);
+    return log(IMG_NORM_PIXEL(fft_texture, vec2(i, 0)).x + 1.0);
 }
 
 // draws 1 layer of the pseudo-3d effect
@@ -53,7 +64,7 @@ vec3 layer(vec2 st, float n) {
     float ids[9];
     float strengths[9];
     vec3 colors[9];
-    float t = time;
+    float t = TIME;
     int i = 0;
 
     vec3 color = vec3(0);
@@ -107,14 +118,14 @@ vec3 layer(vec2 st, float n) {
 }
 
 void main() {
-    vec2 st = uv;
-    st.x *= resolution.x / resolution.y;
+    vec2 st = isf_FragNormCoord;
+    st.x *= RENDERSIZE.x / RENDERSIZE.y;
 
     vec3 color = vec3(0.0);
 
     float gradient = st.y * 0.1;
-    
-    float t = time * 0.1;
+
+    float t = TIME * 0.1;
     vec3 base = sin(t * 5.0 * vec3(0.345, 0.456, 0.657)) * 0.4 + 0.6;
 
     float s = sin(t);
@@ -135,8 +146,8 @@ void main() {
         color += layer(st * size + i * vec2(20.0, 27.0), i) * fade;
     }
 
-    // float gradient_strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x;
-    // color -= gradient * base * gradient_strength;
+    // float gradient_strength = texture(sampler2D(spectrum, spectrum_sampler),
+    // vec2(0.1, 0)).x; color -= gradient * base * gradient_strength;
 
-    frag_color = vec4(color, 1);
+    gl_FragColor = vec4(color, 1);
 }

@@ -1,27 +1,33 @@
-#version 450
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT"
+        }
+    ]
+}*/
 
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
+float rand(float n) { return fract(n * 1183.5437 + .42); }
 
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
-
-//@import util/hsv2rgb
-//@import util/rand
-
-vec3 hsv2rgb(vec3 c);
-vec2 rand2(vec2 p);
+vec2 rand2(vec2 p) {
+    return fract(
+        sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) *
+        43758.5453);
+}
 
 vec2 get_point(vec2 coord) {
     vec2 point = rand2(coord);
-    point = sin(6.2831 * point + time * 0.2) * 0.5 + 0.5;
+    point = sin(6.2831 * point + TIME * 0.2) * 0.5 + 0.5;
     return point;
 }
 
@@ -35,9 +41,7 @@ vec4 voronoi(vec2 p, float scale) {
     vec2 m_diff;
 
     // find the nearest cell center
-    #pragma unroll
     for (int y = -1; y <= 1; y++) {
-        #pragma unroll
         for (int x = -1; x <= 1; x++) {
             vec2 neighbor = vec2(x, y);
             vec2 coord = i_st + neighbor;
@@ -58,9 +62,7 @@ vec4 voronoi(vec2 p, float scale) {
     float m_edge_dist = scale;
 
     // find the nearest edge
-    #pragma unroll
     for (int y = -1; y <= 1; y++) {
-        #pragma unroll
         for (int x = -1; x <= 1; x++) {
             vec2 neighbor = vec2(x, y);
             vec2 coord = i_st + neighbor;
@@ -84,8 +86,8 @@ vec4 voronoi(vec2 p, float scale) {
 }
 
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
 
     vec3 color = vec3(0.0);
 
@@ -117,7 +119,8 @@ void main() {
     vec2 relative_point = point - id;
     vec2 cell_uv = gv - relative_point;
 
-    cell_uv = mix(cell_uv, cell_uv * pow(sin(a * 8.0) * 0.5 + 0.5, 2.0) * 3.0, smoothstep(0.35, 0.4, r));
+    cell_uv = mix(cell_uv, cell_uv * pow(sin(a * 8.0) * 0.5 + 0.5, 2.0) * 3.0,
+                  smoothstep(0.35, 0.4, r));
 
     scale = 5.0 * density;
     cell_uv *= scale;
@@ -127,7 +130,7 @@ void main() {
     float inner_dist = inner_val.z;
     float inner_edge_dist = inner_val.w;
 
-    float strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x;
+    float strength = log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0);
     color += smoothstep(0.01, 0.02, edge_dist);
     float edge_scale = mix(0.5, 5.0, smoothstep(0.0, 0.5, strength));
     color -= smoothstep(0.02 * edge_scale, 0.01 * edge_scale, inner_edge_dist);
@@ -140,5 +143,5 @@ void main() {
     // color.r += step(.48, gv.x) + step(.48, gv.y);
     // color.r += step(0.98, inner_gv.x) + step(0.98, inner_gv.y);
 
-    frag_color = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
