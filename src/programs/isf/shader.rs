@@ -1,6 +1,7 @@
 // A fork of https://github.com/nannou-org/nannou/blob/master/nannou_isf/src/pipeline.rs
 
 use nannou::prelude::*;
+use regex::Regex;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -19,7 +20,7 @@ pub enum ShaderError {
         #[from]
         err: isf::ParseError,
     },
-    #[error("an error occurred while parsing ISF: {err}")]
+    #[error("an error occurred while compiling ISF: {err}")]
     Compile {
         #[from]
         err: hotglsl::CompileError,
@@ -189,7 +190,7 @@ pub fn glfragcolor_exists_and_no_out(glsl_str: &str) -> bool {
 pub const FRAGCOLOR_OUT_DECL_STR: &str = "layout(location = 0) out vec4 FragColor;";
 
 /// Inserts the ISF into the beginning of the shader, returning the resulting glsl source.
-pub fn prefix_isf_glsl_str(isf_glsl_str: &str, mut shader_string: String) -> String {
+pub fn prefix_isf_glsl_str(isf_glsl_str: &str, mut shader_string: String) -> (String, usize) {
     // Check to see if we need to declare the `gl_FragCoord` output.
     // While we're at it, replace `vv_FragNormCoord` with `isf_FragNormCoord` if necessary.
     let glfragcolor_decl_str = {
@@ -238,10 +239,17 @@ pub fn prefix_isf_glsl_str(isf_glsl_str: &str, mut shader_string: String) -> Str
         }
     };
 
+    let diff = shader_string.lines().collect::<Vec<&str>>().len()
+        - remaining_shader_str.lines().collect::<Vec<&str>>().len();
+
     output.extend(glfragcolor_decl_str);
     output.push_str(isf_glsl_str);
+
+    let offset = output.lines().collect::<Vec<&str>>().len() - diff - 1;
+
     output.push_str(remaining_shader_str);
-    output
+
+    (output, offset)
 }
 
 /// Compile an ISF fragment shader.
@@ -257,12 +265,61 @@ pub fn compile_isf_shader(
         .and_then(|(old_str, isf)| {
             let isf_str = glsl_string_from_isf(&isf);
             println!("{}", isf_str);
-            let new_str = prefix_isf_glsl_str(&isf_str, old_str);
+
+            let (new_str, offset) = prefix_isf_glsl_str(&isf_str, old_str);
             let ty = hotglsl::ShaderType::Fragment;
-            hotglsl::compile_str(&new_str, ty).map_err(From::from)
+
+            hotglsl::compile_str(&new_str, ty).map_err(|error| {
+                let mut msg = error.to_string();
+                msg = msg.replacen("\n", "\n\n", 1);
+
+                // replace temp filename in message with actual file name
+                let filename_re = Regex::new(r"/[^\s]+\.frag").unwrap();
+                let path_string = path.to_str().unwrap().to_string();
+                let filename = path_string.split("/").last().unwrap();
+                msg = filename_re.replace_all(msg.as_str(), filename).to_string();
+
+                // reformat error message with source line number and code line
+                let line_re = Regex::new(r"ERROR: ([^\.\n]+)\.fs:(\d+):([^\n]+)\n").unwrap();
+                let lines = new_str.lines().collect::<Vec<&str>>();
+                msg = line_re
+                    .replace_all(msg.as_str(), |captures: &regex::Captures| {
+                        let input = captures[0].to_string();
+                        let filename = captures[1].to_string();
+                        let message = captures[3].to_string();
+                        let line_number = match captures[2].parse::<i32>() {
+                            Ok(n) => n,
+                            Err(_) => return input,
+                        };
+
+                        let source_line_number = line_number - offset as i32;
+                        let line = match lines.get(line_number as usize - 1) {
+                            Some(l) => l,
+                            None => return input,
+                        };
+
+                        println!("line number: {}", line_number);
+                        println!("source line number: {}", source_line_number);
+                        println!("line: {}", line);
+
+                        format!(
+                            "{}.fs:{}:{}\n\n    >> {}\n\n",
+                            filename, source_line_number, message, line
+                        )
+                    })
+                    .to_string();
+
+                println!("{}", msg);
+
+                ShaderError::Compile {
+                    err: hotglsl::CompileError::GlslToSpirv { err: msg },
+                }
+            })
         });
+
     let (bytes, error) = util::split_result(res);
     let module = bytes.map(|b| wgpu::shader_from_spirv_bytes(device, &b));
+
     (module, error)
 }
 

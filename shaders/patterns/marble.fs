@@ -1,3 +1,4 @@
+#version 450
 /*{
     "DESCRIPTION": "FBM marble pattern generator based on the Book of Shaders",
     "CREDIT": "by julesyoungberg",
@@ -198,7 +199,7 @@ float pattern(in vec2 p, out vec2 q, out vec2 r) {
 }
 
 void main() {
-    vec3 finalColor = vec3(0.0);
+    vec4 finalColor = vec4(0.0);
 
     vec2 q;
     vec2 r;
@@ -208,5 +209,5 @@ void main() {
     finalColor = mix(finalColor, color3, length(q) / 2.0);
     finalColor = mix(finalColor, color4, r.y / 2.0);
 
-    gl_FragColor = vec4(finalColor, 1.0);
+    gl_FragColor = finalColor;
 }
