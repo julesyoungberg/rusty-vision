@@ -308,9 +308,12 @@ impl IsfInputData {
     /// Initialise a new `IsfInputData` instance.
     fn new(
         device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        image_loader: &ImageLoader,
+        images_path: &Path,
         audio_source: &mut AudioSource,
         input: &isf::Input,
-        size: [u32; 2],
+        _size: [u32; 2],
     ) -> Self {
         match &input.ty {
             isf::InputType::Event => IsfInputData::Event { happening: false },
@@ -349,7 +352,10 @@ impl IsfInputData {
             }
             isf::InputType::Image => {
                 let mut image_input = ImageInput::new();
-                image_input.start_webcam(device, pt2(size[0] as f32, size[1] as f32));
+                // mage_input.start_webcam(device, pt2(size[0] as f32, size[1] as f32));
+                if let Some(path) = image_paths(images_path).next() {
+                    image_input.load_image(device, encoder, image_loader, path);
+                }
                 IsfInputData::Image(image_input)
             }
             isf::InputType::Audio(a) => {
@@ -412,7 +418,17 @@ impl IsfInputData {
                 audio_fft.update();
                 audio_fft.update_texture(device, encoder);
             }
-            (data, _) => *data = Self::new(device, audio_source, input, size),
+            (data, _) => {
+                *data = Self::new(
+                    device,
+                    encoder,
+                    image_loader,
+                    images_path,
+                    audio_source,
+                    input,
+                    size,
+                )
+            }
         }
         false
     }
@@ -710,7 +726,15 @@ pub fn sync_isf_data(
             .inputs
             .entry(input.name.clone())
             .or_insert_with(|| {
-                IsfInputData::new(device, audio_source, input, output_attachment_size)
+                IsfInputData::new(
+                    device,
+                    encoder,
+                    image_loader,
+                    images_path,
+                    audio_source,
+                    input,
+                    output_attachment_size,
+                )
             });
         if input_data.update(
             device,
@@ -721,7 +745,7 @@ pub fn sync_isf_data(
             input,
             output_attachment_size,
         ) {
-            textures_updated = false;
+            textures_updated = true;
         }
     }
 
