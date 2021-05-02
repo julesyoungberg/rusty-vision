@@ -88,6 +88,18 @@
       },
       "isf": true
     },
+    "SquareSpiral": {
+      "pipeline": {
+        "frag": "square_spiral.fs"
+      },
+      "isf": true
+    },
+    "Sunset": {
+      "pipeline": {
+        "frag": "sunset.fs"
+      },
+      "isf": true
+    },
     "Triangles": {
       "pipeline": {
         "frag": "triangles.fs"

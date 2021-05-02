@@ -1,29 +1,23 @@
 {
-  "default": "kaleidoscope3",
+  "default": "Kaleidoscope3",
   "programs": {
-    "kaleidoImage": {
+    "KaleidoscopeImage1": {
       "pipeline": {
-        "frag": "kaleidoImage.frag"
+        "frag": "kaleidoscope_image1.fs"
       },
-      "uniforms": ["general", "image"],
-      "config": {
-        "image1": "forest.jpg"
-      }
+      "isf": true
+    },
+    "KaleidoscopeImage2": {
+      "pipeline": {
+        "frag": "kaleidoscope_image2.fs"
+      },
+      "isf": true
     },
     "Kaleidoscope1": {
       "pipeline": {
         "frag": "kaleidoscope1.fs"
       },
       "isf": true
-    },
-    "kaleidoscope1Image": {
-      "pipeline": {
-        "frag": "kaleidoscope1Image.frag"
-      },
-      "uniforms": ["general", "image"],
-      "config": {
-        "image1": "forest.jpg"
-      }
     },
     "Kaleidoscope2": {
       "pipeline": {
@@ -43,38 +37,23 @@
       },
       "isf": true
     },
-    "kifs": {
+    "Kifs1": {
       "pipeline": {
-        "frag": "kifs.frag"
+        "frag": "kifs1.fs"
       },
-      "uniforms": ["general", "image"],
-      "config": {
-        "image1": "forest.jpg"
-      }
+      "isf": true
     },
-    "kifs2": {
+    "Kifs2": {
       "pipeline": {
-        "frag": "kifs2.frag"
+        "frag": "kifs2.fs"
       },
-      "uniforms": ["general", "image"],
-      "config": {
-        "image1": "forest.jpg"
-      }
+      "isf": true
     },
-    "kifs3": {
+    "Kifs3": {
       "pipeline": {
-        "frag": "kifs3.frag"
+        "frag": "kifs3.fs"
       },
-      "uniforms": ["general", "image"],
-      "config": {
-        "image1": "forest.jpg"
-      }
-    },
-    "koch": {
-      "pipeline": {
-        "frag": "koch.frag"
-      },
-      "uniforms": ["general"]
+      "isf": true
     }
   }
 }

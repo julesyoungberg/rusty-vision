@@ -1,29 +1,20 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler image_sampler;
-layout(set = 1, binding = 1) uniform texture2D image1;
-layout(set = 1, binding = 2) uniform texture2D image2;
-layout(set = 1, binding = 2) uniform ImageUniforms {
-    vec2 image1_size;
-    vec2 image2_size;
-};
+/*{
+    "DESCRIPTION": "Audio reaactive glitch effects",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "FX" ],
+    "INPUTS": [
+        {
+            "NAME": "input_image",
+            "TYPE": "image"
+        }
+    ]
+}*/
 
 #define PI 3.14159265359
 #define PHI 1.6180339887
 
-vec2 N(float angle) {
-    return vec2(sin(angle), cos(angle));
-}
+vec2 N(float angle) { return vec2(sin(angle), cos(angle)); }
 
 float sdBox(in vec2 p, in vec2 b) {
     vec2 d = abs(p) - b;
@@ -31,15 +22,19 @@ float sdBox(in vec2 p, in vec2 b) {
 }
 
 float square(in vec2 p, in vec2 b) {
-    float angle = PI * 0.25 * time * -0.5;
+    float angle = PI * 0.25 * TIME * -0.5;
     float c = cos(angle);
     float s = sin(angle);
     return sdBox(p * mat2(c, -s, s, c), b);
 }
 
+vec3 image_color(in vec2 coord) {
+    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+}
+
 void main() {
-    vec2 st = uv;
-    st.y *= resolution.y / resolution.x;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st *= 3.0;
     vec3 color = vec3(0);
     vec2 size = vec2(0.5);
@@ -48,7 +43,7 @@ void main() {
     float dist = 100.0;
 
     for (int i = 0; i < 10; i++) {
-        float angle = time * 0.1 + i;
+        float angle = TIME * 0.01 + i;
         float c = cos(angle);
         float s = sin(angle);
         st *= mat2(c, -s, s, c);
@@ -73,8 +68,8 @@ void main() {
     }
 
     st *= scale;
-    color = texture(sampler2D(image1, image_sampler), mod(st - time * 0.05, 1.0)).xyz;
+    color = image_color(st - TIME * 0.3);
     // color += 1.0 - sign(dist);
 
-    frag_color = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
