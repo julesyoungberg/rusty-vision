@@ -1,90 +1,9 @@
 {
-  "default": "slices",
+  "default": "multipass",
   "programs": {
-    "cells": {
-      "pipeline": {
-        "frag": "cells.frag"
-      },
-      "uniforms": ["general", "webcam"]
-    },
     "cracked": {
       "pipeline": {
         "frag": "cracked.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "dither": {
-      "pipeline": {
-        "frag": "dither.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "dots": {
-      "pipeline": {
-        "frag": "dots.frag"
-      },
-      "uniforms": ["general", "webcam"]
-    },
-    "glitch": {
-      "pipeline": {
-        "frag": "glitch.frag"
-      },
-      "uniforms": ["general", "audio_fft", "webcam"],
-      "config": {
-        "audio_fft_smoothing": 0.5
-      }
-    },
-    "grid": {
-      "pipeline": {
-        "frag": "grid.frag"
-      },
-      "uniforms": ["general", "audio_fft", "webcam"],
-      "config": {
-        "audio_fft_smoothing": 0.5
-      }
-    },
-    "halftone": {
-      "pipeline": {
-        "frag": "halftone.frag"
-      },
-      "uniforms": ["general", "audio_fft", "webcam"],
-      "config": {
-        "audio_fft_smoothing": 0.95
-      }
-    },
-    "liquid1": {
-      "pipeline": {
-        "frag": "liquid1.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "liquid2": {
-      "pipeline": {
-        "frag": "liquid2.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "liquid3": {
-      "pipeline": {
-        "frag": "liquid3.frag"
-      },
-      "uniforms": ["general", "webcam"]
-    },
-    "liquid4": {
-      "pipeline": {
-        "frag": "liquid4.frag"
       },
       "uniforms": ["general", "webcam", "audio_fft"],
       "config": {
@@ -106,64 +25,6 @@
         "frag": "notebook.frag"
       },
       "uniforms": ["general", "webcam"]
-    },
-    "pieces": {
-      "pipeline": {
-        "frag": "pieces.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"]
-    },
-    "rainbow": {
-      "pipeline": {
-        "frag": "rainbow.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft", "multipass"],
-      "config": {
-        "audio_fft_smoothing": 0.95,
-        "passes": 2
-      }
-    },
-    "ripples": {
-      "pipeline": {
-        "frag": "ripples.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "slices": {
-      "pipeline": {
-        "frag": "slices.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "sobel": {
-      "pipeline": {
-        "frag": "sobel.frag"
-      },
-      "uniforms": ["general", "webcam"]
-    },
-    "trippy": {
-      "pipeline": {
-        "frag": "trippy.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
-    },
-    "tv": {
-      "pipeline": {
-        "frag": "tv.frag"
-      },
-      "uniforms": ["general", "webcam", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
     },
     "webcam": {
       "pipeline": {

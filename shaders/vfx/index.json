@@ -1,9 +1,27 @@
 {
-  "default": "Blur",
+  "default": "Glitch",
   "programs": {
     "Blur": {
       "pipeline": {
         "frag": "blur.fs"
+      },
+      "isf": true
+    },
+    "Cells": {
+      "pipeline": {
+        "frag": "cells.fs"
+      },
+      "isf": true
+    },
+    "Dither": {
+      "pipeline": {
+        "frag": "dither.fs"
+      },
+      "isf": true
+    },
+    "Dots": {
+      "pipeline": {
+        "frag": "dots.fs"
       },
       "isf": true
     },
@@ -13,9 +31,81 @@
       },
       "isf": true
     },
+    "Grid": {
+      "pipeline": {
+        "frag": "grid.fs"
+      },
+      "isf": true
+    },
+    "Halftone": {
+      "pipeline": {
+        "frag": "halftone.fs"
+      },
+      "isf": true
+    },
+    "Liquid1": {
+      "pipeline": {
+        "frag": "liquid1.fs"
+      },
+      "isf": true
+    },
+    "Liquid2": {
+      "pipeline": {
+        "frag": "liquid2.fs"
+      },
+      "isf": true
+    },
+    "Liquid3": {
+      "pipeline": {
+        "frag": "liquid3.fs"
+      },
+      "isf": true
+    },
+    "Liquid4": {
+      "pipeline": {
+        "frag": "liquid4.fs"
+      },
+      "isf": true
+    },
+    "Pieces": {
+      "pipeline": {
+        "frag": "pieces.fs"
+      },
+      "isf": true
+    },
+    "Ripples": {
+      "pipeline": {
+        "frag": "ripples.fs"
+      },
+      "isf": true
+    },
+    "Slices": {
+      "pipeline": {
+        "frag": "slices.fs"
+      },
+      "isf": true
+    },
+    "Sobel": {
+      "pipeline": {
+        "frag": "sobel.fs"
+      },
+      "isf": true
+    },
     "StopMotion": {
       "pipeline": {
         "frag": "stop_motion.fs"
+      },
+      "isf": true
+    },
+    "Trippy": {
+      "pipeline": {
+        "frag": "trippy.fs"
+      },
+      "isf": true
+    },
+    "TV": {
+      "pipeline": {
+        "frag": "tv.fs"
       },
       "isf": true
     }
