@@ -10,14 +10,11 @@
         "image1": "forest.jpg"
       }
     },
-    "kaleidoscope1": {
+    "Kaleidoscope1": {
       "pipeline": {
-        "frag": "kaleidoscope1.frag"
+        "frag": "kaleidoscope1.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
     "kaleidoscope1Image": {
       "pipeline": {
@@ -28,32 +25,23 @@
         "image1": "forest.jpg"
       }
     },
-    "kaleidoscope2": {
+    "Kaleidoscope2": {
       "pipeline": {
-        "frag": "kaleidoscope2.frag"
+        "frag": "kaleidoscope2.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kaleidoscope3": {
+    "Kaleidoscope3": {
       "pipeline": {
-        "frag": "kaleidoscope3.frag"
+        "frag": "kaleidoscope3.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kaleidoscope4": {
+    "Kaleidoscope4": {
       "pipeline": {
-        "frag": "kaleidoscope4.frag"
+        "frag": "kaleidoscope4.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
     "kifs": {
       "pipeline": {

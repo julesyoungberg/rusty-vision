@@ -22,6 +22,12 @@
       },
       "isf": true
     },
+    "FBM": {
+      "pipeline": {
+        "frag": "fbm.fs"
+      },
+      "isf": true
+    },
     "Flow": {
       "pipeline": {
         "frag": "flow.fs"

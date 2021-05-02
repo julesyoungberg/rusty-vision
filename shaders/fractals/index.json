@@ -1,68 +1,47 @@
 {
   "default": "kaliset3",
   "programs": {
-    "flame": {
+    "Flame1": {
       "pipeline": {
-        "frag": "flame.frag"
+        "frag": "flame1.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.93
-      }
+      "isf": true
     },
-    "flame2": {
+    "Flame2": {
       "pipeline": {
-        "frag": "flame2.frag"
+        "frag": "flame2.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.93
-      }
+      "isf": true
     },
-    "hexFractal": {
+    "HexFractal": {
       "pipeline": {
-        "frag": "hexFractal.frag"
+        "frag": "hex_fractal.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kaliset": {
+    "Kaliset1": {
       "pipeline": {
-        "frag": "kaliset.frag"
+        "frag": "kaliset1.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kaliset2": {
+    "Kaliset2": {
       "pipeline": {
-        "frag": "kaliset2.frag"
+        "frag": "kaliset2.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kaliset3": {
+    "Kaliset3": {
       "pipeline": {
-        "frag": "kaliset3.frag"
+        "frag": "kaliset3.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
-    "kalisetCircuits": {
+    "KalisetCircuits": {
       "pipeline": {
-        "frag": "kalisetCircuits.frag"
+        "frag": "kaliset_circuits.fs"
       },
-      "uniforms": ["general", "audio_fft"],
-      "config": {
-        "audio_fft_smoothing": 0.9
-      }
+      "isf": true
     },
     "mandelbox": {
       "pipeline": {

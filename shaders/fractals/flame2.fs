@@ -1,45 +1,53 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": [
+        {
+            "NAME": "fft_texture",
+            "TYPE": "audioFFT",
+            "MAX": 32
+        }
+    ]
+}*/
 
 #define SPECTRUM_SIZE 32
 
-//@import util/palette
-//@import util/rand
+float rand21(vec2 p) {
+    return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
 
-vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
-vec2 rand2(vec2 p);
-float rand21(vec2 p);
+vec2 rand2(vec2 p) {
+    return fract(
+        sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) *
+        43758.5453);
+}
+
+// IQ's palette generator:
+// https://www.iquilezles.org/www/articles/palettes/palettes.htm
+vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
+    return a + b * cos(6.28318 * (c * t + d));
+}
 
 // based on Illustrated Equations by sben
 // https://www.shadertoy.com/view/MtBGDW0
 // and Circuits by Kali
 // https://www.shadertoy.com/view/XlX3Rj
 void main() {
-    vec2 st = uv;
-    st.x *= resolution.x / resolution.y;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    st.x *= RENDERSIZE.x / RENDERSIZE.y;
 
     vec3 color = vec3(0.0);
 
-    float strength = texture(sampler2D(spectrum, spectrum_sampler), vec2(0.04, 0)).x;
+    float strength = log(IMG_NORM_PIXEL(fft_texture, vec2(0.04, 0)).x + 1.0);
 
     st *= 2.0;
     st *= mix(1.0, 0.95, strength);
 
     vec2 p = abs(st * 2.0);
     vec2 ab = vec2(2.0 - p.x);
-    float t = time;
+    float t = TIME;
 
     // orbit traps
     float min_comp = 1000.0;
@@ -62,7 +70,8 @@ void main() {
         float m_comp = clamp(abs(min(p.x, p.y)), w - mag, abs(mag - w));
         min_comp = min(m_comp, min_comp);
         min_mag = min(mag * 0.1, min_mag);
-        last_stable = max(last_stable, i * (1.0 - abs(sign(min_comp - m_comp))));
+        last_stable =
+            max(last_stable, i * (1.0 - abs(sign(min_comp - m_comp))));
     }
 
     p /= 30.0;
@@ -71,16 +80,10 @@ void main() {
 
     // get fractal color
     color = palette(
-        id * 2.0,
-        vec3(0.5, 0.5, 0.5), 
-        vec3(0.5, 0.5, 0.5),
-        vec3(1.0, 1.0, 1.0),
-        fract(vec3(
-                texture(sampler2D(spectrum, spectrum_sampler), vec2(0.7, 0)).x,
-                texture(sampler2D(spectrum, spectrum_sampler), vec2(0.4, 0)).x,
-                texture(sampler2D(spectrum, spectrum_sampler), vec2(0.1, 0)).x
-        ))
-    );
+        id * 2.0, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0),
+        fract(vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x + 1.0),
+                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x + 1.0),
+                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0))));
 
     // carve out design
     last_stable += 1.0;
@@ -90,5 +93,5 @@ void main() {
     float shape = max(pow(max(0.0, width - min_comp) / width, 0.25), circ);
     color *= shape;
 
-    frag_color = vec4(sqrt(color), 1);
+    gl_FragColor = vec4(sqrt(color), 1);
 }

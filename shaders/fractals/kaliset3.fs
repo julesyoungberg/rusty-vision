@@ -1,47 +1,46 @@
-#version 450
-
-layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
-
-layout(set = 0, binding = 0) uniform GeneralUniforms {
-    vec2 mouse;
-    vec2 resolution;
-    float time;
-    int mouse_down;
-};
-
-layout(set = 1, binding = 0) uniform sampler spectrum_sampler;
-layout(set = 1, binding = 1) uniform texture2D spectrum;
+/*{
+    "DESCRIPTION": "",
+    "CREDIT": "by julesyoungberg",
+    "ISFVSN": "2.0",
+    "CATEGORIES": [ "GENERATOR" ],
+    "INPUTS": []
+}*/
 
 const vec3 LIGHT_POS = vec3(0.0, 0.0, -1.0);
 
-//@import util/complex_inv
-//@import util/complex_log
-//@import util/complex_mult
-//@import util/noise
-//@import util/palette
+vec2 complex_inv(in vec2 z) {
+    vec2 conjugate = vec2(z.x, -z.y);
+    float denominator = dot(conjugate, conjugate);
+    return conjugate / denominator;
+}
 
-vec2 complex_inv(in vec2 z);
-vec2 complex_log(in vec2 z);
-vec2 complex_mult(in vec2 a, in vec2 b);
-float noise2(in vec2 p);
-vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d);
+vec2 complex_log(in vec2 z) { return vec2(log(length(z)), atan(z.y, z.x)); }
+
+vec2 complex_mult(in vec2 a, in vec2 b) {
+    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+// IQ's palette generator:
+// https://www.iquilezles.org/www/articles/palettes/palettes.htm
+vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
+    return a + b * cos(6.28318 * (c * t + d));
+}
 
 // Based on Alien Tech by Kali
 // https://www.shadertoy.com/view/XtX3zj
-// formulas from 
+// formulas from
 // http://www.fractalforums.com/new-theories-and-research/very-simple-formula-for-fractal-patterns
 vec2 formula(in vec2 st) {
     vec2 z = st;
 
     vec2 c = vec2(-0.6);
-    c = vec2(-0.32 + sin(time / 11.0) * 0.05, 0.87);
+    c = vec2(-0.32 + sin(TIME / 11.0) * 0.05, 0.87);
 
     float expsmo = 0.0;
     float len = 0.0;
     float orbit_trap = 0.0;
 
-    float angle = time * 0.05;
+    float angle = TIME * 0.05;
 
     const float iterations = 40;
     for (float i = 0.0; i < iterations; i++) {
@@ -61,13 +60,15 @@ vec2 formula(in vec2 st) {
         // z = abs(complex_mult(z, complex_inv(c))) + c;
         // z = abs(complex_mult(z, z)) + c;
         // z = abs(complex_inv(complex_mult(complex_mult(z, z), z))) + c;
-        // z = complex_inv(complex_mult(complex_mult(abs(z), abs(z)), abs(z))) + c;
+        // z = complex_inv(complex_mult(complex_mult(abs(z), abs(z)), abs(z))) +
+        // c;
 
         // softology variations
         z.x = -abs(z.x);
         const vec2 cone = vec2(1.0, 0.0);
-        // z = complex_mult(z, c) + cone + complex_inv(complex_mult(z, c) + cone);
-        // z = abs(complex_mult(z, c) + cone) + complex_inv(abs(complex_mult(z, c) + cone));
+        // z = complex_mult(z, c) + cone + complex_inv(complex_mult(z, c) +
+        // cone); z = abs(complex_mult(z, c) + cone) +
+        // complex_inv(abs(complex_mult(z, c) + cone));
         vec2 temp = abs(complex_mult(z, c) + cone);
         z = temp + complex_mult(cone, complex_inv(temp));
 
@@ -86,7 +87,8 @@ vec2 formula(in vec2 st) {
 }
 
 vec3 light(vec2 p, vec3 color) {
-    // calculate normals based on horizontal and vertical vectors being z the formula result
+    // calculate normals based on horizontal and vertical vectors being z the
+    // formula result
     const vec2 d = vec2(0.0, 0.01);
     float d1 = formula(p - d.xy).x - formula(p + d.xy).x;
     float d2 = formula(p - d.yx).x - formula(p + d.yx).x;
@@ -96,31 +98,32 @@ vec3 light(vec2 p, vec3 color) {
 
     // lighting
     vec3 light_dir = normalize(vec3(p, 0.0) + LIGHT_POS);
-    float diff = pow(max(0.0, dot(light_dir, n)), 2.0) + 0.2; // lambertian diffuse + ambient
-	vec3 r = reflect(vec3(0.0, 0.0, 1.0), light_dir); // half vector
-	float spec = pow(max(0.0, dot(r, n)), 30.0); // specular
-  	return diff * color + spec * 0.1;
+    float diff = pow(max(0.0, dot(light_dir, n)), 2.0) +
+                 0.2; // lambertian diffuse + ambient
+    vec3 r = reflect(vec3(0.0, 0.0, 1.0), light_dir); // half vector
+    float spec = pow(max(0.0, dot(r, n)), 30.0);      // specular
+    return diff * color + spec * 0.1;
 }
 
 void main() {
-    vec2 st = uv;
-    float aspect_ratio = resolution.x / resolution.y;
+    vec2 st = isf_FragNormCoord * 2.0 - 1.0;
+    float aspect_ratio = RENDERSIZE.x / RENDERSIZE.y;
     st.x *= aspect_ratio;
     st *= 1.0;
-    
+
     vec3 color = vec3(0);
 
-    float t = time;
+    float t = TIME;
     // float scale = 1.0 + 0.5 * sin(t / 17.0);
     // st *= scale;
 
-    vec2 pix_size = 0.25 / resolution;
+    vec2 pix_size = 0.25 / RENDERSIZE;
     pix_size.x *= aspect_ratio;
     const float aa_samples = 1.0;
     const float aa_sqrt = sqrt(aa_samples);
     float little_lights = 0.0;
 
-    vec2 m = 2.0 * mouse / resolution.y;
+    vec2 m = 2.0 * sin(vec2(TIME)) / RENDERSIZE.y;
     m = m * 0.5 + 0.5;
 
     for (float aa = 0.0; aa < aa_samples; aa++) {
@@ -129,13 +132,9 @@ void main() {
 
         vec2 result = formula(p);
         float k = clamp(result.x * 0.06, 0.8, 1.4);
-        vec3 col = palette(
-            result.x * 0.1,
-            vec3(0.5, 0.5, 0.5), 
-            vec3(0.5, 0.5, 0.5),
-            vec3(0.9, 1.0, 1.0),
-            vec3(m, 1.0)
-        );
+        vec3 col =
+            palette(result.x * 0.1, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5),
+                    vec3(0.9, 1.0, 1.0), vec3(m, 1.0));
         col *= 0.4;
         // col = 1.0 - col;
 
@@ -152,7 +151,8 @@ void main() {
     color *= 0.07 + pow(max(0.0, 2.0 - length(luv) * 0.5), 2.0);
 
     // yellow lights
-    // color += pow(little_lights * 0.12, 15.0) * vec3(1.0, 0.9, 0.3) * (0.8 + sin(time * 5.0 - st.y * 10.0) * 0.6);
+    // color += pow(little_lights * 0.12, 15.0) * vec3(1.0, 0.9, 0.3) * (0.8 +
+    // sin(TIME * 5.0 - st.y * 10.0) * 0.6);
 
-    frag_color = vec4(color, 1);
+    gl_FragColor = vec4(color, 1);
 }
