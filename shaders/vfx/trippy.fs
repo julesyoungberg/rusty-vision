@@ -2,15 +2,15 @@
     "DESCRIPTION": "Audio reaactive glitch effects",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Kaleidoscope" ],
     "INPUTS": [
+        {
+            "NAME": "inputImage",
+            "TYPE": "image"
+        },
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
-        },
-        {
-            "NAME": "input_image",
-            "TYPE": "image"
         }
     ]
 }*/
@@ -36,7 +36,7 @@ vec3 rgb2hsv(in vec3 c) {
 }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 float get_spectrum(float i) {

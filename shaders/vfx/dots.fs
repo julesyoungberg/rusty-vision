@@ -1,11 +1,11 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Dot halftone effect.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Halftone Effect" ],
     "INPUTS": [
         {
-            "NAME": "input_image",
+            "NAME": "inputImage",
             "TYPE": "image"
         }
     ]
@@ -19,7 +19,7 @@ float get_luminance(vec3 rgb) {
 }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 void main() {

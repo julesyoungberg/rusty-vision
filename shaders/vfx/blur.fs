@@ -2,7 +2,7 @@
     "DESCRIPTION": "Motion blur.",
     "CREDIT": "by zoidberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "TEST-GLSL FX" ],
+    "CATEGORIES": [ "Blur" ],
     "INPUTS": [
         {
             "NAME": "inputImage",

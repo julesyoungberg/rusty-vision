@@ -1,18 +1,6 @@
 {
   "default": "Kaleidoscope3",
   "programs": {
-    "KaleidoscopeImage1": {
-      "pipeline": {
-        "frag": "kaleidoscope_image1.fs"
-      },
-      "isf": true
-    },
-    "KaleidoscopeImage2": {
-      "pipeline": {
-        "frag": "kaleidoscope_image2.fs"
-      },
-      "isf": true
-    },
     "Kaleidoscope1": {
       "pipeline": {
         "frag": "kaleidoscope1.fs"
@@ -34,24 +22,6 @@
     "Kaleidoscope4": {
       "pipeline": {
         "frag": "kaleidoscope4.fs"
-      },
-      "isf": true
-    },
-    "Kifs1": {
-      "pipeline": {
-        "frag": "kifs1.fs"
-      },
-      "isf": true
-    },
-    "Kifs2": {
-      "pipeline": {
-        "frag": "kifs2.fs"
-      },
-      "isf": true
-    },
-    "Kifs3": {
-      "pipeline": {
-        "frag": "kifs3.fs"
       },
       "isf": true
     }

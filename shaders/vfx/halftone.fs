@@ -1,16 +1,16 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Audio reactive halftone effects.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Halftone Effect" ],
     "INPUTS": [
+        {
+            "NAME": "inputImage",
+            "TYPE": "image"
+        },
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
-        },
-        {
-            "NAME": "input_image",
-            "TYPE": "image"
         }
     ]
 }*/
@@ -62,7 +62,7 @@ float rand_range(in vec2 seed, in float mn, in float mx) {
     return mn + rand21(seed) * (mx - mn);
 }
 
-vec4 image_color(in vec2 coord) { return IMG_NORM_PIXEL(input_image, coord); }
+vec4 image_color(in vec2 coord) { return IMG_NORM_PIXEL(inputImage, coord); }
 
 float spectrum_strength(float start, float end) {
     float sum = 0.0;

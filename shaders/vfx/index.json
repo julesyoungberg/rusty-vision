@@ -27,7 +27,7 @@
     },
     "Glitch": {
       "pipeline": {
-        "frag": "glitch.fs"
+        "frag": "glitch_fx.fs"
       },
       "isf": true
     },
@@ -40,6 +40,36 @@
     "Halftone": {
       "pipeline": {
         "frag": "halftone.fs"
+      },
+      "isf": true
+    },
+    "KaleidoscopeImage1": {
+      "pipeline": {
+        "frag": "kaleidoscope1.fs"
+      },
+      "isf": true
+    },
+    "KaleidoscopeImage2": {
+      "pipeline": {
+        "frag": "kaleidoscope2.fs"
+      },
+      "isf": true
+    },
+    "Kifs1": {
+      "pipeline": {
+        "frag": "kifs1.fs"
+      },
+      "isf": true
+    },
+    "Kifs2": {
+      "pipeline": {
+        "frag": "kifs2.fs"
+      },
+      "isf": true
+    },
+    "Kifs3": {
+      "pipeline": {
+        "frag": "kifs3.fs"
       },
       "isf": true
     },
@@ -75,7 +105,7 @@
     },
     "Ripples": {
       "pipeline": {
-        "frag": "ripples.fs"
+        "frag": "ripple_fx.fs"
       },
       "isf": true
     },

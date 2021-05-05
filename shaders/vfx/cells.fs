@@ -1,11 +1,11 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Voronoi cell effect.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Blur" ],
     "INPUTS": [
         {
-            "NAME": "input_image",
+            "NAME": "inputImage",
             "TYPE": "image"
         }
     ]
@@ -25,7 +25,7 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 vec3 get_point(vec3 coord) {
@@ -80,7 +80,7 @@ void main() {
 
     vec2 g_point = m_point.xy;
     vec2 coord = g_point / scale;
-    vec3 color = webcam_color(coord);
+    vec3 color = image_color(coord);
     // color = mix(vec3(0), color, smoothstep(0.01, 0.02, m_edge_dist));
     color *= (1.0 - m_dist) * 1.1;
 

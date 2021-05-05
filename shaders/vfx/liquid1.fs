@@ -1,11 +1,11 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Liquid domain distortion effect.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Distortion" ],
     "INPUTS": [
         {
-            "NAME": "input_image",
+            "NAME": "inputImage",
             "TYPE": "image"
         },
         {
@@ -16,7 +16,7 @@
 }*/
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 float get_spectrum(float i) {

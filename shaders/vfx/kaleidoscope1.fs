@@ -1,11 +1,11 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Image kaleidoscope effect.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Kaleidoscope" ],
     "INPUTS": [
         {
-            "NAME": "input_image",
+            "NAME": "inputImage",
             "TYPE": "image"
         }
     ]
@@ -33,7 +33,7 @@ vec2 transform(vec2 st) {
 }
 
 vec4 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord));
+    return IMG_NORM_PIXEL(inputImage, fract(coord));
 }
 
 vec4 scene(vec2 st) { return image_color(transform(st)); }

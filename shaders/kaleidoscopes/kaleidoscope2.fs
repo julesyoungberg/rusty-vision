@@ -33,7 +33,7 @@ void main() {
 
         float spec_strength =
             log(IMG_NORM_PIXEL(fft_texture, vec2(i / iterations, 0.0)).x + 1.0);
-        float strength = clamp(spec_strength, 0.0, 1.0) * i;
+        float strength = mix(0.5, 1.0, clamp(spec_strength, 0.0, 1.0) * i);
         color += exp(-abs(st.y) * 5.0) *
                  (cos(vec3(1.0, 3.0, 2.0) * i + TIME * 0.1) * 0.5 + 0.5) *
                  strength;

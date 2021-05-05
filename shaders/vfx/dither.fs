@@ -1,16 +1,16 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Colorful dither effect.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Halftone Effect" ],
     "INPUTS": [
+        {
+            "NAME": "inputImage",
+            "TYPE": "image"
+        },
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
-        },
-        {
-            "NAME": "input_image",
-            "TYPE": "image"
         }
     ]
 }*/
@@ -21,8 +21,8 @@ vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
     return a + b * cos(6.28318 * (c * t + d));
 }
 
-vec3 webcam_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+vec3 image_color(in vec2 coord) {
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 // based on ngMir7 by netgrind
@@ -31,7 +31,7 @@ void main() {
     vec2 st = isf_FragNormCoord;
     st += sin(TIME * vec2(1.0, 1.7)) * 0.01;
 
-    vec3 color = webcam_color(st);
+    vec3 color = image_color(st);
 
     const float steps = 4.0;
 

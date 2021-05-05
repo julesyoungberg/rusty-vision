@@ -2,10 +2,10 @@
     "DESCRIPTION": "Audio reaactive glitch effects",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Glitch" ],
     "INPUTS": [
         {
-            "NAME": "input_image",
+            "NAME": "inputImage",
             "TYPE": "image"
         },
         {
@@ -21,6 +21,10 @@
 
 #define SPECTRUM_SIZE 32
 
+vec3 image_color(in vec2 coord) {
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
+}
+
 float rand21(vec2 p) {
     return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
@@ -32,7 +36,8 @@ float rand_range(in vec2 seed, in float mn, in float mx) {
 float spectrum_strength(float start, float end) {
     float sum = 0.0;
     for (float i = start; i < end; i++) {
-        sum += log(IMG_NORM_PIXEL(fft_texture, vec2(i / SPECTRUM_SIZE, 0)).x + 1.0);
+        sum += log(IMG_NORM_PIXEL(fft_texture, vec2(i / SPECTRUM_SIZE, 0)).x +
+                   1.0);
     }
     return sum / (end - start);
 }
@@ -40,12 +45,13 @@ float spectrum_strength(float start, float end) {
 void main() {
     vec2 st = isf_FragNormCoord;
 
-    vec3 color = IMG_THIS_PIXEL(input_image).rgb;
+    vec3 color = image_color(st);
 
     float t = floor(TIME * 0.5 * 60.0);
 
     // offset slices horizontally according to treble
-    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 2.0;
+    float max_offset =
+        spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 2.0;
     for (float i = 0.0; i < max_offset * 20.0; i++) {
         // get random start and end y coords
         float slice_y = rand21(vec2(t, 3679.0 + i));
@@ -53,18 +59,19 @@ void main() {
         // if we are inside the range shift the slice
         if (step(slice_y, st.y) - step(fract(slice_y + slice_h), st.y) == 1.0) {
             // get random horizontal shift
-            float offset = rand_range(vec2(t, 6824.0 + i), -max_offset, max_offset);
-            color = IMG_NORM_PIXEL(input_image, fract(vec2(st.x + offset, st.y))).rgb;
+            float offset =
+                rand_range(vec2(t, 6824.0 + i), -max_offset, max_offset);
+            color =
+                image_color(fract(vec2(st.x + offset, st.y)));
         }
     }
 
     // calculate color shift according to bass
     float max_color_offset = spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02;
-    vec2 color_offset = vec2(
-        rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
-        rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset)
-    );
-    vec3 shifted_color = IMG_NORM_PIXEL(input_image, st + color_offset).rgb;
+    vec2 color_offset =
+        vec2(rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
+             rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset));
+    vec3 shifted_color = image_color(st + color_offset);
 
     // shift a random channel
     float rnd = rand21(vec2(t, 8379.0));
@@ -79,6 +86,6 @@ void main() {
     vec2 st2 = abs(st * 2.0 - 1.0);
     vec2 border = 1.0 - smoothstep(vec2(0.95), vec2(1.0), st2);
     color *= mix(0.2, 1.0, border.x * border.y);
-    
-	gl_FragColor = vec4(color, 1.0);
+
+    gl_FragColor = vec4(color, 1.0);
 }

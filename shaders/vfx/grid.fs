@@ -1,16 +1,16 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Audio reaactive colored image grid.",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
-    "CATEGORIES": [ "FX" ],
+    "CATEGORIES": [ "Tile Effect" ],
     "INPUTS": [
+        {
+            "NAME": "inputImage",
+            "TYPE": "image"
+        },
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
-        },
-        {
-            "NAME": "input_image",
-            "TYPE": "image"
         }
     ]
 }*/
@@ -41,7 +41,7 @@ float rand21(vec2 p) {
 }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(input_image, fract(coord)).rgb;
+    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
 float get_spectrum(float i) {
