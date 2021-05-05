@@ -22,16 +22,16 @@ For Windows, you need to install ASIO as described here: https://crates.io/crate
 
 ## controls
 
-- Window size:
+- Window resizing:
   - **1**: 852x480
   - **2**: 1280x720
   - **3**: 1920x1080
   - **4**: 2560x1440
   - **5**: 3840x2160
   - **0**: original
-  - **H**: show / hide controls
-  - **P**: pause / unpause
-  - **R**: reset time to 0
+- **H**: show / hide controls
+- **P**: pause / unpause
+- **R**: reset time to 0
 
 ## adding shaders
 
