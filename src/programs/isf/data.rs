@@ -801,41 +801,60 @@ pub fn sync_isf_data(
 
 // All textures stored within the `IsfData` instance in the order that they should be declared in
 // the order expected by the isf textures bind group.
-pub fn isf_data_textures(isf_data: &IsfData) -> impl Iterator<Item = &wgpu::Texture> {
-    let imported = isf_data
-        .imported()
-        .values()
-        .filter_map(|state| match state {
-            ImageState::Ready(ref img_res) => match img_res {
-                Ok(ref img_data) => Some(&img_data.texture),
-                _ => None,
-            },
-            ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
-            _ => None,
-        });
+pub fn isf_data_textures<'a>(isf_data: &'a IsfData, isf: &'a isf::Isf) -> Vec<&'a wgpu::Texture> {
+    let mut textures = vec![];
 
-    let inputs = isf_data
-        .inputs
-        .values()
-        .filter_map(|input_data| match input_data {
+    let imported_data = isf_data.imported();
+    for (key, _) in &isf.imported {
+        let state = match imported_data.get(key) {
+            Some(img) => img,
+            None => continue,
+        };
+
+        let texture = match state {
+            ImageState::Ready(ref img_res) => match img_res {
+                Ok(ref img_data) => &img_data.texture,
+                Err(_) => continue,
+            },
+            ImageState::Loading(ref loading_image) => &loading_image.texture,
+            _ => continue,
+        };
+
+        textures.push(texture);
+    }
+
+    let input_data = isf_data.inputs();
+    for i in &isf.inputs {
+        let input = match input_data.get(&i.name) {
+            Some(input) => input,
+            None => continue,
+        };
+
+        let texture = match input {
             IsfInputData::Image(ref img_input) => match &img_input.source {
                 ImageSource::Image(ref image_state) => match &image_state {
-                    ImageState::Ready(Ok(ref data)) => Some(&data.texture),
-                    ImageState::Loading(ref loading_image) => Some(&loading_image.texture),
-                    _ => None,
+                    ImageState::Ready(Ok(ref data)) => &data.texture,
+                    ImageState::Loading(ref loading_image) => &loading_image.texture,
+                    _ => continue,
                 },
                 ImageSource::Video(ref video) | ImageSource::Webcam(ref video) => {
-                    Some(&video.video_texture)
+                    &video.video_texture
                 }
-                _ => None,
+                _ => continue,
             },
-            IsfInputData::Audio(audio) => Some(&audio.audio_texture),
-            IsfInputData::AudioFft(audio_fft) => Some(&audio_fft.spectrum_texture),
-            _ => None,
-        });
+            IsfInputData::Audio(audio) => &audio.audio_texture,
+            IsfInputData::AudioFft(audio_fft) => &audio_fft.spectrum_texture,
+            _ => continue,
+        };
 
-    let passes = isf_data.passes.iter().map(|pass| &pass.uniform_texture);
-    imported.chain(inputs).chain(passes)
+        textures.push(texture);
+    }
+
+    for pass in &isf_data.passes {
+        textures.push(&&pass.uniform_texture);
+    }
+
+    textures
 }
 
 /// The first set of ISF uniforms that are available to every ISF shader.

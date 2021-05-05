@@ -88,17 +88,22 @@ fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
 fn create_isf_textures_bind_group_layout(
     device: &wgpu::Device,
     isf_data: &data::IsfData,
+    isf_opt: &Option<isf::Isf>,
 ) -> wgpu::BindGroupLayout {
     // Begin with the sampler.
     let mut builder = wgpu::BindGroupLayoutBuilder::new().sampler(wgpu::ShaderStage::FRAGMENT);
-    for texture in data::isf_data_textures(isf_data) {
-        builder = builder.sampled_texture(
-            wgpu::ShaderStage::FRAGMENT,
-            false,
-            wgpu::TextureViewDimension::D2,
-            texture.component_type(),
-        );
+
+    if let Some(ref isf) = isf_opt {
+        for texture in data::isf_data_textures(isf_data, isf) {
+            builder = builder.sampled_texture(
+                wgpu::ShaderStage::FRAGMENT,
+                false,
+                wgpu::TextureViewDimension::D2,
+                texture.component_type(),
+            );
+        }
     }
+
     builder.build(device)
 }
 
@@ -107,14 +112,22 @@ fn create_isf_textures_bind_group(
     layout: &wgpu::BindGroupLayout,
     sampler: &wgpu::Sampler,
     isf_data: &data::IsfData,
+    isf_opt: &Option<isf::Isf>,
 ) -> wgpu::BindGroup {
     let mut builder = wgpu::BindGroupBuilder::new().sampler(sampler);
-    let texture_views: Vec<_> = data::isf_data_textures(isf_data)
-        .map(|tex| tex.view().build())
-        .collect();
+
+    let texture_views: Vec<_> = match isf_opt {
+        Some(ref isf) => data::isf_data_textures(isf_data, isf)
+            .iter()
+            .map(|tex| tex.view().build())
+            .collect(),
+        None => vec![],
+    };
+
     for texture_view in &texture_views {
         builder = builder.texture_view(texture_view);
     }
+
     builder.build(device, layout)
 }
 
@@ -222,7 +235,7 @@ impl IsfPipeline {
 
         println!("creating isf textures");
         let isf_textures_bind_group_layout =
-            create_isf_textures_bind_group_layout(device, &isf_data);
+            create_isf_textures_bind_group_layout(device, &isf_data, &isf);
         bind_group_layouts.push(&isf_textures_bind_group_layout);
         let sampler = wgpu::SamplerBuilder::new().build(device);
         let isf_textures_bind_group = create_isf_textures_bind_group(
@@ -230,6 +243,7 @@ impl IsfPipeline {
             &isf_textures_bind_group_layout,
             &sampler,
             &isf_data,
+            &isf,
         );
 
         println!("creating isf input uniforms");
@@ -421,12 +435,13 @@ impl IsfPipeline {
         // If the number of textures have changed, update the bind group and pipeline layout.
         if textures_updated || self.updated || isf_updated {
             self.isf_textures_bind_group_layout =
-                create_isf_textures_bind_group_layout(device, &self.isf_data);
+                create_isf_textures_bind_group_layout(device, &self.isf_data, &self.isf);
             self.isf_textures_bind_group = create_isf_textures_bind_group(
                 device,
                 &self.isf_textures_bind_group_layout,
                 &self.sampler,
                 &self.isf_data,
+                &self.isf,
             );
         }
 
