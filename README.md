@@ -20,7 +20,7 @@ cargo run --release
 
 For Windows, you need to install ASIO as described here: https://crates.io/crates/cpal
 
-## controls
+## keyboard controls
 
 - Window resizing:
   - **1**: 852x480
