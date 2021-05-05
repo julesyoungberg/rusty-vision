@@ -11,6 +11,32 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "color_offset",
+            "TYPE": "color",
+            "DEFAULT": [0.5, 0.9, 0.0, 0.0]
+        },
+        {
+            "NAME": "num_lines",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 100.0,
+            "DEFAULT": 50.0
+        },
+        {
+            "NAME": "steps",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 10.0,
+            "DEFAULT": 4.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.2
         }
     ]
 }*/
@@ -33,14 +59,11 @@ void main() {
 
     vec3 color = image_color(st);
 
-    const float steps = 4.0;
-
     // take max component and scale it to the step number
     float g = max(color.r, max(color.r, color.b)) * steps;
 
     // pattern
-    float lines = 50.0;
-    float f = mod((st.x + st.y + TIME * 0.2) * lines, 1.0);
+    float f = fract((st.x + st.y + TIME * speed) * num_lines);
 
     if (mod(g, 1.0) > f) {
         color.r = ceil(g);
@@ -51,11 +74,13 @@ void main() {
     color.r /= steps;
 
     color = palette(
-        color.r, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(0.6, 0.8, 1.5),
-        fract(vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x + 1.0) + 0.8,
-                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x + 1.0) + 0.9,
+        color.r, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(0.9, 0.8, 1.0),
+        fract(vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x + 1.0) +
+                       color_offset.r,
+                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x + 1.0) +
+                       color_offset.g,
                    log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0) +
-                       0.7)));
+                       color_offset.b)));
 
     gl_FragColor = vec4(color, 1.0);
 }

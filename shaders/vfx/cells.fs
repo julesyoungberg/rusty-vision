@@ -7,6 +7,27 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.4
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 50.0,
+            "DEFAULT": 20.0
+        },
+        {
+            "NAME": "edge_thickenss",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 0.1,
+            "DEFAULT": 0.06
         }
     ]
 }*/
@@ -34,7 +55,7 @@ vec3 get_point(vec3 coord) {
     return point;
 }
 
-vec4 voroni(vec3 p, float scale) {
+vec4 voronoi(vec3 p, float scale) {
     vec3 i_st = floor(p);
     vec3 f_st = fract(p);
 
@@ -64,25 +85,49 @@ vec4 voroni(vec3 p, float scale) {
         }
     }
 
-    return vec4(m_coord + m_point, m_dist);
+    float m_edge_dist = scale;
+
+    // find the nearest edge
+    for (int z = -1; z <= 1; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                vec3 neighbor = vec3(x, y, z);
+                vec3 coord = i_st + neighbor;
+                if (all(equal(m_coord, coord))) {
+                    continue;
+                }
+
+                vec3 point = get_point(coord);
+
+                vec3 diff = neighbor + point - f_st;
+                float dist = length(diff);
+
+                vec3 to_center = (m_diff + diff) * 0.5;
+                vec3 cell_diff = normalize(diff - m_diff);
+                float edge_dist = dot(to_center, cell_diff);
+                m_edge_dist = min(m_edge_dist, edge_dist);
+            }
+        }
+    }
+
+    return vec4(m_coord + m_point, m_edge_dist);
 }
 
 void main() {
     vec2 st = isf_FragNormCoord;
 
-    float scale = 20.0;
     st *= scale;
 
-    vec3 p = vec3(st, TIME * 0.4);
-    vec4 val = voroni(p, scale);
+    vec3 p = vec3(st, TIME * speed);
+    vec4 val = voronoi(p, scale);
     vec3 m_point = val.xyz;
-    float m_dist = val.w;
+    float m_edge_dist = val.w;
 
     vec2 g_point = m_point.xy;
     vec2 coord = g_point / scale;
     vec3 color = image_color(coord);
-    // color = mix(vec3(0), color, smoothstep(0.01, 0.02, m_edge_dist));
-    color *= (1.0 - m_dist) * 1.1;
+    color = mix(vec3(0), color,
+                smoothstep(edge_thickenss - 0.01, edge_thickenss, m_edge_dist));
 
     gl_FragColor = vec4(color, 1.0);
 }

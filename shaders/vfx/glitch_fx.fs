@@ -12,6 +12,20 @@
             "NAME": "fft_texture",
             "TYPE": "audioFFT",
             "MAX": 32
+        },
+        {
+            "NAME": "slice_strength",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "color_shake_strength",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
         }
     ]
 }*/
@@ -50,8 +64,8 @@ void main() {
     float t = floor(TIME * 0.5 * 60.0);
 
     // offset slices horizontally according to treble
-    float max_offset =
-        spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) * 2.0;
+    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) *
+                       2.0 * slice_strength;
     for (float i = 0.0; i < max_offset * 20.0; i++) {
         // get random start and end y coords
         float slice_y = rand21(vec2(t, 3679.0 + i));
@@ -61,13 +75,13 @@ void main() {
             // get random horizontal shift
             float offset =
                 rand_range(vec2(t, 6824.0 + i), -max_offset, max_offset);
-            color =
-                image_color(fract(vec2(st.x + offset, st.y)));
+            color = image_color(fract(vec2(st.x + offset, st.y)));
         }
     }
 
     // calculate color shift according to bass
-    float max_color_offset = spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02;
+    float max_color_offset =
+        spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02 * color_shake_strength;
     vec2 color_offset =
         vec2(rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
              rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset));

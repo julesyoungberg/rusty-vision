@@ -7,6 +7,20 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 300.0,
+            "DEFAULT": 150.0
+        },
+        {
+            "NAME": "n_shades",
+            "TYPE": "float",
+            "MIN": 2.0,
+            "MAX": 20.0,
+            "DEFAULT": 5.0
         }
     ]
 }*/
@@ -27,7 +41,6 @@ void main() {
     vec3 color = vec3(0);
 
     // tile the space
-    float scale = 150.0;
     vec2 p = st;
     p.y *= RENDERSIZE.y / RENDERSIZE.x;
     p *= scale;
@@ -41,7 +54,6 @@ void main() {
     float brightness = get_luminance(image_color);
 
     // reduce number of shades
-    float n_shades = 5.0;
     float shade = floor(mod(brightness * n_shades, n_shades)) / n_shades;
 
     // draw circle in each grid cell
