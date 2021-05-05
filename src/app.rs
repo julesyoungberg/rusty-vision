@@ -127,6 +127,8 @@ impl Model {
         device: &wgpu::Device,
         num_samples: u32,
     ) {
+        self.program_store.reset_data();
+
         let desc = wgpu::CommandEncoderDescriptor {
             label: Some("rusty_vision_update"),
         };

@@ -737,4 +737,10 @@ impl ProgramStore {
 
         &self.texture_reshaper
     }
+
+    pub fn reset_data(&mut self) {
+        if let Some(ref mut isf_pipeline) = self.isf_pipeline {
+            isf_pipeline.reset_data();
+        }
+    }
 }

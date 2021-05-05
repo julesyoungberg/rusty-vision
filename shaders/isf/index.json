@@ -19,9 +19,21 @@
       },
       "isf": true
     },
+    "TestBool": {
+      "pipeline": {
+        "frag": "test_bool.fs"
+      },
+      "isf": true
+    },
     "TestColor": {
       "pipeline": {
         "frag": "test_color.fs"
+      },
+      "isf": true
+    },
+    "TestEvent": {
+      "pipeline": {
+        "frag": "test_event.fs"
       },
       "isf": true
     },

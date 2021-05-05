@@ -493,6 +493,15 @@ impl IsfInputData {
             _ => None,
         }
     }
+
+    fn reset_event(&mut self) {
+        match self {
+            IsfInputData::Event { happening } => {
+                *happening = false;
+            }
+            _ => (),
+        };
+    }
 }
 
 pub type IsfDataInputs = HashMap<InputName, IsfInputData>;
@@ -636,6 +645,12 @@ impl IsfData {
         });
 
         errors
+    }
+
+    pub fn reset_events(&mut self) {
+        self.inputs
+            .iter_mut()
+            .for_each(|(_name, input)| input.reset_event());
     }
 }
 
@@ -897,6 +912,8 @@ pub fn get_isf_input_uniforms_bytes_vec(isf_opt: &Option<isf::Isf>, isf_data: &I
     for input in &isf.inputs {
         let data = data_inputs.get(&input.name).unwrap();
         match data {
+            IsfInputData::Event { happening } => bytes.extend(int_as_bytes(&(*happening as i32))),
+            IsfInputData::Bool(val) => bytes.extend(int_as_bytes(&(*val as i32))),
             IsfInputData::Float(val) => bytes.extend(float_as_bytes(val)),
             IsfInputData::Long { value, .. } => bytes.extend(int_as_bytes(value)),
             IsfInputData::Point2d(point) => bytes.extend(point_as_bytes(point)),

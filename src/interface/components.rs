@@ -37,6 +37,20 @@ pub fn button_small(active: bool) -> widget::Button<'static, widget::button::Fla
         .border(0.0)
 }
 
+pub fn button_small_wide(active: bool) -> widget::Button<'static, widget::button::Flat> {
+    let mut btn_color = 0.0;
+    if active {
+        btn_color = 0.5;
+    }
+
+    widget::Button::new()
+        .w_h(200.0, 20.0)
+        .rgb(btn_color, btn_color, btn_color)
+        .border(0.0)
+        .label_rgb(1.0, 1.0, 1.0)
+        .label_font_size(12)
+}
+
 pub fn button() -> widget::Button<'static, widget::button::Flat> {
     widget::Button::new()
         .w_h(200.0, 27.0)

@@ -610,7 +610,9 @@ impl IsfPipeline {
             let name = input.name.clone();
 
             match &input.ty {
-                isf::InputType::Float(_) => {
+                isf::InputType::Float(_)
+                | isf::InputType::Event { .. }
+                | isf::InputType::Bool(_) => {
                     widget_ids.insert(name, ui.generate_widget_id());
                 }
                 isf::InputType::Long { .. } | isf::InputType::Image { .. } => {
@@ -654,5 +656,9 @@ impl IsfPipeline {
 
     pub fn get_texture_reshaper(&self) -> Option<&wgpu::TextureReshaper> {
         self.texture_reshaper.as_ref()
+    }
+
+    pub fn reset_data(&mut self) {
+        self.isf_data.reset_events();
     }
 }

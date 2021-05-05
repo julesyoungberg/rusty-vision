@@ -23,7 +23,7 @@ pub fn height(model: &mut app::Model) -> f32 {
 
     for input in &isf.inputs {
         match &input.ty {
-            isf::InputType::Float(_) => {
+            isf::InputType::Float(_) | isf::InputType::Bool(_) | isf::InputType::Event { .. } => {
                 height += 35.0;
             }
             isf::InputType::Long(_)
@@ -70,6 +70,38 @@ pub fn update(
             let data = data_inputs.get_mut(&input.name).unwrap();
 
             match (data, &input.ty) {
+                (data::IsfInputData::Bool(val), isf::InputType::Bool(_)) => {
+                    let widget_id = match isf_widget_ids.get(&input.name) {
+                        Some(id) => id,
+                        None => continue,
+                    };
+
+                    for _click in components::button_small_wide(*val)
+                        .parent(widget_ids.controls_wrapper)
+                        .down(10.0)
+                        .align_left_of(widget_ids.controls_wrapper)
+                        .label(&input.name)
+                        .set(*widget_id, ui)
+                    {
+                        *val = !*val;
+                    }
+                }
+                (data::IsfInputData::Event { happening }, isf::InputType::Event) => {
+                    let widget_id = match isf_widget_ids.get(&input.name) {
+                        Some(id) => id,
+                        None => continue,
+                    };
+
+                    for _click in components::button_small_wide(false)
+                        .parent(widget_ids.controls_wrapper)
+                        .down(10.0)
+                        .align_left_of(widget_ids.controls_wrapper)
+                        .label(&input.name)
+                        .set(*widget_id, ui)
+                    {
+                        *happening = true;
+                    }
+                }
                 (data::IsfInputData::Float(val), isf::InputType::Float(input_config)) => {
                     let widget_id = match isf_widget_ids.get(&input.name) {
                         Some(id) => id,
@@ -87,10 +119,13 @@ pub fn update(
                     .label(input.name.as_str())
                     .set(*widget_id, ui)
                     {
-                        data_inputs.insert(input.name.clone(), data::IsfInputData::Float(value));
+                        *val = value;
                     }
                 }
-                (data::IsfInputData::Long { selected, .. }, isf::InputType::Long(input_config)) => {
+                (
+                    data::IsfInputData::Long { selected, value },
+                    isf::InputType::Long(input_config),
+                ) => {
                     let widget_id = match isf_widget_ids.get(&input.name) {
                         Some(id) => id,
                         None => continue,
@@ -115,13 +150,8 @@ pub fn update(
                         .down(5.0)
                         .set(*widget_id, ui)
                     {
-                        data_inputs.insert(
-                            input.name.clone(),
-                            data::IsfInputData::Long {
-                                value: input_config.values[index],
-                                selected: index,
-                            },
-                        );
+                        *selected = index;
+                        *value = input_config.values[index];
                     }
                 }
                 (data::IsfInputData::Image(image_input), isf::InputType::Image) => {
@@ -172,7 +202,6 @@ pub fn update(
                 (data::IsfInputData::Point2d(val), isf::InputType::Point2d(input_config)) => {
                     let min = input_config.min.unwrap_or([0.0, 0.0]);
                     let max = input_config.max.unwrap_or([size[0] * 2.0, size[1] * 2.0]);
-                    let mut v = *val;
 
                     let mut label_name = input.name.clone();
                     label_name.push_str("-label");
@@ -186,26 +215,18 @@ pub fn update(
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
-                    if let Some(value) = components::x_2d_slider(v[0], min[0], max[0])
+                    if let Some(value) = components::x_2d_slider(val[0], min[0], max[0])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&x_name).unwrap(), ui)
                     {
-                        v[0] = value;
-                        data_inputs.insert(
-                            input.name.clone(),
-                            data::IsfInputData::Point2d(vec2(v[0], v[1])),
-                        );
+                        val[0] = value;
                     }
 
-                    if let Some(value) = components::y_2d_slider(v[1], min[1], max[1])
+                    if let Some(value) = components::y_2d_slider(val[1], min[1], max[1])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&y_name).unwrap(), ui)
                     {
-                        v[1] = value;
-                        data_inputs.insert(
-                            input.name.clone(),
-                            data::IsfInputData::Point2d(vec2(v[0], v[1])),
-                        );
+                        val[1] = value;
                     }
                 }
                 (data::IsfInputData::Color(val), isf::InputType::Color(input_config)) => {
@@ -217,7 +238,6 @@ pub fn update(
                         .max
                         .clone()
                         .unwrap_or_else(|| vec![1.0, 1.0, 1.0, 1.0]);
-                    let mut v = *val;
 
                     let mut label_name = input.name.clone();
                     label_name.push_str("-label");
@@ -235,36 +255,32 @@ pub fn update(
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&label_name).unwrap(), ui);
 
-                    if let Some(value) = components::r_4d_slider(v.red, min[0], max[0])
+                    if let Some(value) = components::r_4d_slider(val.red, min[0], max[0])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&r_name).unwrap(), ui)
                     {
-                        v.red = value;
-                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                        val.red = value;
                     }
 
-                    if let Some(value) = components::g_4d_slider(v.green, min[1], max[1])
+                    if let Some(value) = components::g_4d_slider(val.green, min[1], max[1])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&g_name).unwrap(), ui)
                     {
-                        v.green = value;
-                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                        val.green = value;
                     }
 
-                    if let Some(value) = components::b_4d_slider(v.blue, min[2], max[2])
+                    if let Some(value) = components::b_4d_slider(val.blue, min[2], max[2])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&b_name).unwrap(), ui)
                     {
-                        v.blue = value;
-                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                        val.blue = value;
                     }
 
-                    if let Some(value) = components::a_4d_slider(v.alpha, min[3], max[3])
+                    if let Some(value) = components::a_4d_slider(val.alpha, min[3], max[3])
                         .parent(widget_ids.controls_wrapper)
                         .set(*isf_widget_ids.get(&a_name).unwrap(), ui)
                     {
-                        v.alpha = value;
-                        data_inputs.insert(input.name.clone(), data::IsfInputData::Color(v));
+                        val.alpha = value;
                     }
                 }
                 _ => (),
