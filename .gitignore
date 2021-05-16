@@ -3,3 +3,5 @@
 /vert.spv
 .cargo
 .DS_Store
+*.swp
+
