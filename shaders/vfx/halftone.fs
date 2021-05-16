@@ -10,7 +10,64 @@
         },
         {
             "NAME": "fft_texture",
-            "TYPE": "audioFFT"
+            "TYPE": "audioFFT",
+            "MAX": 32
+        },
+        {
+            "NAME": "angle",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 3.14,
+            "DEFAULT": 0.0
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "dot_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 6.0
+        },
+        {
+            "NAME": "circle_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 6.0
+        },
+        {
+            "NAME": "line_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 12.0
+        },
+        {
+            "NAME": "divisions",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 10.0,
+            "DEFAULT": 4.0
+        },
+        {
+            "NAME": "pattern_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.25
+        },
+        {
+            "NAME": "center",
+            "TYPE": "point2D",
+            "MIN": [0.0, 0.0],
+            "MAX": [1.0, 1.0],
+            "DEFAULT": [0.5, 0.5]
         }
     ]
 }*/
@@ -20,7 +77,6 @@
 
 #define SPECTRUM_SIZE 32
 #define TAU 6.28318530718
-#define SPECTRUM_SIZE 32
 
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -74,24 +130,33 @@ float spectrum_strength(float start, float end) {
 }
 
 float dot_pattern(in vec2 st, float angle, float scale, in vec2 center) {
-    float s = sin(angle * TAU);
-    float c = cos(angle * TAU);
+    float a = angle * TAU;
+    float s = sin(a);
+    float c = cos(a);
+
     vec2 p = (st - center) * RENDERSIZE * scale * mat2(c, -s, s, c);
+
     return sin(p.x) * sin(p.y) * 4.0 *
-           (sin(angle * TAU + scale * TIME * 6.0) * 0.5 + 1.0);
+           (sin(a + scale * TIME * dot_speed) * 0.5 + 1.0);
 }
 
 float circle_pattern(in vec2 st, float angle, float scale, in vec2 center) {
+    float a = angle * TAU;
+
     float d =
         distance(st * RENDERSIZE, center * RENDERSIZE) * max(scale, 0.001);
-    return sin(d + angle * TAU - TIME * 6.0) * 4.0;
+
+    return sin(d + a - TIME * circle_speed) * 4.0;
 }
 
 float line_pattern(in vec2 st, float angle, float scale, in vec2 center) {
-    float s = sin(angle * TAU * 0.5);
-    float c = cos(angle * TAU * 0.5);
+    float a = angle * TAU;
+    float s = sin(a * 0.5);
+    float c = cos(a * 0.5);
+
     vec2 p = st * RENDERSIZE * scale * mat2(c, -s, s, c);
-    return (center.x + sin(p.y + center.y * TAU + TIME * 12.0)) * 4.0;
+
+    return (center.x + sin(p.y + center.y * TAU + TIME * line_speed)) * 4.0;
 }
 
 float[SPECTRUM_SIZE] get_spectrum() {
@@ -140,34 +205,29 @@ void main() {
     vec4 br_color = image_color(st + vec2(offset.x, -offset.y));
 
     // apply convolution filter
-    float sharpness = 10.0;
     vec4 color_sum = left_color + right_color + top_color + bottom_color +
                      tl_color + tr_color + bl_color + br_color;
-    // vec4 color = center_color + sharpness * (8.0 * center_color - color_sum);
     vec4 color = (center_color + color_sum) / 9.0;
 
     // convert to hsv and discretize domain
-    float divisions = 4.0;
     vec3 hsv = rgb2hsv(color.rgb);
     vec3 discrete = floor(hsv * divisions + 0.5) / divisions;
 
     float average = (hsv.r + hsv.g + hsv.b) / 3.0;
     float a = average * 10.0 - 5.0;
-    int patternType =
-        int(2.99 * noise21(discrete.xy * 5.0 +
-                           (float(max_bin) / SPECTRUM_SIZE) + TIME * 0.25));
-    float angle = 0.0;
-    float scale = 1.0;
+    int patternType = int(2.99 * noise21(discrete.xy * 5.0 +
+                                         (float(max_bin) / SPECTRUM_SIZE) +
+                                         TIME * pattern_speed));
     vec3 final = vec3(0);
     if (patternType == 0) {
         final = vec3(a + dot_pattern(st, angle + discrete.x, scale * discrete.y,
-                                     vec2(0.5)));
+                                     center));
     } else if (patternType == 1) {
         final = vec3(a + circle_pattern(st, angle + discrete.x,
-                                        scale * discrete.y, vec2(0.5)));
+                                        scale * discrete.y, center));
     } else if (patternType == 2) {
         final = vec3(a + line_pattern(st, angle + discrete.x,
-                                      scale * discrete.y, vec2(0.5)));
+                                      scale * discrete.y, center));
     }
 
     color.rgb = mix(color.rgb * final, final, 0.0);
