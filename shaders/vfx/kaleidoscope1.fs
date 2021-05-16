@@ -12,8 +12,8 @@
             "NAME": "speed",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 0.5,
-            "DEFAULT": 0.02
+            "MAX": 0.2,
+            "DEFAULT": 0.05
         },
         {
             "NAME": "slices",
@@ -21,6 +21,20 @@
             "MIN": 1.0,
             "MAX": 20.0,
             "DEFAULT": 9.0
+        },
+        {
+            "NAME": "power",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 5.0,
+            "DEFAULT": 1.3
+        },
+        {
+            "NAME": "factor_strength",
+            "TYPE": "float",
+            "MIN": 0.001,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
         }
     ]
 }*/
@@ -31,10 +45,9 @@
 vec2 kaleidoscope(vec2 st) {
     float a = atan(st.y, st.x);
     float r = pow(length(st), 0.9);
-    float p = sin(2.0 * PI * TIME * speed);
     float q = 2.0 * PI / slices;
     a = abs(mod(a, q) - 0.5 * q);
-    float factor = pow(r, 1.3) * 0.1;
+    float factor = pow(r, power) * factor_strength;
     return vec2(cos(a), sin(a)) * factor;
 }
 

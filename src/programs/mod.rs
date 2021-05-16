@@ -37,12 +37,7 @@ pub struct ProgramStore {
     changes_channel: Receiver<DebouncedEvent>,
     config: Option<config::Config>,
     current_program: Option<program::Program>,
-    #[cfg(target_os = "macos")]
-    shader_watcher: notify::FsEventWatcher,
-    #[cfg(target_os = "linux")]
-    shader_watcher: notify::INotifyWatcher,
-    #[cfg(target_os = "windows")]
-    shader_watcher: notify::ReadDirectoryChangesWatcher,
+    shader_watcher: notify::PollWatcher,
     render_texture: wgpu::Texture,
     texture_reshaper: wgpu::TextureReshaper,
 }
@@ -53,7 +48,8 @@ impl ProgramStore {
 
         // setup shader watcher
         let (send_channel, changes_channel) = channel();
-        let mut shader_watcher = watcher(send_channel, time::Duration::from_secs(1)).unwrap();
+        let mut shader_watcher =
+            notify::PollWatcher::new(send_channel, time::Duration::from_secs(1)).unwrap();
         let shader_path = util::shaders_path_string(app);
         shader_watcher
             .watch(shader_path.as_str(), RecursiveMode::Recursive)
