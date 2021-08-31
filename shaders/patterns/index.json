@@ -94,12 +94,6 @@
       },
       "isf": true
     },
-    "Sunset": {
-      "pipeline": {
-        "frag": "sunset.fs"
-      },
-      "isf": true
-    },
     "Triangles": {
       "pipeline": {
         "frag": "triangles.fs"

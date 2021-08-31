@@ -7,6 +7,34 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "iterations",
+            "TYPE": "float",
+            "MIN": 5,
+            "MAX": 20,
+            "DEFAULT": 10
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -0.1,
+            "MAX": 0.1,
+            "DEFAULT": 0.02
+        },
+        {
+            "NAME": "zoom",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 0.1,
+            "DEFAULT": 0.07
         }
     ]
 }*/
@@ -40,8 +68,8 @@ vec4 fractal(in vec2 p) {
 
     float alpha = 0.0;
     vec3 color = vec3(0.0);
+    float t = TIME * speed;
 
-    const float iterations = 10.0;
     for (float i = 0.0; i < iterations; i++) {
         float s = 2.0;
 
@@ -50,7 +78,7 @@ vec4 fractal(in vec2 p) {
 
         // fold
         float theta = (i + 1.0) * PI * 0.125;
-        theta = TIME * 0.02 * i;
+        theta = t * i;
         p *= rot(theta);
 
         scale *= s;
@@ -84,7 +112,8 @@ vec4 fractal(in vec2 p) {
         float spec_strength = log(
             IMG_NORM_PIXEL(fft_texture, vec2((i - 3.0) / iterations, 0.0)).x +
             1.0);
-        float strength = clamp(mix(0.0, 1.0, spec_strength), 0.0, 1.5);
+        float strength =
+            clamp(mix(1.0 - sensitivity, 1.0, spec_strength), 0.0, 1.5);
 
         // front to back compositing
         color = (1.0 - alpha) * c * strength + color;
@@ -101,7 +130,7 @@ void main() {
     vec3 color = vec3(0.0);
 
     // st += vec2(0.4487, 0.17567) * (TIME + 10.3312);
-    st *= 0.07;
+    st *= zoom;
 
     vec4 frac = fractal(st);
 

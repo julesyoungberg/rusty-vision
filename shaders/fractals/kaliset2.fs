@@ -7,6 +7,41 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "iterations",
+            "TYPE": "float",
+            "MIN": 1,
+            "MAX": 20,
+            "DEFAULT": 9
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "rOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.7
+        },
+        {
+            "NAME": "gOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.4
+        },
+        {
+            "NAME": "bOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.1
         }
     ]
 }*/
@@ -39,7 +74,6 @@ vec3 formula(in vec2 st, in vec2 c) {
 
     float angle = TIME * 0.05;
 
-    const float iterations = 9;
     for (float i = 0.0; i < iterations; i++) {
         z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
         z = abs(complex_inv(z)) + c;
@@ -72,9 +106,13 @@ vec3 formula(in vec2 st, in vec2 c) {
     vec3 color = palette(
         last_stable / iterations, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5),
         vec3(1.0, 1.0, 1.0),
-        fract(vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x + 1.0),
-                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x + 1.0),
-                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0))));
+        fract(
+            vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x * sensitivity +
+                     rOffset),
+                 log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x * sensitivity +
+                     gOffset),
+                 log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x * sensitivity +
+                     bOffset))));
 
     // carve out the pattern
     color *= 0.4 + mod(last_stable / iterations + min_mag * 0.2 - t, 1.0) * 1.6;

@@ -1,14 +1,9 @@
 /*{
     "DESCRIPTION": "",
-    "CREDIT": "by julesyoungberg",
+    "CREDIT": "by kali",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": [
-        {
-            "NAME": "fft_texture",
-            "TYPE": "audioFFT"
-        }
-    ]
+    "INPUTS": []
 }*/
 
 // A disection of Circuits by Kali

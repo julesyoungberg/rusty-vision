@@ -3,7 +3,60 @@
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": []
+    "INPUTS": [
+        {
+            "NAME": "iterations",
+            "TYPE": "float",
+            "MIN": 1,
+            "MAX": 50,
+            "DEFAULT": 40
+        },
+        {
+            "NAME": "c_x",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": -0.32
+        },
+        {
+            "NAME": "c_y",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.87
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.09
+        },
+        {
+            "NAME": "color_config",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.9,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "NAME": "color_offset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.0
+        },
+        {
+            "NAME": "color_scale",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
+        }
+    ]
 }*/
 
 const vec3 LIGHT_POS = vec3(0.0, 0.0, -1.0);
@@ -34,15 +87,14 @@ vec2 formula(in vec2 st) {
     vec2 z = st;
 
     vec2 c = vec2(-0.6);
-    c = vec2(-0.32 + sin(TIME / 11.0) * 0.05, 0.87);
+    c = vec2(c_x + sin(TIME * speed) * 0.05, c_y);
 
     float expsmo = 0.0;
     float len = 0.0;
     float orbit_trap = 0.0;
 
-    float angle = TIME * 0.05;
+    float angle = TIME * speed;
 
-    const float iterations = 40;
     for (float i = 0.0; i < iterations; i++) {
         // rotation
         // z *= mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
@@ -133,8 +185,8 @@ void main() {
         vec2 result = formula(p);
         float k = clamp(result.x * 0.06, 0.8, 1.4);
         vec3 col =
-            palette(result.x * 0.1, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5),
-                    vec3(0.9, 1.0, 1.0), vec3(m, 1.0));
+            palette(result.x * color_scale + color_offset, vec3(0.5, 0.5, 0.5),
+                    vec3(0.5, 0.5, 0.5), color_config.rgb, vec3(m, 1.0));
         col *= 0.4;
         // col = 1.0 - col;
 

@@ -3,7 +3,59 @@
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": []
+    "INPUTS": [
+        {
+            "NAME": "color1",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.95,
+                0.32,
+                0.06,
+                1.0
+            ]
+        },
+        {
+            "NAME": "color2",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.87,
+                0.71,
+                0.28,
+                1.0
+            ]
+        },
+        {
+            "NAME": "color3",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.03,
+                0.26,
+                0.34,
+                1.0
+            ]
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 10.0,
+            "DEFAULT": 6.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -2.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "background_speed",
+            "TYPE": "float",
+            "MIN": -2.0,
+            "MAX": 2.0,
+            "DEFAULT": 2.0
+        }
+    ]
 }*/
 
 #define PI 3.14159265359
@@ -43,7 +95,7 @@ float hash21(vec2 p) {
 // Polar coordinate of the arc pixel.
 float polar_coord(vec2 q, float dir) {
     // The actual animation. You perform that before polar conversion.
-    q = r2(TIME * dir) * q;
+    q = r2(TIME * speed * dir) * q;
     // Polar angle.
     float a = atan(q.y, q.x);
     // Wrapping the polar angle.
@@ -60,7 +112,7 @@ void main() {
     vec3 color = vec3(0);
 
     // st += TIME * 0.05;
-    st *= 6.0;
+    st *= scale;
 
     vec4 coords = hex_coords(st);
     vec2 gv = coords.xy;
@@ -95,15 +147,11 @@ void main() {
     q3.z = max(q3.z, -th - q3.z);
 
     float d = q3.z;
-    float sd = floor(mod(d * 25.0 - TIME, 3));
+    float sd = floor(mod(d * 25.0 - TIME * background_speed, 3));
     // color += sd / 3.0;
 
-    vec3 color1 = vec3(0.95, 0.32, 0.06);
-    vec3 color2 = vec3(0.87, 0.71, 0.28);
-    vec3 color3 = vec3(0.03, 0.26, 0.34);
-
     // background / distance field coloring
-    color = mix(mix(color1, color2, sd), color3, sd - 1.0);
+    color = mix(mix(color1.rgb, color2.rgb, sd), color3.rgb, sd - 1.0);
 
     float width = 0.1;
     float mask = smoothstep(0.015, 0.0, d);

@@ -7,6 +7,71 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 50.0,
+            "DEFAULT": 20.0
+        },
+        {
+            "NAME": "shimmer_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 10.0,
+            "DEFAULT": 6.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 5.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "color1",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.19,
+                0.25,
+                0.43,
+                1.0
+            ]
+        },
+        {
+            "NAME": "color2",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.35,
+                0.06,
+                0.28,
+                1.0
+            ]
+        },
+        {
+            "NAME": "positions",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.33,
+                0.5,
+                0.85,
+                0.25
+            ]
+        },
+        {
+            "NAME": "shimmer_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 1.0
         }
     ]
 }*/
@@ -65,7 +130,7 @@ vec4 get_hex(vec2 p) {
                : vec4(h.zw, hc.zw + vec2(0.5, 1));
 }
 
-vec2 get_point(vec2 id) { return sin(rand2(id) * TIME) * 0.15; }
+vec2 get_point(vec2 id) { return sin(rand2(id) * TIME * speed) * 0.15; }
 
 float line(vec2 p, vec2 a, vec2 b) {
     float d = line_dist(p, a, b);
@@ -80,7 +145,6 @@ void main() {
 
     vec3 color = vec3(0);
 
-    const float scale = 17.0;
     st *= scale;
 
     vec4 hex_coords = get_hex(st);
@@ -151,15 +215,16 @@ void main() {
     tri_coord /= scale;
 
     // color gradient
-    float d1 = 1.0 - length(tri_coord - vec2(0.33, 0.5)) * 2.0;
-    color = mix(vec3(0.0), vec3(0.19, 0.25, 0.43), d1 * step(0.01, d1));
-    float d2 = 1.0 - length(tri_coord - vec2(0.85, 0.25)) * 2.0;
-    color = mix(color, vec3(0.35, 0.06, 0.28), d2 * step(0.01, d2));
+    float d1 = 1.0 - length(tri_coord - positions.xy) * 2.0;
+    color = mix(vec3(0.0), color1.rgb, d1 * step(0.01, d1));
+    float d2 = 1.0 - length(tri_coord - positions.zw) * 2.0;
+    color = mix(color, color2.rgb, d2 * step(0.01, d2));
 
     // shimmer
     float dist = length(tri_coord) * 4.0;
-    float t = dist - TIME * 6.0 + (tri_coord.x + tri_coord.y) * 2.0;
-    float shine = mix(1.0, 2.0, pulse(3.0, 2.0, mod(t, 16.8)));
+    float t =
+        dist - TIME * shimmer_speed + (tri_coord.x + tri_coord.y) * 2.0 - 10.0;
+    float shine = mix(1.0, 1.0 + shimmer_amount, pulse(3.0, 2.0, mod(t, 16.8)));
     color *= shine;
 
     // randomly darkened tiles
@@ -170,15 +235,15 @@ void main() {
     vec2 rnd = rand2(tri_coord);
     float ti = rand(dot(rnd, rnd) * 0.1);
     float sparkle = 1.0;
-    if (AUDIO_REACTIVE == 1) {
-        float intensity =
-            log(IMG_NORM_PIXEL(fft_texture, vec2(fract(ti), 0)).x + 1.0);
-        sparkle = intensity + 1.0;
-    } else {
-        float loop = 30.0;
-        float t2 = TIME * 0.5 + ti * loop;
-        sparkle = mix(1.0, 5.0, max(0.0, power_curve(mod(t2, loop), 2.0, 1.0)));
-    }
+
+    float loop = 30.0;
+    float t2 = TIME * 0.5 + ti * loop;
+    sparkle = mix(0.5, 2.0, max(0.0, power_curve(mod(t2, loop), 2.0, 1.0)));
+
+    float intensity =
+        log(IMG_NORM_PIXEL(fft_texture, vec2(fract(ti), 0)).x + 1.0) *
+        sensitivity;
+    sparkle += intensity + 1.0;
     color *= sparkle;
 
     // draw lines

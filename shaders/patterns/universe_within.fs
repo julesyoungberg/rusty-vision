@@ -7,6 +7,27 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "camera_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 0.5,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "point_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "color_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
         }
     ]
 }*/
@@ -49,7 +70,7 @@ float line(vec2 p, vec2 a, vec2 b, float strength) {
     return m;
 }
 
-vec2 get_point(vec2 id) { return sin(rand2(id) * TIME) * 0.4; }
+vec2 get_point(vec2 id) { return sin(rand2(id) * TIME * point_speed) * 0.4; }
 
 float get_strength(float i) {
     return log(IMG_NORM_PIXEL(fft_texture, vec2(i, 0)).x + 1.0);
@@ -64,7 +85,7 @@ vec3 layer(vec2 st, float n) {
     float ids[9];
     float strengths[9];
     vec3 colors[9];
-    float t = TIME;
+    float t = TIME * color_speed;
     int i = 0;
 
     vec3 color = vec3(0);
@@ -123,10 +144,10 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    float gradient = st.y * 0.1;
+    float gradient = st.y * camera_speed;
 
-    float t = TIME * 0.1;
-    vec3 base = sin(t * 5.0 * vec3(0.345, 0.456, 0.657)) * 0.4 + 0.6;
+    float t = TIME * camera_speed;
+    // vec3 base = sin(t * 5.0 * vec3(0.345, 0.456, 0.657)) * 0.4 + 0.6;
 
     float s = sin(t);
     float c = cos(t);

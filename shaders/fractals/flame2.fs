@@ -8,6 +8,41 @@
             "NAME": "fft_texture",
             "TYPE": "audioFFT",
             "MAX": 32
+        },
+        {
+            "NAME": "iterations",
+            "TYPE": "float",
+            "MIN": 1,
+            "MAX": 20,
+            "DEFAULT": 12
+        },
+        {
+            "NAME": "rOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.7
+        },
+        {
+            "NAME": "gOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.4
+        },
+        {
+            "NAME": "bOffset",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "pulse",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.05
         }
     ]
 }*/
@@ -43,7 +78,7 @@ void main() {
     float strength = log(IMG_NORM_PIXEL(fft_texture, vec2(0.04, 0)).x + 1.0);
 
     st *= 2.0;
-    st *= mix(1.0, 0.95, strength);
+    st *= mix(1.0, 1.0 - pulse, strength);
 
     vec2 p = abs(st * 2.0);
     vec2 ab = vec2(2.0 - p.x);
@@ -53,7 +88,6 @@ void main() {
     float min_comp = 1000.0;
     float min_mag = min_comp;
     float last_stable = 0.0;
-    const float iterations = 12.0;
 
     for (float i = 0.0; i < iterations; i++) {
         // fractal equation
@@ -81,9 +115,10 @@ void main() {
     // get fractal color
     color = palette(
         id * 2.0, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0),
-        fract(vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(0.7, 0)).x + 1.0),
-                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.4, 0)).x + 1.0),
-                   log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0))));
+        fract(
+            vec3(log(IMG_NORM_PIXEL(fft_texture, vec2(rOffset, 0)).x + 1.0),
+                 log(IMG_NORM_PIXEL(fft_texture, vec2(gOffset, 0)).x + 1.0),
+                 log(IMG_NORM_PIXEL(fft_texture, vec2(bOffset, 0)).x + 1.0))));
 
     // carve out design
     last_stable += 1.0;

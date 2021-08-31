@@ -151,6 +151,12 @@
       "config": {
         "audio_fft_smoothing": 0.9
       }
+    },
+    "Sunset": {
+      "pipeline": {
+        "frag": "sunset.fs"
+      },
+      "isf": true
     }
   }
 }
