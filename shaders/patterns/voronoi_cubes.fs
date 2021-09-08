@@ -3,7 +3,22 @@
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": []
+    "INPUTS": [
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 12.0
+        },
+        {
+            "NAME": "mode",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.0
+        }
+    ]
 }*/
 
 // based on VoronoiCubes  by mojovideotech
@@ -78,9 +93,6 @@ void main() {
     st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st = st * 0.5 + 0.5;
 
-    float mode = 0.0; // sin(TIME) * 0.5 + 0.5;
-
-    float scale = 12.0;
     vec4 val = voronoi(st * scale, mode);
 
     // unique cell color

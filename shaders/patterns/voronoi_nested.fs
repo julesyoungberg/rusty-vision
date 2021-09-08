@@ -7,6 +7,41 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "scale1",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 8.0
+        },
+        {
+            "NAME": "scale2",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 5.0
+        },
+        {
+            "NAME": "scale3",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 8.0
+        },
+        {
+            "NAME": "radius",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 0.3,
+            "DEFAULT": 0.25
         }
     ]
 }*/
@@ -94,19 +129,19 @@ void main() {
     float density = 1.0;
     float r = length(st);
     float a = atan(st.y, st.x);
-    if (r < 0.2) {
+    if (r < radius - 0.05) {
         density = 0.3;
-    } else if (r < 0.25) {
-        density = mix(0.3, 0.9, smoothstep(0.2, 0.25, r));
-    } else if (r < 0.35) {
-        density = mix(0.9, 0.5, smoothstep(0.25, 0.35, r));
+    } else if (r < radius) {
+        density = mix(0.3, 0.9, smoothstep(radius - 0.05, radius, r));
+    } else if (r < radius + 0.1) {
+        density = mix(0.9, 0.5, smoothstep(radius, radius + 0.1, r));
     } else {
         density = 0.5;
-        st = mix(st, st * 0.5, smoothstep(0.35, 1.5, r));
+        st = mix(st, st * 0.5, smoothstep(radius + 0.1, 1.5, r));
     }
 
     // Scale
-    float scale = 8.0 * density;
+    float scale = scale1 * density;
     st *= scale;
 
     vec4 val = voronoi(st, scale);
@@ -119,10 +154,11 @@ void main() {
     vec2 relative_point = point - id;
     vec2 cell_uv = gv - relative_point;
 
-    cell_uv = mix(cell_uv, cell_uv * pow(sin(a * 8.0) * 0.5 + 0.5, 2.0) * 3.0,
-                  smoothstep(0.35, 0.4, r));
+    cell_uv =
+        mix(cell_uv, cell_uv * pow(sin(a * scale3) * 0.5 + 0.5, 2.0) * 3.0,
+            smoothstep(radius + 0.1, 0.4, r));
 
-    scale = 5.0 * density;
+    scale = scale2 * density;
     cell_uv *= scale;
     vec2 inner_gv = fract(cell_uv);
     vec4 inner_val = voronoi(cell_uv, scale);
@@ -130,9 +166,10 @@ void main() {
     float inner_dist = inner_val.z;
     float inner_edge_dist = inner_val.w;
 
-    float strength = log(IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x + 1.0);
+    float strength = log(IMG_NORM_PIXEL(fft_texture, vec2(r, 0)).x + 1.0);
     color += smoothstep(0.01, 0.02, edge_dist);
-    float edge_scale = mix(0.5, 5.0, smoothstep(0.0, 0.5, strength));
+    float edge_scale =
+        mix(0.5, 5.0, smoothstep(0.0, 0.5, strength * sensitivity + 0.1));
     color -= smoothstep(0.02 * edge_scale, 0.01 * edge_scale, inner_edge_dist);
 
     // Draw cell center
