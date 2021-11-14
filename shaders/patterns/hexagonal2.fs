@@ -7,11 +7,51 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "audio_reactive",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "audio_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 5.0,
+            "DEFAULT": 3.0
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 5.0
+        },
+        {
+            "NAME": "h_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.2
+        },
+        {
+            "NAME": "s_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.13
+        },
+        {
+            "NAME": "v_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.11
         }
     ]
 }*/
-
-#define AUDIO_REACTIVE 1
 
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -48,7 +88,7 @@ void main() {
 
     vec3 color = vec3(0);
 
-    st *= 5.0;
+    st *= scale;
 
     vec4 coords = hex_coords(st);
     vec2 gv = coords.xy;
@@ -74,18 +114,19 @@ void main() {
         hue = 0.66;
     }
 
-    color = hsv2rgb(vec3(
-        mod(hue + TIME * 0.2 * (hue + 0.5) + i * 0.4, 1),
-        0.6 + sin(TIME * 0.13 * (hue + 0.5) + i * 0.3 + hue * 2.23) * 0.3,
-        0.7 + sin(TIME * 0.11 * (hue + 0.5) + i * 0.7 + hue * 3.55) * 0.2));
+    float h = hue + 0.5;
+    color = hsv2rgb(
+        vec3(mod(hue + TIME * h_speed * h + i * 0.4, 1),
+             0.6 + sin(TIME * s_speed * h + i * 0.3 + hue * 2.23) * 0.3,
+             0.7 + sin(TIME * v_speed * h + i * 0.7 + hue * 3.55) * 0.2));
 
-    if (AUDIO_REACTIVE == 1) {
+    if (audio_reactive > 0.5) {
         float intensity =
             log(IMG_NORM_PIXEL(
                     fft_texture,
                     vec2(fract(dot(id, id) * 0.1 + hue + TIME * 0.01), 0.0))
                         .x *
-                    3.0 +
+                    audio_sensitivity +
                 1.0);
         color *= clamp(log(intensity * 2.0), 0.3, 1.1);
     }
