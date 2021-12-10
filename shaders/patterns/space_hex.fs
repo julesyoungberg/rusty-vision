@@ -3,7 +3,50 @@
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": []
+    "INPUTS": [
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 30.0,
+            "DEFAULT": 15.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -2.0,
+            "MAX": 2.0,
+            "DEFAULT": -1.5
+        },
+        {
+            "NAME": "initial_angle",
+            "TYPE": "float",
+            "MIN": -3.1415926536,
+            "MAX": 3.1415926536,
+            "DEFAULT": 0.7853981634
+        },
+        {
+            "NAME": "shift_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.3
+        },
+        {
+            "NAME": "shift_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 0.1,
+            "DEFAULT": 0.005
+        },
+        {
+            "NAME": "zoom_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.7
+        }
+    ]
 }*/
 
 #define PI 3.14159265359
@@ -28,14 +71,17 @@ void main() {
 
     vec3 color = vec3(0);
 
+    float zoom = sin(TIME * zoom_speed) * 0.5 + 0.5;
+
     for (float i = 0; i < 3; i++) {
         vec2 p = st;
 
         float shift =
-            sin(i * PI + TIME * (i + 0.1) * 1.3 + length(p) * 15.0) * 0.005;
+            sin(i * PI + TIME * (i + 0.1) * shift_speed + length(p) * scale) *
+            shift_amount;
         p += shift;
-        p *= 15.0;
-        p = mix(p, p * (1.0 - length(st)), sin(TIME * 0.7) * 0.5 + 0.5);
+        p *= scale;
+        p = mix(p, p * (1.0 - length(st)), zoom);
 
         vec4 hex = get_hex(p);
         vec2 gv = hex.xy;

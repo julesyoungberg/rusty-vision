@@ -7,6 +7,48 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "square_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 0.006
+        },
+        {
+            "NAME": "angle_speed",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "color_speed",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.3
+        },
+        {
+            "NAME": "speed1",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "speed2",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.7
         }
     ]
 }*/
@@ -39,7 +81,7 @@ void main() {
     st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st *= 10.0;
 
-    float angle = TIME;
+    float angle = TIME * speed1;
     float c = cos(angle);
     float s = sin(angle);
     st *= mat2(c, -s, s, c);
@@ -49,15 +91,16 @@ void main() {
     for (float i = 0.0; i < ITERATIONS; i += 1.0) {
         float m = mod(i * 3.2, ITERATIONS);
         float intensity = get_spectrum(m / ITERATIONS);
-        color += square(st, 0.006 * intensity) *
-                 hsv2rgb(vec3(mod(i / ITERATIONS - TIME * 0.3, 1.0), 1, 1)) *
-                 sqrt(intensity * 0.5) * 0.1 * (m + 1.0);
+        color +=
+            square(st, square_sensitivity * intensity) *
+            hsv2rgb(vec3(mod(i / ITERATIONS - TIME * color_speed, 1.0), 1, 1)) *
+            sqrt(intensity * 0.5) * sensitivity * (m + 1.0);
 
-        angle = (i + 1) * PI * 0.002 * sin(TIME * 0.5);
+        angle = (i + 1) * PI * 0.002 * sin(TIME * angle_speed);
         c = cos(angle);
         s = sin(angle);
         st *= mat2(c, -s, s, c);
-        st *= (sin(TIME * 0.7) * 0.5 + 0.5) * 0.04 + 0.92;
+        st *= (sin(TIME * speed2) * 0.5 + 0.5) * 0.04 + 0.92;
     }
 
     gl_FragColor = vec4(color, 1.0);

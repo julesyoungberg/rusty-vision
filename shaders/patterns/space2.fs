@@ -3,7 +3,43 @@
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "GENERATOR" ],
-    "INPUTS": []
+    "INPUTS": [
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 50.0,
+            "DEFAULT": 20.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -2.0,
+            "MAX": 2.0,
+            "DEFAULT": -1.5
+        },
+        {
+            "NAME": "initial_angle",
+            "TYPE": "float",
+            "MIN": -3.1415926536,
+            "MAX": 3.1415926536,
+            "DEFAULT": 0.7853981634
+        },
+        {
+            "NAME": "shift_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "shift_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 0.1,
+            "DEFAULT": 0.01
+        }
+    ]
 }*/
 
 #define PI 3.14159265359
@@ -14,7 +50,7 @@ void main() {
     vec2 st = isf_FragNormCoord * 2.0 - 1.0;
     st.y *= RENDERSIZE.y / RENDERSIZE.x;
 
-    float angle = PI / 4.0;
+    float angle = initial_angle;
     float c = cos(angle);
     float s = sin(angle);
     st *= mat2(c, -s, s, c);
@@ -24,15 +60,17 @@ void main() {
     for (float i = 0; i < 3; i++) {
         vec2 p = st;
 
-        float shift = sin(i * PI + TIME * (i + 0.1) + length(p) * 5.0) * 0.01;
+        float shift =
+            sin(i * PI + TIME * (i + 0.1) * shift_speed + length(p) * 5.0) *
+            shift_amount;
         p += shift;
 
-        p *= 20.0;
+        p *= scale;
 
         vec2 gv = fract(p) - 0.5;
         vec2 id = floor(p);
         float m = 0;
-        float t = TIME * -1.5;
+        float t = TIME * speed;
 
         for (float y = -1.0; y <= 1.0; y++) {
             for (float x = -1.0; x <= 1.0; x++) {

@@ -18,12 +18,6 @@
         "frag": "kaleidoscope3.fs"
       },
       "isf": true
-    },
-    "Kaleidoscope4": {
-      "pipeline": {
-        "frag": "kaleidoscope4.fs"
-      },
-      "isf": true
     }
   }
 }
