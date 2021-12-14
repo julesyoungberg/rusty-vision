@@ -7,6 +7,44 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 50.0,
+            "DEFAULT": 16.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -2.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "point_speed",
+            "TYPE": "float",
+            "MIN": -0.5,
+            "MAX": 0.5,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "color_palette",
+            "TYPE": "color",
+            "DEFAULT": [
+                1.0,
+                0.9,
+                0.5,
+                1.0
+            ]
         }
     ]
 }*/
@@ -17,6 +55,12 @@ vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// IQ's palette generator:
+// https://www.iquilezles.org/www/articles/palettes/palettes.htm
+vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
+    return a + b * cos(6.28318 * (c * t + d));
 }
 
 vec2 rand2(vec2 p) {
@@ -43,8 +87,8 @@ float hex_dist(in vec2 p) {
 
 vec2 get_point(vec2 coord) {
     vec2 point = rand2(coord);
-    return vec2(cos(TIME * 0.5 + point.x * TAU),
-                sin(TIME * 0.5 + point.y * TAU)) *
+    return vec2(cos(TIME * point_speed + point.x * TAU),
+                sin(TIME * point_speed + point.y * TAU)) *
            0.3;
 }
 
@@ -132,10 +176,10 @@ void main() {
     if (r < 0.5) {
         scaling = pow(smoothstep(0.0, 0.5, r) * 2.0, 4.0);
     } else {
-        scaling = 16.0 - smoothstep(0.5, 0.75, r) * 2.0;
+        scaling = scale - smoothstep(0.5, 0.75, r) * 2.0;
     }
     st *= scaling;
-    st += TIME;
+    st += TIME * speed;
 
     float scale = 1.0;
     st *= scale;
@@ -157,7 +201,9 @@ void main() {
     float intensity =
         log(IMG_NORM_PIXEL(fft_texture, vec2(point_val, 0)).x + 1.0);
 
-    color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
+    color = palette(point_val, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5),
+                    vec3(1.0, 1.0, 1.0), color_palette.rgb) *
+            log(intensity * sensitivity);
     color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
 
     // dots

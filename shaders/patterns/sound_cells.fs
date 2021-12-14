@@ -7,14 +7,52 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 50.0,
+            "DEFAULT": 20.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "point_speed",
+            "TYPE": "float",
+            "MIN": -0.5,
+            "MAX": 0.5,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "color_palette",
+            "TYPE": "color",
+            "DEFAULT": [
+                1.0,
+                0.9,
+                0.5,
+                1.0
+            ]
         }
     ]
 }*/
 
-vec3 hsv2rgb(vec3 c) {
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+// IQ's palette generator:
+// https://www.iquilezles.org/www/articles/palettes/palettes.htm
+vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
+    return a + b * cos(6.28318 * (c * t + d));
 }
 
 vec3 rand3(vec3 p) {
@@ -26,7 +64,7 @@ vec3 rand3(vec3 p) {
 
 vec3 get_point(vec3 coord) {
     vec3 point = rand3(coord);
-    point = sin(TIME * 0.5 + 6.2831 * point) * 0.5 + 0.5;
+    point = sin(TIME * point_speed + 6.2831 * point) * 0.5 + 0.5;
     return point;
 }
 
@@ -93,11 +131,9 @@ void main() {
     st.y *= RENDERSIZE.y / RENDERSIZE.x;
     st = st * 0.5 + 0.5;
 
-    // Scale
-    float scale = 20.0;
     st *= scale;
 
-    vec3 p = vec3(st, TIME * 0.5);
+    vec3 p = vec3(st, TIME * speed);
     vec4 val = voronoi(p, scale);
     vec3 m_point = val.xyz;
     float m_edge_dist = val.w;
@@ -107,7 +143,9 @@ void main() {
     float intensity =
         log(IMG_NORM_PIXEL(fft_texture, vec2(point_val, 0)).x + 1.0);
 
-    vec3 color = hsv2rgb(vec3(point_val, 1, 1)).zxy * log(intensity * 10.0);
+    vec3 color = palette(point_val, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5),
+                         vec3(1.0, 1.0, 1.0), color_palette.rgb) *
+                 log(intensity * sensitivity);
     color = mix(vec3(0), color, smoothstep(0.05, 0.06, m_edge_dist));
 
     // Draw cell center
@@ -116,5 +154,5 @@ void main() {
     // Draw grid
     // color.r += step(.98, f_st.x) + step(.98, f_st.y);
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(max(vec3(0), color), 1.0);
 }
