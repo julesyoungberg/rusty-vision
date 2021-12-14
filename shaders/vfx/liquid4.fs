@@ -9,8 +9,53 @@
             "TYPE": "image"
         },
         {
-            "NAME": "fft_texture",
-            "TYPE": "audioFFT"
+            "NAME": "grid_scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 100.0,
+            "DEFAULT": 80.0
+        },
+        {
+            "NAME": "speed1",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 3.0,
+            "DEFAULT": 2.0
+        },
+        {
+            "NAME": "speed2",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 3.0,
+            "DEFAULT": 1.7
+        },
+        {
+            "NAME": "scale1",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "scale2",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "scale3",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "magnitude",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.55
         }
     ]
 }*/
@@ -22,10 +67,6 @@ const vec3 LIGHT_POS = vec3(0.5, 0.5, -1.0);
 
 vec3 image_color(in vec2 coord) {
     return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
-}
-
-float get_spectrum(float i) {
-    return log(IMG_NORM_PIXEL(fft_texture, vec2(fract(i), 0)).x + 1.0);
 }
 
 //	Simplex 3D Noise
@@ -113,12 +154,9 @@ const float sc1t = 1.0 / scale_divt;
 const float sc2t = sc1t / scale_divt;
 const float sc3t = sc2t / scale_divt;
 float fbm(vec3 v) {
-    return 1.0 * 0.5 * snoise(v * vec3(sc3, sc3, sc3t)) * get_spectrum(0.2) *
-               2.0 +
-           0.4 * 0.25 * snoise(v * vec3(sc2, sc2, sc2t)) * get_spectrum(0.4) *
-               2.0 +
-           0.15 * 0.125 * snoise(v * vec3(sc1, sc1, sc1t)) * get_spectrum(0.6) *
-               2.0;
+    return 1.0 * 0.5 * snoise(v * vec3(sc3, sc3, sc3t)) * scale1 * 2.0 +
+           0.4 * 0.25 * snoise(v * vec3(sc2, sc2, sc2t)) * scale2 * 2.0 +
+           0.15 * 0.125 * snoise(v * vec3(sc1, sc1, sc1t)) * scale3 * 2.0;
 }
 
 void main() {
@@ -126,11 +164,10 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    float noise_val1 = fbm(vec3(st * 80.0, TIME * 2.0));
-    float noise_val2 = fbm(vec3(st * 80.0, TIME * 1.7 + 300.0));
+    float noise_val1 = fbm(vec3(st * grid_scale, TIME * speed1));
+    float noise_val2 = fbm(vec3(st * grid_scale, TIME * speed2 + 300.0));
 
-    const float mag = 0.55;
-    st += vec2(mag * 0.2 * noise_val1, mag * 0.21 * noise_val2);
+    st += vec2(magnitude * 0.2 * noise_val1, magnitude * 0.21 * noise_val2);
 
     color = image_color(st);
 

@@ -7,6 +7,34 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "grid_scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 10.0,
+            "DEFAULT": 2.0
+        },
+        {
+            "NAME": "factor",
+            "TYPE": "float",
+            "MIN": 0.1,
+            "MAX": 10.0,
+            "DEFAULT": 3.0
+        },
+        {
+            "NAME": "shift",
+            "TYPE": "float",
+            "MIN": -5.0,
+            "MAX": 5.0,
+            "DEFAULT": 1.5
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": -0.05
         }
     ]
 }*/
@@ -27,7 +55,7 @@ vec3 image_color(in vec2 coord) {
 void main() {
     vec2 st = isf_FragNormCoord * 2.0 - 1.0;
     st.y *= RENDERSIZE.y / RENDERSIZE.x;
-    st *= 2.0;
+    st *= grid_scale;
     vec3 color = vec3(0);
     vec2 size = vec2(0.5);
 
@@ -45,13 +73,13 @@ void main() {
         st.x = abs(st.x);
         st.y = abs(st.y);
 
-        st *= 3.0;
-        scale /= 3.0;
-        st -= 1.5;
+        st *= factor;
+        scale /= factor;
+        st -= shift;
     }
 
     st *= scale;
-    color = image_color(st - TIME * 0.05);
+    color = image_color(st + TIME * speed);
     // color += 1.0 - sign(dist);
 
     gl_FragColor = vec4(color, 1.0);

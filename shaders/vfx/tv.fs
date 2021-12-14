@@ -11,6 +11,69 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "shift_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.25
+        },
+        {
+            "NAME": "x_shift_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "y_shift_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "x_flicker_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "dispersion_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "distortion_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "noise_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "small_strips_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "big_strip_speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
         }
     ]
 }*/
@@ -116,29 +179,34 @@ void main() {
 
     // apply shifting
     // the window targets a specific horizontal region
-    float window = 1.0 / (1.0 + 20.0 * (st.y - mod(TIME * 0.25, 1.0)) *
-                                    (st.y - mod(TIME * 0.25, 1.0)));
+    float window = 1.0 / (1.0 + 20.0 * (st.y - mod(TIME * shift_speed, 1.0)) *
+                                    (st.y - mod(TIME * shift_speed, 1.0)));
     // start with high freq compound wave
-    float x_shift = sin(st.y * 5.0 + TIME) / 50.0 * (1.0 + cos(TIME * 80.0));
-    x_shift *= window;                       // concentrate the wave
-    x_shift *= step(0.3, get_spectrum(0.3)); // flicker
-    st.x += x_shift;                         // apply shift
+    float x_shift = sin(st.y * 5.0 + TIME * x_shift_speed) / 50.0 *
+                    (1.0 + cos(TIME * 80.0 * x_shift_speed));
+    x_shift *= window; // concentrate the wave
+    x_shift *= step(0.3, get_spectrum(0.3) * x_flicker_sensitivity); // flicker
+    st.x += x_shift; // apply shift
     // start with jiggle compound wave
-    float y_shift = 0.4 * sin(TIME) * sin(TIME * 20.0);
+    float y_shift =
+        0.4 * sin(TIME * y_shift_speed) * sin(TIME * 20.0 * y_shift_speed);
     y_shift += 0.1 * sin(TIME * 200.0 * cos(TIME)); // add fast flickerywave
     y_shift *= step(0.1, get_spectrum(0.6));        // flicker
     st.y += y_shift;
 
     // calculate each channel coord to get chromatic shift effect
-    float dispersion = mix(0.001, 0.1, get_spectrum(0.3));
+    float dispersion =
+        mix(0.001, 0.1, get_spectrum(0.3) * dispersion_sensitivity);
     vec2 str = st * (1.0 - dispersion) + vec2(dispersion * 0.5);
     vec2 stg = st;
     vec2 stb = st * (1.0 + dispersion) - vec2(dispersion * 0.5);
 
     // calculate noise effect
     float offset = noise21(vec2(0, st.y + TIME * 155.0));
-    float distortion = mix(0.002, 0.008, get_spectrum(0.7));
-    float noisestrength = mix(0.002, 0.008, get_spectrum(0.5));
+    float distortion =
+        mix(0.002, 0.008, get_spectrum(0.7) * distortion_sensitivity);
+    float noisestrength =
+        mix(0.002, 0.008, get_spectrum(0.5) * noise_sensitivity);
 
     // get colors for each channel with noise
     float r =
@@ -153,13 +221,15 @@ void main() {
     color += rand21(st) * get_spectrum(0.8);
 
     // add small TV noise stripes
-    float stripes = sin(st.y * 300.0 + TIME * 20.0 + sin(TIME * 0.27) * 300.0);
+    float stripes = sin(st.y * 300.0 + TIME * 20.0 * small_strips_speed +
+                        sin(TIME * 0.27 * small_strips_speed) * 300.0);
     color = mix(color, vec3(0.8), stripes / 20.0);
 
     // add big TV noise stripes
     float n = rand21(st) * 0.5 + 0.5;
-    float t =
-        st.y + TIME * 0.5 + sin(TIME + sin(TIME * 0.63) * get_spectrum(0.4));
+    float t = st.y + TIME * big_strip_speed * 0.5 +
+              sin(TIME * big_strip_speed +
+                  sin(TIME * 0.63 * big_strip_speed) * get_spectrum(0.4));
     color = mix(color, vec3(n), pulse(0.5, 0.05, fract(t)) * 0.4);
 
     // edge fade

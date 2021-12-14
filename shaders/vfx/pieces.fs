@@ -11,6 +11,34 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "freq",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.2
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 3.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "pieces",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 8.0,
+            "DEFAULT": 4.0
         }
     ]
 }*/
@@ -33,12 +61,10 @@ void main() {
 
     vec3 color = image_color(st);
 
-    float t = TIME;
-    float d = mix(0.01, 0.1, get_spectrum(0.1));
+    float t = TIME * speed;
+    float d = mix(0.01, 0.1, get_spectrum(freq) * sensitivity);
 
-    const float taps = 6.0;
-
-    for (float i = 0.0; i < TAU; i += TAU / taps) {
+    for (float i = 0.0; i < TAU; i += TAU / pieces) {
         float a = i + t;
         vec3 color2 = image_color(vec2(st.x + cos(a) * d, st.y + sin(a) * d));
         color = min(color, color2);

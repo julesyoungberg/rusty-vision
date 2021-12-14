@@ -7,6 +7,13 @@
         {
             "NAME": "inputImage",
             "TYPE": "image"
+        },
+        {
+            "NAME": "d",
+            "TYPE": "float",
+            "MIN": 0.0001,
+            "MAX": 0.01,
+            "DEFAULT": 0.004
         }
     ]
 }*/
@@ -21,7 +28,6 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    const float d = 0.004;
     vec3 stp = vec3(-d, 0, d);
     float c00 = length(image_color(st + stp.xx));
     float c01 = length(image_color(st + stp.xy));

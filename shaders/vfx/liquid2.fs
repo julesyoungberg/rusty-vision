@@ -9,8 +9,53 @@
             "TYPE": "image"
         },
         {
-            "NAME": "fft_texture",
-            "TYPE": "audioFFT"
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "speed_x",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.387
+        },
+        {
+            "NAME": "scale1",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "scale2",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "factor_y",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "factor_x",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 15.0
+        },
+        {
+            "NAME": "normal_scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 5.0,
+            "DEFAULT": 2.0
         }
     ]
 }*/
@@ -24,18 +69,11 @@ vec3 image_color(in vec2 coord) {
     return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
 }
 
-float get_spectrum(float i) {
-    return log(IMG_NORM_PIXEL(fft_texture, vec2(fract(i), 0)).x + 1.0);
-}
-
 // This height map combines a couple of waves
 float height(vec2 st) {
-    float s1 = get_spectrum(0.3) * 2.0 + 0.1;
-    float s2 = get_spectrum(0.6) * 2.0 + 0.1;
-    float t = TIME;
-
-    float shift = sin(st.y * 10.0 + t + cos(st.y * st.x + t)) * s1;
-    shift *= sin(st.x * 15.0 + t * 1.387) * s2;
+    float t = TIME * speed;
+    float shift = sin(st.y * factor_y + t + cos(st.y * st.x + t)) * scale1;
+    shift *= sin(st.x * factor_x + t * speed_x) * scale2;
     return shift;
 }
 
@@ -52,7 +90,7 @@ void main() {
 
     vec2 n = normal(isf_FragNormCoord * 2.0 - 1.0);
     color = image_color(st + n);
-    n *= 2.0;
+    n *= normal_scale;
     color.r += image_color(vec2(st.x + n.x, st.y)).r;
     color.g += image_color(vec2(st.x, st.y + n.y)).g;
     color.b += image_color(st - n).b;

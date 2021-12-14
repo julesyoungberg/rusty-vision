@@ -11,6 +11,55 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "low_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 5.0
+        },
+        {
+            "NAME": "high_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "low_freq",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 3.0,
+            "DEFAULT": 2.0
+        },
+        {
+            "NAME": "high_freq",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 5.0,
+            "DEFAULT": 3.0
+        },
+        {
+            "NAME": "low_waves",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "high_waves",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 40.0,
+            "DEFAULT": 20.0
+        },
+        {
+            "NAME": "normal_scale",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 5.0,
+            "DEFAULT": 2.0
         }
     ]
 }*/
@@ -37,12 +86,11 @@ float wave(vec2 pos, float freq, float numWaves, vec2 center) {
 
 // This height map combines a couple of waves
 float height(vec2 pos) {
-    float w = wave(pos, 2.0, 10.0, vec2(0.0, -1.0));
-    w *= get_spectrum(0.2) * 5.0 + 0.4;
-    w += wave(pos, 3.0, 20.0, vec2(-1.0, 1.0)) *
-         (get_spectrum(0.6) * 10.0 + 0.1);
-    w +=
-        wave(pos, 3.0, 20.0, vec2(1.0, 1.0)) * (get_spectrum(0.6) * 10.0 + 0.1);
+    float w = wave(pos, low_freq, low_waves, vec2(0.0, -1.0));
+    w *= get_spectrum(0.2) * low_sensitivity + 0.4;
+    float hi_spec = get_spectrum(0.6) * high_sensitivity + 0.1;
+    w += wave(pos, high_freq, high_waves, vec2(-1.0, 1.0)) * hi_spec;
+    w += wave(pos, high_freq, high_waves, vec2(1.0, 1.0)) * hi_spec;
     return w;
 }
 
@@ -59,7 +107,7 @@ void main() {
 
     vec2 n = normal(isf_FragNormCoord * 2.0 - 1.0);
     color = image_color(st + n);
-    n *= 2.0;
+    n *= normal_scale;
     color.r += image_color(vec2(st.x + n.x, st.y)).r;
     color.g += image_color(vec2(st.x, st.y + n.y)).g;
     color.b += image_color(st - n).b;

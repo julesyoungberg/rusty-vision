@@ -11,6 +11,34 @@
         {
             "NAME": "fft_texture",
             "TYPE": "audioFFT"
+        },
+        {
+            "NAME": "slices",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 20.0,
+            "DEFAULT": 10.0
+        },
+        {
+            "NAME": "intensity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.1
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 5.0,
+            "DEFAULT": 0.2
         }
     ]
 }*/
@@ -47,7 +75,6 @@ void main() {
     vec2 st = isf_FragNormCoord;
 
     // assign the pixel to a slice
-    const float slices = 10.0;
     float slice = floor(st.y * slices);
     float s = slice / slices;
 
@@ -55,9 +82,8 @@ void main() {
     float n = noise21(vec2(slice, 0.0));
 
     // compute shift as combo of sin wave and spectral intensity
-    const float intensity = 0.1;
-    float shift = sin(n * TIME) * intensity - 0.05;
-    shift *= log(1.0 + get_spectrum(s) * exp(s)) * 0.2;
+    float shift = sin(n * TIME * speed) * intensity - 0.05;
+    shift *= log(1.0 + get_spectrum(s) * exp(s)) * sensitivity;
     st.x += shift;
 
     vec3 color = image_color(st);

@@ -127,12 +127,6 @@
       },
       "isf": true
     },
-    "Trippy": {
-      "pipeline": {
-        "frag": "trippy.fs"
-      },
-      "isf": true
-    },
     "TV": {
       "pipeline": {
         "frag": "tv.fs"
