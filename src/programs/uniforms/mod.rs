@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use crate::programs::config;
 
 pub mod audio;
-pub mod audio_features;
 pub mod audio_fft;
 pub mod audio_source;
 pub mod base;
@@ -26,7 +25,6 @@ use base::{UniformBuffers, UniformBuffersMethods};
 #[derive(Debug)]
 pub struct UniformSubscriptions {
     pub audio: bool,
-    pub audio_features: bool,
     pub audio_fft: bool,
     pub camera: bool,
     pub color: bool,
@@ -43,7 +41,6 @@ pub struct UniformSubscriptions {
 pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
     let mut subscriptions = UniformSubscriptions {
         audio: false,
-        audio_features: false,
         audio_fft: false,
         camera: false,
         color: false,
@@ -58,7 +55,6 @@ pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
 
     names.iter().for_each(|n| match n.as_str() {
         "audio" => subscriptions.audio = true,
-        "audio_features" => subscriptions.audio_features = true,
         "audio_fft" => subscriptions.audio_fft = true,
         "camera" => subscriptions.camera = true,
         "color" => subscriptions.color = true,
@@ -78,7 +74,6 @@ pub fn get_subscriptions(names: &[String]) -> UniformSubscriptions {
 /// Stores all different uniforms.
 /// Mantains the uniform data and the corresponding GPU buffers.
 pub struct BufferStore {
-    pub audio_features_uniforms: audio_features::AudioFeaturesUniforms,
     pub audio_fft_uniforms: audio_fft::AudioFftUniforms,
     pub audio_source: audio_source::AudioSource,
     pub audio_uniforms: audio::AudioUniforms,
@@ -104,9 +99,6 @@ impl BufferStore {
         // create uniforms and buffers
         let audio_uniforms = audio::AudioUniforms::new(device, None);
         buffers.add(device, "audio", &audio_uniforms);
-
-        let audio_features_uniforms = audio_features::AudioFeaturesUniforms::new(device);
-        buffers.add(device, "audio_features", &audio_features_uniforms);
 
         let audio_fft_uniforms = audio_fft::AudioFftUniforms::new(device, None);
         buffers.add(device, "audio_fft", &audio_fft_uniforms);
@@ -140,7 +132,6 @@ impl BufferStore {
 
         Self {
             audio_uniforms,
-            audio_features_uniforms,
             audio_fft_uniforms,
             audio_source,
             buffers,
@@ -157,7 +148,7 @@ impl BufferStore {
     }
 
     pub fn start_audio_session(&mut self, subscriptions: &UniformSubscriptions) {
-        if !(subscriptions.audio || subscriptions.audio_fft || subscriptions.audio_features) {
+        if !(subscriptions.audio || subscriptions.audio_fft) {
             return;
         }
 
@@ -169,11 +160,6 @@ impl BufferStore {
             self.audio_uniforms.start_session(&mut self.audio_source);
         }
 
-        if subscriptions.audio_features {
-            self.audio_features_uniforms
-                .start_session(&mut self.audio_source);
-        }
-
         if subscriptions.audio_fft {
             self.audio_fft_uniforms
                 .start_session(&mut self.audio_source);
@@ -182,8 +168,6 @@ impl BufferStore {
 
     pub fn end_audio_session(&mut self) {
         self.audio_uniforms.end_session(&mut self.audio_source);
-        self.audio_features_uniforms
-            .end_session(&mut self.audio_source);
         self.audio_fft_uniforms.end_session(&mut self.audio_source);
     }
 
@@ -200,7 +184,6 @@ impl BufferStore {
         num_samples: u32,
     ) {
         self.end_audio_session();
-        self.audio_features_uniforms.configure(settings);
         self.audio_fft_uniforms.configure(settings);
         self.start_audio_session(subscriptions);
 
@@ -245,16 +228,12 @@ impl BufferStore {
         size: Point2,
         num_samples: u32,
     ) {
-        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+        if subscriptions.audio || subscriptions.audio_fft {
             self.audio_source.update();
         }
 
         if subscriptions.audio {
             self.audio_uniforms.update();
-        }
-
-        if subscriptions.audio_features {
-            self.audio_features_uniforms.update(&mut self.audio_source);
         }
 
         if subscriptions.audio_fft {
@@ -300,16 +279,6 @@ impl BufferStore {
     ) {
         if subscriptions.audio {
             self.audio_uniforms.update_texture(device, encoder);
-        }
-
-        if subscriptions.audio_features {
-            self.audio_features_uniforms.update_texture(device, encoder);
-            self.buffers.update(
-                device,
-                encoder,
-                "audio_features",
-                &self.audio_features_uniforms,
-            );
         }
 
         if subscriptions.audio_fft {
@@ -360,7 +329,7 @@ impl BufferStore {
     }
 
     pub fn pause(&mut self, subscriptions: &UniformSubscriptions) {
-        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+        if subscriptions.audio || subscriptions.audio_fft {
             self.end_audio_session();
         }
 
@@ -376,7 +345,7 @@ impl BufferStore {
     }
 
     pub fn unpause(&mut self, subscriptions: &UniformSubscriptions) {
-        if subscriptions.audio || subscriptions.audio_features || subscriptions.audio_fft {
+        if subscriptions.audio || subscriptions.audio_fft {
             self.start_audio_session(subscriptions);
         }
 
@@ -416,10 +385,6 @@ impl BufferStore {
 
         if let Some(audio_error) = self.audio_source.error.clone() {
             errors.insert(String::from("Audio"), vec![audio_error]);
-        }
-
-        if let Some(audio_error) = self.audio_features_uniforms.error.clone() {
-            errors.insert(String::from("Audio Features"), vec![audio_error]);
         }
 
         if let Some(image_error) = self.image_uniforms.error.clone() {

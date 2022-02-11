@@ -64,7 +64,6 @@ fn model(app: &App) -> app::Model {
         texture,
         texture_reshaper,
         ui,
-        ui_show_audio_features: false,
         ui_show_audio_fft: false,
         ui_show_color: false,
         ui_show_geometry: false,

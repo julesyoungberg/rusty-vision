@@ -4,7 +4,6 @@ use nannou::ui::DrawToFrameError;
 
 use crate::app;
 
-mod audio_features_controls;
 mod audio_fft_controls;
 mod camera_info;
 mod color_controls;
@@ -25,7 +24,6 @@ fn controls_height(model: &mut app::Model) -> f32 {
     };
 
     [
-        subscriptions.audio_features,
         subscriptions.audio_fft,
         subscriptions.color,
         subscriptions.geometry,
@@ -41,7 +39,6 @@ fn controls_height(model: &mut app::Model) -> f32 {
     });
 
     height = height
-        + audio_features_controls::height(model)
         + audio_fft_controls::height(model)
         + color_controls::height(model)
         + geometry_controls::height(model)
@@ -199,30 +196,6 @@ pub fn update(
                     &model.widget_ids,
                     ui,
                     &mut model.program_store.buffer_store.geometry_uniforms,
-                );
-            }
-        }
-
-        //////////////////////////////////////////////////
-        // Audio Features Controls
-        //////////////////////////////////////////////////
-        if subscriptions.audio_features {
-            for _click in components::button_big()
-                .parent(model.widget_ids.controls_wrapper)
-                .down(20.0)
-                .align_left_of(model.widget_ids.controls_wrapper)
-                .label("Audio Features")
-                .set(model.widget_ids.audio_features_folder, ui)
-            {
-                println!("toggle audio features controls");
-                model.ui_show_audio_features = !model.ui_show_audio_features;
-            }
-
-            if model.ui_show_audio_features {
-                audio_features_controls::update(
-                    &model.widget_ids,
-                    ui,
-                    &mut model.program_store.buffer_store.audio_features_uniforms,
                 );
             }
         }
