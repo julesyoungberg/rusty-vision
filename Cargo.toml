@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 apodize = "1.0.0"
 cpal = "0.13.1"
-bytemuck = { version = "1.4", features = [ "derive" ] }
+bytemuck = { version = "1.7.3", features = [ "derive" ] }
 isf = "0.1.0"
 half = "1.7.1"
 hotglsl = { git = "https://github.com/nannou-org/hotglsl", branch = "master" }
