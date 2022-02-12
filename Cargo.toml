@@ -14,7 +14,7 @@ hotglsl = { git = "https://github.com/nannou-org/hotglsl", branch = "master" }
 mexprp = "0.3.0"
 nannou = "0.15"
 notify = "4.0.12"
-opencv = {version = "0.53", features = ["clang-runtime"]}
+opencv = {version = "0.63", features = ["clang-runtime"]}
 path-slash = "0.1.3"
 rayon = "1.4"
 regex = "1"
