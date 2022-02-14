@@ -103,6 +103,12 @@
       },
       "isf": true
     },
+    "QuadTree": {
+      "pipeline": {
+        "frag": "quadtree.fs"
+      },
+      "isf": true
+    },
     "Ripples": {
       "pipeline": {
         "frag": "ripple_fx.fs"

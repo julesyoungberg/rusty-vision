@@ -1,5 +1,5 @@
 /*{
-    "DESCRIPTION": "Audio reaactive glitch effects",
+    "DESCRIPTION": "Audio reactive glitch effects",
     "CREDIT": "by julesyoungberg",
     "ISFVSN": "2.0",
     "CATEGORIES": [ "Glitch" ],
