@@ -1,5 +1,5 @@
 {
-  "default": "Flow",
+  "default": "Lava",
   "programs": {
     "CandyWrap": {
       "pipeline": {
@@ -43,6 +43,12 @@
     "Hexagonal2": {
       "pipeline": {
         "frag": "hexagonal2.fs"
+      },
+      "isf": true
+    },
+    "Lava": {
+      "pipeline": {
+        "frag": "lava.fs"
       },
       "isf": true
     },
