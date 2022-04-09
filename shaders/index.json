@@ -2,6 +2,7 @@
   "default": "patterns",
   "folders": [
     "basic",
+    "basic3D",
     "collabs",
     "fractals",
     "isf",

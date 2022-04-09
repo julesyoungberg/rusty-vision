@@ -5,6 +5,16 @@
     "CATEGORIES": [ "GENERATOR" ],
     "INPUTS": [
         {
+            "NAME": "background_color",
+            "TYPE": "color",
+            "DEFAULT": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        },
+        {
             "NAME": "color1",
             "TYPE": "color",
             "DEFAULT": [
@@ -29,7 +39,7 @@
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 0.5,
-            "DEFAULT": 0.1
+            "DEFAULT": 0.05
         },
         {
             "NAME": "point_range",
@@ -260,7 +270,7 @@ void main() {
             (snoise(vec3((st + displacement) * 5.0, TIME * noise_speed)) * 0.5 +
              0.5) *
                 noise_amount);
-    color = mix(color, ball_color,
+    color = mix(background_color.rgb, ball_color,
                 smoothstep(distance_cutoff, distance_cutoff + 0.01, metaball));
 
     gl_FragColor = vec4(color, 1.0);

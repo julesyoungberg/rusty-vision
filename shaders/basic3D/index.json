@@ -1,0 +1,11 @@
+{
+  "default": "Points",
+  "programs": {
+    "Points": {
+      "pipeline": {
+        "frag": "points.fs"
+      },
+      "isf": true
+    }
+  }
+}
