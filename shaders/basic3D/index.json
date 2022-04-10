@@ -1,6 +1,12 @@
 {
   "default": "Points",
   "programs": {
+    "Diamonds": {
+      "pipeline": {
+        "frag": "diamonds.fs"
+      },
+      "isf": true
+    },
     "Points": {
       "pipeline": {
         "frag": "points.fs"

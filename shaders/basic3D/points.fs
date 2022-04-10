@@ -9,7 +9,7 @@
             "NAME": "n_steps",
             "MIN": 1.0,
             "MAX": 10.0,
-            "DEFAULT": 5.0
+            "DEFAULT": 7.0
         },
         {
             "TYPE": "float",
