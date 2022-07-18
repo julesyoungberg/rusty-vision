@@ -46,6 +46,12 @@
       },
       "isf": true
     },
+    "Honeycomb": {
+      "pipeline": {
+        "frag": "honeycomb.fs"
+      },
+      "isf": true
+    },
     "Lava": {
       "pipeline": {
         "frag": "lava.fs"
