@@ -7,6 +7,12 @@
       },
       "isf": true
     },
+    "Chemistry": {
+      "pipeline": {
+        "frag": "chemistry.fs"
+      },
+      "isf": true
+    },
     "eyes": {
       "pipeline": {
         "frag": "eyes.frag"
