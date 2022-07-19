@@ -95,6 +95,8 @@
 #define TAU 6.28318530718
 
 const vec2 s = vec2(1, 1.7320508);
+const vec2 hex_step = vec2(0.7, 0.4);
+const vec2 hex_corner = vec2(0.22, 0.42);
 
 // IQ's palette generator:
 // https://www.iquilezles.org/www/articles/palettes/palettes.htm
@@ -153,36 +155,24 @@ float benzene_ring(in vec2 st) {
     return shade;
 }
 
-// float hex_leg(in vec2 st, int edge, vec2 dotloc) {
-//     float shade = 0.0;
-
-//     shade += polygon_edges(st, 6, edge, edge + 1);
-//     shade += circle(st + vec2())
-// }
-
-float left_leg1(in vec2 st) {
+float hex_leg(in vec2 st, int edge, vec2 dotloc) {
     float shade = 0.0;
 
-    // st += vec2(0.7, -0.4);
+    shade += polygon_edges(st, 6, edge, edge + 1);
 
-    shade += polygon_edges(st + vec2(0.7, -0.4), 6, 0, 1);
-    shade += circle(st + vec2(0.9, 0.0));
+    shade += circle(st + hex_corner * dotloc);
 
     return shade;
+}
+
+float left_leg1(in vec2 st) {
+    return hex_leg(st + hex_step * vec2(1.0, -1.0), 0, vec2(0.95));
 }
 
 float left_leg2(in vec2 st) {
-    float shade = 0.0;
-
-    // st += vec2(0.7, 0.4);
-
-    shade += polygon_edges(st + vec2(0.7, 0.4), 6, 5, 6);
-    shade += circle(st + vec2(0.45, 0.78));
-
-    return shade;
+    return hex_leg(st + hex_step, 5, vec2(-1.0, 1.0));
 }
 
-// @todo do this properly with trigonometry instead of estimating
 float serotonin(vec2 st) {
     float shade = 0.0;
 
@@ -196,9 +186,13 @@ float serotonin(vec2 st) {
 
     // main pentagon
     vec2 uv = st;
+    uv -= hex_step;
+    // uv -= vec2(0.6, 0.3);
     uv *= 1.25;
+    // uv *= make_rot(-0.2);
     uv *= make_rot(-0.2);
-    uv -= vec2(0.875, 0.3);
+    // uv -= vec2(0.875, 0.3);
+    uv += vec2(0.1, 0.0);
     shade += polygon_edges(uv, 5, 0, 5);
     shade += polygon_edges(uv * 1.25, 5, 3, 4);
     shade += circle(uv - vec2(0.3, -0.4));
@@ -211,9 +205,7 @@ float serotonin(vec2 st) {
     shade += polygon_edges(uv, 6, 1, 3);
 
     // final line
-    uv -= vec2(-0.7, 0.4);
-    shade += polygon_edges(uv, 6, 4, 5);
-    shade += circle(uv - vec2(0.22, 0.42));
+    shade += hex_leg(uv + vec2(0.7, -0.4), 4, vec2(-1.0));
 
     return shade;
 }
@@ -231,13 +223,12 @@ float dopamine(vec2 st) {
     shade += left_leg2(st);
 
     // partial hex
-    vec2 uv = st - vec2(0.7, 0.4);
+    vec2 uv = st - hex_step;
     shade += polygon_edges(uv, 6, 2, 4);
 
     // NH2 right leg
-    uv -= vec2(0.7, 0.4);
-    shade += polygon_edges(uv, 6, 2, 3);
-    shade += circle(uv - vec2(-0.22, 0.42));
+    uv -= hex_step;
+    shade += hex_leg(uv, 2, vec2(1.0, -1.0));
 
     return shade;
 }
@@ -248,8 +239,8 @@ vec3 layer(vec2 st, float n) {
 
     float shade = 0.0;
 
-    shade += serotonin(st - vec2(7.0, 5.0));
-    shade += dopamine(st + vec2(5.0, 0.0));
+    shade += serotonin(st - vec2(2.0, 0.0));
+    shade += dopamine(st + vec2(2.0, 0.0));
 
     color += max(shade, 0.0);
 
@@ -261,8 +252,6 @@ void main() {
     st.x *= RENDERSIZE.x / RENDERSIZE.y;
 
     vec3 color = vec3(0.0);
-
-    float gradient = st.y * zoom_speed;
 
     float zoom = TIME * zoom_speed;
     float r = TIME * rotation_speed;
@@ -277,9 +266,6 @@ void main() {
         st *= rot;
         color += layer(st * size + i * vec2(20.0, 27.0), i) * fade;
     }
-
-    // float gradient_strength = IMG_NORM_PIXEL(fft_texture, vec2(0.1, 0)).x;
-    // color -= max(gradient * gradient_strength, 0.0);
 
     gl_FragColor = vec4(color, 1);
 }
