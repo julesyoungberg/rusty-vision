@@ -186,18 +186,16 @@ float serotonin(vec2 st) {
 
     // main pentagon
     vec2 uv = st;
-    uv -= hex_step;
-    // uv -= vec2(0.6, 0.3);
+    uv -= hex_step; // @todo apply to st before pref line
     uv *= 1.25;
-    // uv *= make_rot(-0.2);
-    uv *= make_rot(-0.2);
-    // uv -= vec2(0.875, 0.3);
+    uv *= make_rot(-0.2); // @todo adjust, maybe find true val with trig
     uv += vec2(0.1, 0.0);
     shade += polygon_edges(uv, 5, 0, 5);
     shade += polygon_edges(uv * 1.25, 5, 3, 4);
     shade += circle(uv - vec2(0.3, -0.4));
 
     // partial hex
+    // @todo improve, use math rather than guesses
     uv = st;
     uv -= vec2(1.0);
     uv *= make_rot(0.6);
