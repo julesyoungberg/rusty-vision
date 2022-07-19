@@ -131,11 +131,127 @@ float polygon_edges(vec2 st, int edges, int start_edge, int end_edge) {
     return max(smoothstep(0.42, 0.41, d) - smoothstep(0.39, 0.38, d), 0.0);
 }
 
+float circle(vec2 st) {
+    float d = length(st);
+    return smoothstep(0.05, 0.049, d);
+}
+
+mat2 make_rot(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c);
+}
+
+float benzene_ring(in vec2 st) {
+    float shade = 0.0;
+
+    shade += polygon_edges(st, 6, 0, 6);
+    shade += polygon_edges(st * 1.25, 6, 0, 1);
+    shade += polygon_edges(st * 1.25, 6, 2, 3);
+    shade += polygon_edges(st * 1.25, 6, 4, 5);
+
+    return shade;
+}
+
+// float hex_leg(in vec2 st, int edge, vec2 dotloc) {
+//     float shade = 0.0;
+
+//     shade += polygon_edges(st, 6, edge, edge + 1);
+//     shade += circle(st + vec2())
+// }
+
+float left_leg1(in vec2 st) {
+    float shade = 0.0;
+
+    // st += vec2(0.7, -0.4);
+
+    shade += polygon_edges(st + vec2(0.7, -0.4), 6, 0, 1);
+    shade += circle(st + vec2(0.9, 0.0));
+
+    return shade;
+}
+
+float left_leg2(in vec2 st) {
+    float shade = 0.0;
+
+    // st += vec2(0.7, 0.4);
+
+    shade += polygon_edges(st + vec2(0.7, 0.4), 6, 5, 6);
+    shade += circle(st + vec2(0.45, 0.78));
+
+    return shade;
+}
+
+// @todo do this properly with trigonometry instead of estimating
+float serotonin(vec2 st) {
+    float shade = 0.0;
+
+    st *= make_rot(TAU / 6.0 * 0.5);
+
+    // main hex
+    shade += benzene_ring(st);
+
+    // HO leg
+    shade += left_leg1(st);
+
+    // main pentagon
+    vec2 uv = st;
+    uv *= 1.25;
+    uv *= make_rot(-0.2);
+    uv -= vec2(0.875, 0.3);
+    shade += polygon_edges(uv, 5, 0, 5);
+    shade += polygon_edges(uv * 1.25, 5, 3, 4);
+    shade += circle(uv - vec2(0.3, -0.4));
+
+    // partial hex
+    uv = st;
+    uv -= vec2(1.0);
+    uv *= make_rot(0.6);
+    uv -= vec2(0.0, -0.05);
+    shade += polygon_edges(uv, 6, 1, 3);
+
+    // final line
+    uv -= vec2(-0.7, 0.4);
+    shade += polygon_edges(uv, 6, 4, 5);
+    shade += circle(uv - vec2(0.22, 0.42));
+
+    return shade;
+}
+
+float dopamine(vec2 st) {
+    float shade = 0.0;
+
+    // main hex
+    shade += benzene_ring(st);
+
+    // HO leg
+    shade += left_leg1(st);
+
+    // OH leg
+    shade += left_leg2(st);
+
+    // partial hex
+    vec2 uv = st - vec2(0.7, 0.4);
+    shade += polygon_edges(uv, 6, 2, 4);
+
+    // NH2 right leg
+    uv -= vec2(0.7, 0.4);
+    shade += polygon_edges(uv, 6, 2, 3);
+    shade += circle(uv - vec2(-0.22, 0.42));
+
+    return shade;
+}
+
 // draws 1 layer of the psudeo-3d effect
 vec3 layer(vec2 st, float n) {
     vec3 color = vec3(0.0);
 
-    color += polygon_edges(st, 6, 1, 4);
+    float shade = 0.0;
+
+    shade += serotonin(st - vec2(7.0, 5.0));
+    shade += dopamine(st + vec2(5.0, 0.0));
+
+    color += max(shade, 0.0);
 
     return color;
 }
@@ -151,9 +267,7 @@ void main() {
     float zoom = TIME * zoom_speed;
     float r = TIME * rotation_speed;
 
-    float s = sin(r);
-    float c = cos(r);
-    mat2 rot = mat2(c, -s, s, c);
+    mat2 rot = make_rot(r);
     st *= rot;
 
     for (float i = 0.0; i < n_layers; i += 1.0) {
