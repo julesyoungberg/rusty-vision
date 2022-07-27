@@ -34,6 +34,12 @@
       },
       "isf": true
     },
+    "FBM Lines": {
+      "pipeline": {
+        "frag": "fbm_lines.fs"
+      },
+      "isf": true
+    },
     "Flow": {
       "pipeline": {
         "frag": "flow.fs"
