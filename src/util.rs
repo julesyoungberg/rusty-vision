@@ -51,7 +51,7 @@ pub fn vertices_as_bytes(data: &[Vertex]) -> &[u8] {
     unsafe { wgpu::bytes::from_slice(data) }
 }
 
-pub fn rotate_around_axis(axis: Vector3, theta: f32) -> Matrix4<f32> {
+pub fn rotate_around_axis(axis: Vector3<f32>, theta: f32) -> Matrix4<f32> {
     let cos = theta.cos();
     let sin = theta.sin();
     let m00 = cos + axis.x * axis.x * (1.0 - cos);
@@ -68,17 +68,17 @@ pub fn rotate_around_axis(axis: Vector3, theta: f32) -> Matrix4<f32> {
     )
 }
 
-pub fn transform_vector(transform: &Matrix4<f32>, vector: Vector3) -> Vector3 {
+pub fn transform_vector(transform: &Matrix4<f32>, vector: Vector3<f32>) -> Vector3<f32> {
     let point = Point3::new(vector.x, vector.y, vector.z);
     let transformed_point = Transform::transform_point(transform, point.into());
-    Vector3::new(
+    Vector3::<f32>::new(
         transformed_point.x,
         transformed_point.y,
         transformed_point.z,
     )
 }
 
-pub fn vector_length(vector: Vector3) -> f32 {
+pub fn vector_length(vector: Vector3<f32>) -> f32 {
     let sum = vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
     sum.sqrt()
 }
@@ -89,7 +89,7 @@ fn test_vector_length() {
     assert_eq!(vector_length(pt3(1.0, 2.0, 3.0)), 3.7416575);
 }
 
-pub fn normalize_vector(vector: Vector3) -> Vector3 {
+pub fn normalize_vector(vector: Vector3<f32>) -> Vector3<f32> {
     let len = vector_length(vector);
     pt3(vector.x / len, vector.y / len, vector.z / len)
 }
@@ -124,7 +124,7 @@ pub fn create_app_texture(device: &wgpu::Device, size: Point2, msaa_samples: u32
     wgpu::TextureBuilder::new()
         .size([size[0] as u32, size[1] as u32])
         .usage(
-            wgpu::TextureUsage::OUTPUT_ATTACHMENT
+            wgpu::TextureUsage::RENDER_ATTACHMENT
                 | wgpu::TextureUsage::SAMPLED
                 | wgpu::TextureUsage::COPY_SRC,
         )
@@ -151,23 +151,39 @@ pub fn create_texture_reshaper(
     msaa_samples: u32,
 ) -> wgpu::TextureReshaper {
     let texture_view = texture.view().build();
-    let texture_component_type = texture.component_type();
+    let texture_sample_type = texture.sample_type();
     let dst_format = Frame::TEXTURE_FORMAT;
     wgpu::TextureReshaper::new(
         device,
         &texture_view,
         msaa_samples,
-        texture_component_type,
+        texture_sample_type,
         msaa_samples,
         dst_format,
     )
 }
 
 pub fn copy_texture(encoder: &mut wgpu::CommandEncoder, src: &wgpu::Texture, dst: &wgpu::Texture) {
-    let src_copy_view = src.default_copy_view();
-    let dst_copy_view = dst.default_copy_view();
+    let src_texture_view = wgpu::TextureCopyView {
+        texture: src,
+        mip_level: 0, // TODO(jhg): should we handle this?
+        origin: wgpu::Origin3d {
+            x: 0,
+            y: 0,
+            z: 1,
+        },
+    };
+    let dst_texture_view = wgpu::TextureCopyView {
+        texture: dst,
+        mip_level: 0,
+        origin: wgpu::Origin3d {
+            x: 0,
+            y: 0,
+            z: 1,
+        },
+    };
     let copy_size = dst.extent();
-    encoder.copy_texture_to_texture(src_copy_view, dst_copy_view, copy_size);
+    encoder.copy_texture_to_texture(src_texture_view, dst_texture_view, copy_size);
 }
 
 pub fn float_as_bytes(data: &f32) -> &[u8] {

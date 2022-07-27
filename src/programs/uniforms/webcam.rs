@@ -7,7 +7,7 @@ use crate::programs::uniforms::video_capture::VideoCapture;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub video_size: Vector2,
+    pub video_size: Vector2<f32>,
 }
 
 pub struct WebcamUniforms {

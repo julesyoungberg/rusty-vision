@@ -11,7 +11,7 @@ fn error_display(
     ui: &mut UiCell,
     title: &str,
     message: &str,
-    size: Vector2,
+    size: Vector2<f32>,
 ) {
     let container_id = widget_ids.errors_wrapper;
     let padding = 40.0;
@@ -41,7 +41,7 @@ pub fn compilation_errors(
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
     errors: &ProgramErrors,
-    size: Vector2,
+    size: Vector2<f32>,
 ) {
     let mut error_string: String = "".to_owned();
     for value in errors.values() {
@@ -62,7 +62,7 @@ pub fn update(
     program_store: &ProgramStore,
     widget_ids: &app::WidgetIds,
     ui: &mut UiCell,
-    size: Vector2,
+    size: Vector2<f32>,
 ) {
     if let Some(config_error) = &program_store.error {
         error_display(&widget_ids, ui, "Config Error", config_error.as_str(), size);

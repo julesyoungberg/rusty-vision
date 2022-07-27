@@ -523,7 +523,7 @@ impl IsfPassTextures {
             .format(Frame::TEXTURE_FORMAT)
             .size(size)
             .usage(
-                wgpu::TextureUsage::OUTPUT_ATTACHMENT
+                wgpu::TextureUsage::RENDER_ATTACHMENT
                     | wgpu::TextureUsage::COPY_SRC
                     | wgpu::TextureUsage::COPY_DST,
             )

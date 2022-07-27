@@ -11,8 +11,8 @@ use crate::util;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub image1_size: Vector2,
-    pub image2_size: Vector2,
+    pub image1_size: Vector2<f32>,
+    pub image2_size: Vector2<f32>,
 }
 
 pub struct ImageUniforms {

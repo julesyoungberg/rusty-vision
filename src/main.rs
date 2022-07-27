@@ -47,7 +47,7 @@ fn model(app: &App) -> app::Model {
     let texture = util::create_app_texture(device, size, msaa_samples);
     let texture_reshaper = util::create_texture_reshaper(device, &texture, msaa_samples);
 
-    window.swap_chain_queue().submit(&[encoder.finish()]);
+    window.swap_chain_queue().submit(vec![encoder.finish()]);
 
     // create UI
     let mut ui = app.new_ui().build().unwrap();
@@ -145,7 +145,7 @@ fn key_pressed(app: &App, model: &mut app::Model, key: Key) {
     }
 }
 
-fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
+fn resized(_app: &App, model: &mut app::Model, size: Vector2<f32>) {
     model.size = size;
     model
         .program_store
@@ -155,7 +155,7 @@ fn resized(_app: &App, model: &mut app::Model, size: Vector2) {
     model.resized = true;
 }
 
-fn mouse_moved(_app: &App, model: &mut app::Model, position: Vector2) {
+fn mouse_moved(_app: &App, model: &mut app::Model, position: Vector2<f32>) {
     model
         .program_store
         .buffer_store

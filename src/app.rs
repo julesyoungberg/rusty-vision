@@ -111,7 +111,7 @@ pub struct Model {
     pub ui_show_noise: bool,
     pub ui_show_video: bool,
     pub resized: bool,
-    pub size: Vector2,
+    pub size: Vector2<f32>,
     pub vertex_buffer: wgpu::Buffer,
 }
 
@@ -147,7 +147,7 @@ impl Model {
             self.resized = false;
         }
 
-        window.swap_chain_queue().submit(&[encoder.finish()]);
+        window.swap_chain_queue().submit(vec![encoder.finish()]);
     }
 
     /// Encode a render pass to a given texture.
@@ -181,7 +181,7 @@ impl Model {
             .begin(encoder);
 
         render_pass.set_pipeline(render_pipeline);
-        render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
 
         // attach appropriate bind groups for the current program
         let bind_groups = match self.program_store.get_bind_groups() {
@@ -224,7 +224,7 @@ impl Model {
             util::copy_texture(&mut encoder, &render_texture, pass_texture);
 
             // finish pass
-            window.swap_chain_queue().submit(&[encoder.finish()]);
+            window.swap_chain_queue().submit(vec![encoder.finish()]);
             self.program_store.increment_pass_index();
         }
     }

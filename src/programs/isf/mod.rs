@@ -3,6 +3,7 @@
 use nannou::prelude::*;
 use nannou::ui::prelude::*;
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 use threadpool::ThreadPool;
 
@@ -91,15 +92,15 @@ fn create_isf_textures_bind_group_layout(
     isf_opt: &Option<isf::Isf>,
 ) -> wgpu::BindGroupLayout {
     // Begin with the sampler.
-    let mut builder = wgpu::BindGroupLayoutBuilder::new().sampler(wgpu::ShaderStage::FRAGMENT);
+    let mut builder = wgpu::BindGroupLayoutBuilder::new().sampler(wgpu::ShaderStage::FRAGMENT, false);
 
     if let Some(ref isf) = isf_opt {
         for texture in data::isf_data_textures(isf_data, isf) {
-            builder = builder.sampled_texture(
+            builder = builder.texture(
                 wgpu::ShaderStage::FRAGMENT,
                 false,
                 wgpu::TextureViewDimension::D2,
-                texture.component_type(),
+                texture.sample_type(),
             );
         }
     }
@@ -135,7 +136,11 @@ fn create_pipeline_layout(
     device: &wgpu::Device,
     bind_group_layouts: &[&wgpu::BindGroupLayout],
 ) -> wgpu::PipelineLayout {
-    let desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
+    let desc = wgpu::PipelineLayoutDescriptor {
+        label: None,
+        bind_group_layouts,
+        push_constant_ranges: &[],
+    };
     device.create_pipeline_layout(&desc)
 }
 
@@ -226,7 +231,11 @@ impl IsfPipeline {
         println!("creating isf uniforms");
         let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
         let isf_uniform_buffer =
-            device.create_buffer_with_data(&isf_uniforms_bytes, uniforms_usage);
+            device.create_buffer_init(&BufferInitDescriptor {
+                label: None,
+                contents: isf_uniforms_bytes,
+                usage: uniforms_usage
+            });
         let isf_bind_group_layout = build_uniform_bind_group_layout(device);
         bind_group_layouts.push(&isf_bind_group_layout);
         let isf_bind_group = wgpu::BindGroupBuilder::new()
@@ -255,10 +264,14 @@ impl IsfPipeline {
 
         if !isf_input_uniforms_bytes.is_empty() {
             let uniform_buffer =
-                device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+                device.create_buffer_init(&BufferInitDescriptor {
+                    label: None,
+                    contents: isf_input_uniforms_bytes,
+                    usage: uniforms_usage
+                });
             let bind_group_layout = build_uniform_bind_group_layout(device);
             let bind_group = wgpu::BindGroupBuilder::new()
-                .buffer_bytes(&uniform_buffer, 0..1)
+                .buffer_bytes(&uniform_buffer, 0, Some((isf_input_uniforms_bytes.len() as u64).try_into().unwrap()))
                 .build(device, &bind_group_layout);
 
             isf_inputs_uniform_buffer = Some(uniform_buffer);
@@ -284,7 +297,11 @@ impl IsfPipeline {
         // The quad vertex buffer.
         let vertices_bytes = vertices_as_bytes(&VERTICES[..]);
         let vertex_usage = wgpu::BufferUsage::VERTEX;
-        let vertex_buffer = device.create_buffer_with_data(vertices_bytes, vertex_usage);
+        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: vertices_bytes,
+            usage: vertex_usage
+        });
 
         let texture_reshaper = match isf_data.get_final_texture() {
             Some(texture) => Some(crate::util::create_texture_reshaper(
@@ -417,10 +434,14 @@ impl IsfPipeline {
             if !isf_input_uniforms_bytes.is_empty() {
                 let uniforms_usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
                 let uniform_buffer =
-                    device.create_buffer_with_data(&isf_input_uniforms_bytes, uniforms_usage);
+                    device.create_buffer_init(&BufferInitDescriptor {
+                        label: None,
+                        contents: isf_input_uniforms_bytes,
+                        usage: uniforms_usage
+                    });
                 let bind_group_layout = build_uniform_bind_group_layout(device);
                 let bind_group = wgpu::BindGroupBuilder::new()
-                    .buffer_bytes(&uniform_buffer, 0..1)
+                    .buffer_bytes(&uniform_buffer, 0, Some((isf_input_uniforms_bytes.len() as u64).try_into().unwrap()))
                     .build(device, &bind_group_layout);
 
                 self.isf_inputs_uniform_buffer = Some(uniform_buffer);
@@ -512,7 +533,11 @@ impl IsfPipeline {
             };
             let isf_uniforms_bytes = isf_uniforms_as_bytes(&isf_uniforms);
             let usage = wgpu::BufferUsage::COPY_SRC;
-            let new_buffer = device.create_buffer_with_data(&isf_uniforms_bytes, usage);
+            let new_buffer = device.create_buffer_init(&BufferInitDescriptor {
+                label: None,
+                contents: isf_uniforms_bytes,
+                usage
+            });
             let uniforms_size = isf_uniforms_bytes.len() as wgpu::BufferAddress;
             encoder.copy_buffer_to_buffer(
                 &new_buffer,
@@ -527,7 +552,11 @@ impl IsfPipeline {
                 let isf_input_uniforms_bytes_vec =
                     data::get_isf_input_uniforms_bytes_vec(&self.isf, &self.isf_data);
                 let isf_input_uniforms_bytes = &isf_input_uniforms_bytes_vec[..];
-                let new_buffer = device.create_buffer_with_data(&isf_input_uniforms_bytes, usage);
+                let new_buffer = device.create_buffer_init(&BufferInitDescriptor {
+                    label: None,
+                    contents: isf_input_uniforms_bytes,
+                    usage
+                });
                 let inputs_size = isf_input_uniforms_bytes.len() as wgpu::BufferAddress;
                 encoder.copy_buffer_to_buffer(&new_buffer, 0, &uniform_buffer, 0, inputs_size);
             }
@@ -537,7 +566,7 @@ impl IsfPipeline {
                 .color_attachment(dst_texture, |color| color)
                 .begin(encoder);
             render_pass.set_pipeline(pipeline);
-            render_pass.set_vertex_buffer(0, &self.vertex_buffer, 0, 0);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_bind_group(0, &self.isf_bind_group, &[]);
             render_pass.set_bind_group(1, &self.isf_textures_bind_group, &[]);
             if let Some(ref bind_group) = self.isf_inputs_bind_group {

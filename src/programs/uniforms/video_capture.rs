@@ -44,7 +44,7 @@ pub struct VideoCapture {
     pub error: Option<String>,
     pub running: bool,
     pub speed: f32,
-    pub video_size: Vector2,
+    pub video_size: Vector2<f32>,
     pub video_texture: wgpu::Texture,
 
     capture_thread: Option<std::thread::JoinHandle<()>>,

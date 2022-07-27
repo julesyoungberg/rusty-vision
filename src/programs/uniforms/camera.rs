@@ -77,7 +77,7 @@ impl CameraUniforms {
         self.set_up(camera_up);
     }
 
-    pub fn forward(&self) -> Vector3 {
+    pub fn forward(&self) -> Vector3<f32> {
         pt3(
             self.data.camera_target_x - self.data.camera_pos_x,
             self.data.camera_target_y - self.data.camera_pos_y,
@@ -85,7 +85,7 @@ impl CameraUniforms {
         )
     }
 
-    pub fn up(&self) -> Vector3 {
+    pub fn up(&self) -> Vector3<f32> {
         pt3(
             self.data.camera_up_x,
             self.data.camera_up_y,
@@ -93,11 +93,11 @@ impl CameraUniforms {
         )
     }
 
-    pub fn dir(&self) -> Vector3 {
+    pub fn dir(&self) -> Vector3<f32> {
         util::normalize_vector(self.forward())
     }
 
-    pub fn set_dir(&mut self, next_dir: Vector3) {
+    pub fn set_dir(&mut self, next_dir: Vector3<f32>) {
         let len = util::vector_length(self.forward());
         let next_forward = pt3(next_dir.x * len, next_dir.y * len, next_dir.z * len);
         self.data.camera_target_x += next_forward.x;
@@ -105,13 +105,13 @@ impl CameraUniforms {
         self.data.camera_target_z += next_forward.z;
     }
 
-    pub fn set_up(&mut self, next_dir: Vector3) {
+    pub fn set_up(&mut self, next_dir: Vector3<f32>) {
         self.data.camera_up_x = next_dir.x;
         self.data.camera_up_y = next_dir.y;
         self.data.camera_up_z = next_dir.z;
     }
 
-    pub fn translate(&mut self, translation: Vector3) {
+    pub fn translate(&mut self, translation: Vector3<f32>) {
         self.data.camera_pos_x += translation.x;
         self.data.camera_pos_y += translation.y;
         self.data.camera_pos_z += translation.z;

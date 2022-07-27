@@ -1,5 +1,5 @@
 use nannou::prelude::*;
-use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use notify::{DebouncedEvent, RecursiveMode, Watcher};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
@@ -43,7 +43,7 @@ pub struct ProgramStore {
 }
 
 impl ProgramStore {
-    pub fn new(app: &App, device: &wgpu::Device, size: Vector2, num_samples: u32) -> Self {
+    pub fn new(app: &App, device: &wgpu::Device, size: Vector2<f32>, num_samples: u32) -> Self {
         let buffer_store = uniforms::BufferStore::new(device, size);
 
         // setup shader watcher
@@ -108,7 +108,11 @@ impl ProgramStore {
             .map(|u| &buffers.get(&u.to_string()).unwrap().bind_group_layout)
             .collect::<Vec<&wgpu::BindGroupLayout>>()[..];
         // update the program with the new shader code and appropriate layout description
-        let layout_desc = wgpu::PipelineLayoutDescriptor { bind_group_layouts };
+        let layout_desc = wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts,
+            push_constant_ranges: &[],
+        };
         current_program.create_render_pipeline(device, &layout_desc, num_samples);
     }
 

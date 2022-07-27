@@ -90,7 +90,7 @@ pub struct BufferStore {
 }
 
 impl BufferStore {
-    pub fn new(device: &wgpu::Device, size: Vector2) -> Self {
+    pub fn new(device: &wgpu::Device, size: Vector2<f32>) -> Self {
         let audio_source = audio_source::AudioSource::new();
 
         // store buffers in map

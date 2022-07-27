@@ -6,8 +6,8 @@ use crate::programs::uniforms::base::Bufferable;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Data {
-    pub mouse: Vector2,
-    pub resolution: Vector2,
+    pub mouse: Vector2<f32>,
+    pub resolution: Vector2<f32>,
     pub time: f32,
     pub mouse_down: i32,
 }
@@ -29,7 +29,7 @@ impl Bufferable<Data> for GeneralUniforms {
 }
 
 impl GeneralUniforms {
-    pub fn new(resolution: Vector2) -> Self {
+    pub fn new(resolution: Vector2<f32>) -> Self {
         println!("resolution: {:?}", resolution);
         Self {
             clock: SystemTime::now(),
@@ -54,11 +54,11 @@ impl GeneralUniforms {
         self.data.time = self.get_time();
     }
 
-    pub fn set_size(&mut self, size: Vector2) {
+    pub fn set_size(&mut self, size: Vector2<f32>) {
         self.data.resolution = size;
     }
 
-    pub fn set_mouse(&mut self, mouse: Vector2) {
+    pub fn set_mouse(&mut self, mouse: Vector2<f32>) {
         self.data.mouse = mouse;
     }
 

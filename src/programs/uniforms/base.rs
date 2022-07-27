@@ -40,15 +40,15 @@ impl UniformBuffer {
         let mut texture_views = vec![];
 
         if !textures.is_empty() {
-            layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT);
+            layout_builder = layout_builder.sampler(wgpu::ShaderStage::FRAGMENT, false);
 
             for texture in textures.iter() {
                 let texture_view = texture.view().build();
-                layout_builder = layout_builder.sampled_texture(
+                layout_builder = layout_builder.texture(
                     wgpu::ShaderStage::FRAGMENT,
                     false,
                     wgpu::TextureViewDimension::D2,
-                    texture_view.component_type(),
+                    texture_view.sample_type(),
                 );
                 texture_views.push(texture_view);
             }
@@ -58,7 +58,11 @@ impl UniformBuffer {
         if !data.is_empty() {
             layout_builder = layout_builder.uniform_buffer(wgpu::ShaderStage::FRAGMENT, false);
             let usage = wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST;
-            let buff = device.create_buffer_with_data(data, usage);
+            let buff = device.create_buffer_init(&BufferInitDescriptor {
+                label: None,
+                contents: data,
+                usage
+            });
             buffer = Some(buff);
         }
 
@@ -97,7 +101,11 @@ impl UniformBuffer {
         if let Some(buffer) = &self.buffer {
             let size = std::mem::size_of::<T>() as wgpu::BufferAddress;
             let usage = wgpu::BufferUsage::COPY_SRC;
-            let next_buffer = device.create_buffer_with_data(uniforms.as_bytes(), usage);
+            let next_buffer = device.create_buffer_init(&BufferInitDescriptor {
+                label: None,
+                contents: uniforms.as_bytes(),
+                usage,
+            });
             encoder.copy_buffer_to_buffer(&next_buffer, 0, buffer, 0, size);
         }
     }

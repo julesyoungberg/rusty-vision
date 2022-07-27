@@ -21,5 +21,9 @@ pub const VERTICES: [util::Vertex; 4] = [
 pub fn create_vertex_buffer(device: &wgpu::Device) -> wgpu::Buffer {
     let vertices_bytes = util::vertices_as_bytes(&VERTICES[..]);
     let usage = wgpu::BufferUsage::VERTEX;
-    device.create_buffer_with_data(vertices_bytes, usage)
+    device.create_buffer_init(&wgpu::BufferInitDescriptor {
+        label: None,
+        contents: vertices_bytes,
+        usage,
+    })
 }
