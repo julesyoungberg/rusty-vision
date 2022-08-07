@@ -82,6 +82,12 @@
       },
       "isf": true
     },
+    "NoiseLines": {
+      "pipeline": {
+        "frag": "noise_lines.fs"
+      },
+      "isf": true
+    },
     "ShapeScope": {
       "pipeline": {
         "frag": "shape_scope.fs"
