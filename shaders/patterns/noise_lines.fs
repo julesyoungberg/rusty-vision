@@ -5,46 +5,6 @@
     "CATEGORIES": [ "GENERATOR" ],
     "INPUTS": [
         {
-            "NAME": "color_config1",
-            "TYPE": "color",
-            "DEFAULT": [
-                0.5,
-                0.5,
-                0.5,
-                1.0
-            ]
-        },
-        {
-            "NAME": "color_config2",
-            "TYPE": "color",
-            "DEFAULT": [
-                0.5,
-                0.5,
-                0.5,
-                1.0
-            ]
-        },
-        {
-            "NAME": "color_config3",
-            "TYPE": "color",
-            "DEFAULT": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ]
-        },
-        {
-            "NAME": "color_config4",
-            "TYPE": "color",
-            "DEFAULT": [
-                0.1,
-                0.3,
-                0.6,
-                1.0
-            ]
-        },
-        {
             "NAME": "noise_octaves",
             "TYPE": "float",
             "MIN": 1.0,
@@ -64,6 +24,48 @@
             "MIN": 0.0,
             "MAX": 0.5,
             "DEFAULT": 0.2
+        },
+        {
+            "NAME": "num_lines",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 60.0,
+            "DEFAULT": 7.0
+        },
+        {
+            "NAME": "line_spacing",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 0.1,
+            "DEFAULT": 0.05
+        },
+        {
+            "NAME": "noise_width",
+            "TYPE": "float",
+            "MIN": 0.1,
+            "MAX": 0.9,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "noise_amount",
+            "TYPE": "float",
+            "MIN": 0.1,
+            "MAX": 0.5,
+            "DEFAULT": 0.2
+        },
+        {
+            "NAME": "noise_scale_x",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 7.0,
+            "DEFAULT": 2.0
+        },
+        {
+            "NAME": "noise_scale_y",
+            "TYPE": "float",
+            "MIN": 1.0,
+            "MAX": 7.0,
+            "DEFAULT": 4.0
         }
     ]
 }*/
@@ -125,7 +127,7 @@ float fbm(in vec2 p) {
 
     for (float i = 0.0; i < noise_octaves; i++) {
         f += scale * noise31(vec3(p, TIME * noise_speed));
-        // p *= m * (2.0 + noise_hash2(p) * 0.01);
+        p *= m;
         scaling += scale;
         scale *= 0.5;
     }
@@ -149,14 +151,14 @@ float line(vec2 p, vec2 a, vec2 b) {
 }
 
 float displaced_line(in vec2 st, float line_y, float x_len) {
-    float width = x_len * 0.5;
+    float radius = x_len * noise_width * 0.5;
     float center = x_len * 0.5;
-    float start = center - width * 0.5;
-    float end = center + width * 0.5;
+    float start = center - radius;
+    float end = center + radius;
     float shift = TIME * shift_speed;
     float shifted_x = mod(st.x - shift, x_len);
     float amount = smoothstep(start, center, shifted_x) - smoothstep(center, end, shifted_x);
-    st.y -= 0.2 * fbm(st * vec2(3.0, 4.0)) * amount;
+    st.y -= noise_amount * fbm(st * vec2(noise_scale_x, noise_scale_y)) * amount;
     return line(st, vec2(0.0, line_y), vec2(x_len, line_y));
 }
 
@@ -167,8 +169,6 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    float num_lines = 7.0;
-    float line_spacing = 0.05;
     float lines_width = (num_lines - 1.0) * line_spacing;
     float start = 0.5 - lines_width * 0.5;
     float end = 0.5 + lines_width * 0.5;
@@ -177,8 +177,5 @@ void main() {
         color += displaced_line(st, y, ratio);
     }
 
-    // vec3 color = vec3(fbm(st));
-    // vec3 color = palette(fbm(st), color_config1.rgb, color_config2.rgb,
-    //                      color_config3.rgb, color_config4.rgb);
     gl_FragColor = vec4(color, 1);
 }
