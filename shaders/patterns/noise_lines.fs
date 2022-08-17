@@ -8,29 +8,29 @@
             "NAME": "noise_octaves",
             "TYPE": "float",
             "MIN": 1.0,
-            "MAX": 6.0,
-            "DEFAULT": 2.0
+            "MAX": 10.0,
+            "DEFAULT": 5.0
         },
         {
             "NAME": "noise_speed",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 0.5,
-            "DEFAULT": 0.15
+            "MAX": 0.6,
+            "DEFAULT": 0.3
         },
         {
             "NAME": "shift_speed",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 0.5,
-            "DEFAULT": 0.2
+            "MAX": 0.6,
+            "DEFAULT": 0.3
         },
         {
             "NAME": "num_lines",
             "TYPE": "float",
             "MIN": 1.0,
             "MAX": 60.0,
-            "DEFAULT": 7.0
+            "DEFAULT": 20.0
         },
         {
             "NAME": "line_spacing",
@@ -43,15 +43,15 @@
             "NAME": "noise_width",
             "TYPE": "float",
             "MIN": 0.1,
-            "MAX": 0.9,
-            "DEFAULT": 0.5
+            "MAX": 1.0,
+            "DEFAULT": 0.9
         },
         {
             "NAME": "noise_amount",
             "TYPE": "float",
             "MIN": 0.1,
-            "MAX": 0.5,
-            "DEFAULT": 0.2
+            "MAX": 0.6,
+            "DEFAULT": 0.3
         },
         {
             "NAME": "noise_scale_x",

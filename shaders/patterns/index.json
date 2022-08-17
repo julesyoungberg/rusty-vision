@@ -82,6 +82,12 @@
       },
       "isf": true
     },
+    "NoiseGrid": {
+      "pipeline": {
+        "frag": "noise_grid.fs"
+      },
+      "isf": true
+    },
     "NoiseLines": {
       "pipeline": {
         "frag": "noise_lines.fs"
