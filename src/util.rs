@@ -170,7 +170,7 @@ pub fn copy_texture(encoder: &mut wgpu::CommandEncoder, src: &wgpu::Texture, dst
         origin: wgpu::Origin3d {
             x: 0,
             y: 0,
-            z: 1,
+            z: 0,
         },
     };
     let dst_texture_view = wgpu::TextureCopyView {
@@ -179,7 +179,7 @@ pub fn copy_texture(encoder: &mut wgpu::CommandEncoder, src: &wgpu::Texture, dst
         origin: wgpu::Origin3d {
             x: 0,
             y: 0,
-            z: 1,
+            z: 0,
         },
     };
     let copy_size = dst.extent();
