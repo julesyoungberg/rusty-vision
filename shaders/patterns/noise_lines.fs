@@ -40,10 +40,17 @@
             "DEFAULT": 0.05
         },
         {
+            "NAME": "line_width",
+            "TYPE": "float",
+            "MIN": 0.002,
+            "MAX": 0.1,
+            "DEFAULT": 0.005
+        },
+        {
             "NAME": "noise_width",
             "TYPE": "float",
             "MIN": 0.1,
-            "MAX": 1.0,
+            "MAX": 2.0,
             "DEFAULT": 0.9
         },
         {
@@ -120,7 +127,7 @@ float line_dist(vec2 p, vec2 a, vec2 b) {
 
 float line(vec2 p, vec2 a, vec2 b) {
     float d = line_dist(p, a, b);
-    float m = smoothstep(0.002, 0.0, d);
+    float m = smoothstep(line_width, 0.0, d);
     return m;
 }
 
@@ -132,7 +139,7 @@ float displaced_line(in vec2 st, float line_y, float x_len) {
     float shift = TIME * shift_speed;
     float shifted_x = mod(st.x - shift, x_len);
     float amount = smoothstep(start, center, shifted_x) - smoothstep(center, end, shifted_x);
-    st.y -= noise_amount * fbm(st * vec2(noise_scale_x, noise_scale_y)) * amount;
+    st.y -= noise_amount * fbm(vec2(noise_scale_x * st.x, noise_scale_y * line_y)) * amount;
     return line(st, vec2(0.0, line_y), vec2(x_len, line_y));
 }
 
