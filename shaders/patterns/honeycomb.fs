@@ -19,6 +19,25 @@
             ]
         },
         {
+            "NAME" : "audio_reactive",
+            "TYPE" : "bool",
+            "DEFAULT" : 0
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 0.25,
+            "MAX": 1.75,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "thickness",
+            "TYPE": "float",
+            "MIN": 0.05,
+            "MAX": 0.2,
+            "DEFAULT": 0.07
+        },
+        {
             "NAME": "zoom_speed",
             "TYPE": "float",
             "MIN": 0.0,
@@ -132,13 +151,13 @@ vec3 layer(vec2 st, float n) {
 
     float i = fract(id.x * id.y * 0.05 + n);
 
-    float d = smoothstep(0.05, 0.0, dist);
+    float d = smoothstep(thickness, 0.0, dist);
 
-    float intensity =
+    float intensity = audio_reactive ?
         log(IMG_NORM_PIXEL(fft_texture, vec2(fract(i * freq_diversity), 0.0))
                 .x +
             1.0) *
-        sensitivity;
+        sensitivity : 1.0;
 
     float shade = d * i * color_diversity *
                   max(rand21(id) - 1.0 + density, 0.0) * intensity;
@@ -155,6 +174,8 @@ vec3 layer(vec2 st, float n) {
 void main() {
     vec2 st = isf_FragNormCoord * 2.0 - 1.0;
     st.x *= RENDERSIZE.x / RENDERSIZE.y;
+
+    st *= scale;
 
     vec3 color = vec3(0.0);
 
