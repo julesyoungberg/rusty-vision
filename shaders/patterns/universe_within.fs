@@ -9,6 +9,34 @@
             "TYPE": "audioFFT"
         },
         {
+            "NAME": "sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "brightness",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "scale",
+            "TYPE": "float",
+            "MIN": 0.5,
+            "MAX": 2.0,
+            "DEFAULT": 1.0
+        },
+        {
+            "NAME": "line_thickenss",
+            "TYPE": "float",
+            "MIN": 0.01,
+            "MAX": 0.05,
+            "DEFAULT": 0.02
+        },
+        {
             "NAME": "camera_speed",
             "TYPE": "float",
             "MIN": 0.0,
@@ -63,8 +91,8 @@ vec2 rand2(vec2 p) {
 
 float line(vec2 p, vec2 a, vec2 b, float strength) {
     float d = line_dist(p, a, b);
-    float s = mix(0.0, 0.02, strength);
-    float m = smoothstep(s, 0.0, d);
+    float s = mix(0.0, line_thickenss, strength);
+    float m = smoothstep(s, s - 0.01, d);
     float d2 = length(a - b);
     m *= smoothstep(1.2, 0.8, d2) + smoothstep(0.05, 0.03, d2 - 0.75);
     return m;
@@ -73,7 +101,11 @@ float line(vec2 p, vec2 a, vec2 b, float strength) {
 vec2 get_point(vec2 id) { return sin(rand2(id) * TIME * point_speed) * 0.4; }
 
 float get_strength(float i) {
-    return log(IMG_NORM_PIXEL(fft_texture, vec2(i, 0)).x + 1.0);
+    return mix(
+        brightness,
+        log(IMG_NORM_PIXEL(fft_texture, vec2(i, 0)).x + 1.0),
+        sensitivity
+    );
 }
 
 // draws 1 layer of the pseudo-3d effect
@@ -139,8 +171,9 @@ vec3 layer(vec2 st, float n) {
 }
 
 void main() {
-    vec2 st = isf_FragNormCoord;
+    vec2 st = isf_FragNormCoord - 0.5;
     st.x *= RENDERSIZE.x / RENDERSIZE.y;
+    st *= scale;
 
     vec3 color = vec3(0.0);
 

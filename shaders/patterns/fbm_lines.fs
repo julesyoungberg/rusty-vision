@@ -45,7 +45,7 @@
             "NAME": "line_thickness",
             "TYPE": "float",
             "MIN": 0.01,
-            "MAX": 0.1,
+            "MAX": 0.2,
             "DEFAULT": 0.03
         },
         {

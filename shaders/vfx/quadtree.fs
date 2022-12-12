@@ -66,7 +66,7 @@ vec4 color_variation(in vec2 center, in float size) {
     vec3 color_mean = vec3(0.0);
 
     for (uint i = 0; i < SAMPLES_PER_ITERATION; i++) {
-        vec2 rnd = hash22(center.xy + vec2(i, 0.0)) - 0.5;
+        vec2 rnd = hash22(center.xy + vec2(float(i), 0.0)) - 0.5;
         vec2 sample_coord = center + rnd * size;
         samples[i] = image_color(sample_coord);
         color_mean += samples[i];

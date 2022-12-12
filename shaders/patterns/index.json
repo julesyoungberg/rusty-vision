@@ -94,6 +94,12 @@
       },
       "isf": true
     },
+    "RainbowCircle": {
+      "pipeline": {
+        "frag": "rainbow_circle.fs"
+      },
+      "isf": true
+    },
     "ShapeScope": {
       "pipeline": {
         "frag": "shape_scope.fs"
@@ -151,6 +157,18 @@
     "Truchet2": {
       "pipeline": {
         "frag": "truchet2.fs"
+      },
+      "isf": true
+    },
+    "Tunnel": {
+      "pipeline": {
+        "frag": "tunnel.fs"
+      },
+      "isf": true
+    },
+    "Tunnel3D": {
+      "pipeline": {
+        "frag": "tunnel3D.fs"
       },
       "isf": true
     },
