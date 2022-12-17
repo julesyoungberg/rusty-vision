@@ -160,6 +160,18 @@
       },
       "isf": true
     },
+    "TunnelBricks": {
+      "pipeline": {
+        "frag": "tunnel_bricks.fs"
+      },
+      "isf": true
+    },
+    "TunnelBricks2": {
+      "pipeline": {
+        "frag": "tunnel_bricks_2.fs"
+      },
+      "isf": true
+    },
     "Tunnel": {
       "pipeline": {
         "frag": "tunnel.fs"

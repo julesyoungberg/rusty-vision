@@ -5,34 +5,6 @@
     "CATEGORIES": [ "GENERATOR" ],
     "INPUTS": [
         {
-            "NAME": "fft_texture",
-            "TYPE": "audioFFT"
-        },
-        {
-            "NAME": "color_config",
-            "TYPE": "color",
-            "DEFAULT": [
-                0.60,
-                0.10,
-                0.20,
-                1.0
-            ]
-        },
-        {
-            "NAME": "sensitivity",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 1.0,
-            "DEFAULT": 0.5
-        },
-        {
-            "NAME": "brightness",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 1.0,
-            "DEFAULT": 0.5
-        },
-        {
             "NAME": "zoom_speed",
             "TYPE": "float",
             "MIN": 0.0,
@@ -47,25 +19,11 @@
             "DEFAULT": 0.3
         },
         {
-            "NAME": "color_speed",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 1.0,
-            "DEFAULT": 0.1
-        },
-        {
             "NAME": "n_layers",
             "TYPE": "float",
             "MIN": 4.0,
             "MAX": 100.0,
-            "DEFAULT": 32.0
-        },
-        {
-            "NAME": "color_amount",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 1.0,
-            "DEFAULT": 1.0
+            "DEFAULT": 16.0
         },
         {
             "TYPE": "float",
@@ -77,16 +35,16 @@
         {
             "TYPE": "float",
             "NAME": "light_x",
-            "MIN": -2.0,
-            "MAX": 2.0,
-            "DEFAULT": 0.0
+            "MIN": -3.0,
+            "MAX": 3.0,
+            "DEFAULT": 2.0
         },
         {
             "TYPE": "float",
             "NAME": "light_y",
-            "MIN": -2.0,
-            "MAX": 2.0,
-            "DEFAULT": 0.0
+            "MIN": -3.0,
+            "MAX": 3.0,
+            "DEFAULT": 2.0
         },
         {
             "TYPE": "float",
@@ -106,20 +64,6 @@ const float surface_dist = 0.0001;
 const float ambient = 0.1;
 
 float rand(float n) { return fract(n * 1183.5437 + .42); }
-
-// IQ's palette generator:
-// https://www.iquilezles.org/www/articles/palettes/palettes.htm
-vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
-    return a + b * cos(6.28318 * (c * t + d));
-}
-
-float get_strength(float i) {
-    return mix(
-        brightness,
-        log(IMG_NORM_PIXEL(fft_texture, vec2(i, 0)).x + 1.0),
-        sensitivity
-    );
-}
 
 vec3 get_ray_direction(vec3 ro, vec2 uv) {
     const vec3 lookat = vec3(0.0);
@@ -161,6 +105,8 @@ float op_union(float d1, float d2) { return min(d1, d2); }
 
 float op_subtraction(float d1, float d2) { return max(-d1, d2); }
 
+float op_intersection(float d1, float d2) { return max(d1, d2); }
+
 mat3 rot_z(float a) {
     float c = cos(a);
     float s = sin(a);
@@ -177,7 +123,7 @@ float sd_semi_circle(vec3 p, float r1, float r2, float arc) {
     mat3 r = rot_z(PI * arc);
     vec3 shift = vec3(0.5, 0.0, 0.0);
 
-    float sd = op_union(
+    float sd = op_intersection(
         sd_box(p - shift, vec3(0.5)),
         sd_box(r * p - shift, vec3(0.5))
     );
@@ -185,7 +131,7 @@ float sd_semi_circle(vec3 p, float r1, float r2, float arc) {
     return op_subtraction(sd, d);
 }
 
-vec2 scene_dist(vec3 p) {
+vec3 scene_dist(vec3 p) {
     vec3 sp = p - vec3(0.0, 0.0, 0.0);
     const float n_layers = 21.0;
     float stp = 1.0 / n_layers;
@@ -193,38 +139,47 @@ vec2 scene_dist(vec3 p) {
     float d = max_dist;
     float min_z = 0.0;
 
+    float total_rot = 0.0;
+
+    // p.z *= 0.75;
+
     for (float z = 0; z < 1.0; z += stp) {
         sp.z = mod(p.z + z - TIME * zoom_speed, 1.0);
         float id = z;
-        float arc = rand(id * 13.0) * 0.8 + 0.1;
+        float arc = round(rand(id * 13.0)) * 0.25 + 0.75;
 
-        mat3 rot = rot_z(rand(id * 17.0) * PI * 2.0);
-        sp *= rot;
+        // mat3 rot = rot_z(rand(id * 17.0) * PI * 2.0);
+        // sp *= rot;
 
-        rot = rot_z(TIME * rotation_speed * (rand(id * 23.0) * 2.0 - 1.0));
+        float layer_rot = TIME * rotation_speed * (rand(id * 23.0) * 2.0 - 1.0);
 
-        float dt = sd_semi_circle(sp * rot, 0.11, 0.13, arc);
+        mat3 rot = rot_z(layer_rot);
+
+        float dt = sd_semi_circle(sp * rot, 0.11, 0.14, arc);
 
         if (dt < d) {
             d = dt;
-            min_z = z;
+            min_z = sp.z;
+            total_rot = layer_rot;
         }
     }
 
-    return vec2(d, min_z);
+    return vec3(d, min_z, total_rot);
 }
 
-vec3 ray_march(vec3 ro, vec3 rd) {
+vec4 ray_march(vec3 ro, vec3 rd) {
     float dist = 0.0;
     float dist_step = 0.0;
     float layer = -1.0;
+    float rot = 0.0;
     vec3 position;
 
     for (uint i = 0; i < max_steps; i++) {
         position = ro + rd * dist;
-        vec2 r = scene_dist(position);
+        vec3 r = scene_dist(position);
         dist_step = r.x;
         layer = r.y;
+        rot = r.z;
         dist += dist_step * 0.5;
 
         if (dist >= max_dist || dist_step <= surface_dist) {
@@ -232,7 +187,7 @@ vec3 ray_march(vec3 ro, vec3 rd) {
         }
     }
 
-    return vec3(dist, dist_step, layer);
+    return vec4(dist, dist_step, layer, rot);
 }
 
 vec3 get_normal(vec3 p) {
@@ -244,11 +199,18 @@ vec3 get_normal(vec3 p) {
 					 e.xxx * scene_dist(p + e.xxx * eps).x);
 }
 
-vec3 scene_color(vec3 p, vec3 ro, float id) {
+float circle(vec2 st, float r) {
+    return smoothstep(r, r + 0.001, length(st));
+}
+
+vec3 scene_color(in vec3 p, vec3 ro, float z, float rot) {
     vec3 normal = get_normal(p);
     if (normal == vec3(0.0)) {
         return normal;
     }
+
+    p *= rot_z(rot);
+    p.z = z;
 
     vec3 light_pos = vec3(light_x, light_y, light_z);
     vec3 light_dir = normalize(light_pos - p);
@@ -269,15 +231,35 @@ vec3 scene_color(vec3 p, vec3 ro, float id) {
 
     vec3 light = vec3(diffuse + ambient + specular);
 
-    vec3 clr = palette(
-        fract(id * 3.0 + TIME * color_speed),
-        vec3(0.5, 0.5, 0.5),
-        vec3(0.5, 0.5, 0.5),
-        vec3(1.0, 1.0, 1.0),
-        color_config.rgb
-    );
+    vec2 uv = vec2(atan(p.y, p.x) / PI, p.z);
+    vec2 scale = vec2(4.0, 4.0);
+    uv *= scale;
 
-    return light * clr * get_strength(fract(id * 2.0));
+    vec2 id = floor(uv);
+    vec2 gv = fract(uv - vec2(0.5, 0.0) * mod(id.y, 2.0));
+    id = floor(uv); // - vec2(0.5, 0.0) * mod(id.y, 2.0));
+
+    float edge = (step(0.005, gv.x) - step(0.995, gv.x))
+        * (step(0.005, gv.y) - step(0.995, gv.y))
+        * 0.75 + 0.25;
+
+    const vec2 correction = vec2(1.0, 2.0);
+
+    gv *= correction;
+
+    for (float x = 0.0; x < 1.0; x += 0.1) {
+        edge *= max(circle(gv - vec2(x - 0.05, 0.05), 0.01), 0.5);
+        edge *= max(circle(gv - vec2(x + 0.05, 0.35), 0.01), 0.5);
+    }
+
+    for (float y = 0.0; y < 0.5; y += 0.05) {
+        edge *= max(circle(gv - vec2(0.05, y - 0.05), 0.01), 0.5);
+        edge *= max(circle(gv - vec2(0.95, y + 0.05), 0.01), 0.5);
+    }
+
+    vec3 clr = vec3(0.2);
+
+    return light * clr * edge;
 }
 
 void main() {
@@ -286,12 +268,12 @@ void main() {
 
     vec3 ro = vec3(0.0, 0.0, 0.1);
     vec3 rd = get_ray_direction(ro, st);
-    vec3 d = ray_march(ro, rd);
+    vec4 d = ray_march(ro, rd);
 
     vec3 color = vec3(0.0);
 
     if (d.y <= surface_dist) {
-        color = scene_color(ro + rd * d.x, ro, d.z);
+        color = scene_color(ro + rd * d.x, ro, d.z, d.a);
     }
 
     gl_FragColor = vec4(color, 1);
