@@ -1,6 +1,30 @@
 {
   "default": "Points",
   "programs": {
+    "CubeNoise": {
+      "pipeline": {
+        "frag": "cube_noise.fs"
+      },
+      "isf": true
+    },
+    "CubeNoise2": {
+      "pipeline": {
+        "frag": "cube_noise_2.fs"
+      },
+      "isf": true
+    },
+    "CubeNoise3": {
+      "pipeline": {
+        "frag": "cube_noise_3.fs"
+      },
+      "isf": true
+    },
+    "CubeTide": {
+      "pipeline": {
+        "frag": "cube_tide.fs"
+      },
+      "isf": true
+    },
     "Diamonds": {
       "pipeline": {
         "frag": "diamonds.fs"
@@ -10,6 +34,12 @@
     "Points": {
       "pipeline": {
         "frag": "points.fs"
+      },
+      "isf": true
+    },
+    "PyramidCubes": {
+      "pipeline": {
+        "frag": "pyramid_cubes.fs"
       },
       "isf": true
     }

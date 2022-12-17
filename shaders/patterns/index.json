@@ -178,6 +178,12 @@
       },
       "isf": true
     },
+    "TunnelShapes": {
+      "pipeline": {
+        "frag": "tunnel_shapes.fs"
+      },
+      "isf": true
+    },
     "Tunnel3D": {
       "pipeline": {
         "frag": "tunnel3D.fs"
