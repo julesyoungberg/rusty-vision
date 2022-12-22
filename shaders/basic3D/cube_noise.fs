@@ -143,13 +143,41 @@
             "MIN": -10.0,
             "MAX": 10.0,
             "DEFAULT": -7.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "ambient_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 0.1
+        },
+        {
+            "TYPE": "float",
+            "NAME": "diffuse_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 1.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "specular_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 1.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "specular_power",
+            "MIN": 0.0,
+            "MAX": 256.0,
+            "DEFAULT": 32.0
         }
     ]
 }*/
 
 #define PI 3.14159265359
 
-const uint max_steps = 256;
+const int max_steps = 256;
 const float max_dist = 200.0;
 const float surface_dist = 0.0001;
 const float ambient = 0.1;
@@ -216,7 +244,7 @@ float get_strength(float i) {
 }
 
 vec3 get_ray_direction(vec3 ro, vec2 uv) {
-    const vec3 lookat = ro - vec3(look_x, 1.0, look_z);
+    vec3 lookat = ro - vec3(look_x, 1.0, look_z);
 
     vec3 forward = normalize(lookat - ro);
     vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));
@@ -269,7 +297,7 @@ vec2 ray_march(vec3 ro, vec3 rd) {
     float dist = 0.0;
     float dist_step = 0.0;
 
-    for (uint i = 0; i < max_steps; i++) {
+    for (int i = 0; i < max_steps; i++) {
         dist_step = scene_dist(ro + rd * dist);
         dist += dist_step;
 
@@ -299,21 +327,16 @@ vec3 scene_color(vec3 p, vec3 ro) {
     vec3 light_pos = ro + vec3(light_x, light_y, light_z);
     vec3 light_dir = normalize(light_pos - p);
 
-    const float ambient = 0.1;
-    const float diffuse_strength = 1.0;
-    const float specular_strength = 1.0;
-
     float diff = max(dot(normal, light_dir), 0.0);
     float diffuse = diffuse_strength * diff;
 
     vec3 view_dir = normalize(ro - p);
     vec3 reflect_dir = reflect(-light_dir, normal);
 
-    float spec_pow = 32.0;
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), spec_pow);
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), specular_power);
     float specular = specular_strength * spec;
 
-    vec3 light = vec3(diffuse + ambient + specular);
+    vec3 light = vec3(diffuse + ambient_strength + specular);
 
     float id = rand21(get_cell(p));
 

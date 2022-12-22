@@ -14,14 +14,28 @@
             "MAX": 32
         },
         {
-            "NAME": "slice_strength",
+            "NAME": "slice_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.0
+        },
+        {
+            "NAME": "slice_sensitivity",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 2.0,
             "DEFAULT": 1.0
         },
         {
-            "NAME": "color_shake_strength",
+            "NAME": "color_shake_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.0
+        },
+        {
+            "NAME": "color_shake_sensitivity",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 2.0,
@@ -64,8 +78,8 @@ void main() {
     float t = floor(TIME * 0.5 * 60.0);
 
     // offset slices horizontally according to treble
-    float max_offset = spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) *
-                       2.0 * slice_strength;
+    float max_offset = slice_amount + spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) *
+                       2.0 * slice_sensitivity;
     for (float i = 0.0; i < max_offset * 20.0; i++) {
         // get random start and end y coords
         float slice_y = rand21(vec2(t, 3679.0 + i));
@@ -80,8 +94,8 @@ void main() {
     }
 
     // calculate color shift according to bass
-    float max_color_offset =
-        spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02 * color_shake_strength;
+    float max_color_offset = color_shake_amount + 
+        spectrum_strength(0, SPECTRUM_SIZE * 0.5) * 0.02 * color_shake_sensitivity;
     vec2 color_offset =
         vec2(rand_range(vec2(t, 6794.0), -max_color_offset, max_color_offset),
              rand_range(vec2(t, 9382.0), -max_color_offset, max_color_offset));

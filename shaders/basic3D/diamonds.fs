@@ -90,7 +90,7 @@
     ]
 }*/
 
-const uint max_steps = 100;
+const int max_steps = 100;
 const float max_dist = 100.0;
 const float surface_dist = 0.1;
 
@@ -167,7 +167,7 @@ float ray_march(vec3 ro, vec3 rd) {
     float dist_step = 0.0;
     vec3 position;
 
-    for (uint i = 0; i < max_steps; i++) {
+    for (int i = 0; i < max_steps; i++) {
         position = ro + rd * dist;
         dist_step = scene_dist(position);
         dist += dist_step * 0.5;

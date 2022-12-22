@@ -142,7 +142,7 @@
 
 #define PI 3.14159265359
 
-const uint max_steps = 256;
+const int max_steps = 256;
 const float max_dist = 200.0;
 const float surface_dist = 0.0001;
 const float ambient = 0.1;
@@ -265,6 +265,8 @@ float scene_dist(vec3 p) {
 
     float min_dist = sd_pyramid(p * 0.7 + vec3(0.0, 0.2, 0.0), 1.0);
 
+    // @todo figure out how to get 
+
     // return op_intersection(min_dist, plane) * 0.5;
 
     // @todo calculate nearest cube below
@@ -287,7 +289,7 @@ vec2 ray_march(vec3 ro, vec3 rd) {
     float dist = 0.0;
     float dist_step = 0.0;
 
-    for (uint i = 0; i < max_steps; i++) {
+    for (int i = 0; i < max_steps; i++) {
         dist_step = scene_dist(ro + rd * dist);
         dist += dist_step;
 

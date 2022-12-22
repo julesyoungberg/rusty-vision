@@ -52,13 +52,41 @@
             "MIN": -10.0,
             "MAX": 2.0,
             "DEFAULT": -1.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "ambient_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 0.1
+        },
+        {
+            "TYPE": "float",
+            "NAME": "diffuse_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 1.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "specular_strength",
+            "MIN": 0.0,
+            "MAX": 1.5,
+            "DEFAULT": 1.0
+        },
+        {
+            "TYPE": "float",
+            "NAME": "specular_power",
+            "MIN": 0.0,
+            "MAX": 256.0,
+            "DEFAULT": 32.0
         }
     ]
 }*/
 
 #define PI 3.14159265359
 
-const uint max_steps = 128;
+const int max_steps = 128;
 const float max_dist = 3.0;
 const float surface_dist = 0.0001;
 const float ambient = 0.1;
@@ -174,7 +202,7 @@ vec4 ray_march(vec3 ro, vec3 rd) {
     float rot = 0.0;
     vec3 position;
 
-    for (uint i = 0; i < max_steps; i++) {
+    for (int i = 0; i < max_steps; i++) {
         position = ro + rd * dist;
         vec3 r = scene_dist(position);
         dist_step = r.x;
@@ -215,21 +243,16 @@ vec3 scene_color(in vec3 p, vec3 ro, float z, float rot) {
     vec3 light_pos = vec3(light_x, light_y, light_z);
     vec3 light_dir = normalize(light_pos - p);
 
-    const float ambient = 0.1;
-    const float diffuse_strength = 1.0;
-    const float specular_strength = 1.0;
-
     float diff = max(dot(normal, light_dir), 0.0);
     float diffuse = diffuse_strength * diff;
 
     vec3 view_dir = normalize(ro - p);
     vec3 reflect_dir = reflect(-light_dir, normal);
 
-    float spec_pow = 32.0;
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), spec_pow);
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), specular_power);
     float specular = specular_strength * spec;
 
-    vec3 light = vec3(diffuse + ambient + specular);
+    vec3 light = vec3(diffuse + ambient_strength + specular);
 
     vec2 uv = vec2(atan(p.y, p.x) / PI, p.z);
     vec2 scale = vec2(4.0, 4.0);

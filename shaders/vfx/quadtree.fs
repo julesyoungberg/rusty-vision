@@ -65,7 +65,7 @@ vec4 color_variation(in vec2 center, in float size) {
 
     vec3 color_mean = vec3(0.0);
 
-    for (uint i = 0; i < SAMPLES_PER_ITERATION; i++) {
+    for (int i = 0; i < SAMPLES_PER_ITERATION; i++) {
         vec2 rnd = hash22(center.xy + vec2(float(i), 0.0)) - 0.5;
         vec2 sample_coord = center + rnd * size;
         samples[i] = image_color(sample_coord);
@@ -77,7 +77,7 @@ vec4 color_variation(in vec2 center, in float size) {
     vec3 color_variance = vec3(0.0);
 
     // compute variance
-    for (uint i = 0; i < SAMPLES_PER_ITERATION; i++) {
+    for (int i = 0; i < SAMPLES_PER_ITERATION; i++) {
         color_variance += pow(samples[i], vec3(2.0));
     }
 
@@ -97,11 +97,11 @@ void main() {
     vec4 variation = vec4(0.0);
     float divisions = 1.0;
 
-    uint min_iterations = uint(floor(min_divisions));
-    uint end = min_iterations + uint(floor(max_iterations));
+    int min_iterations = int(floor(min_divisions));
+    int end = min_iterations + int(floor(max_iterations));
 
     // loop until the variance is under the threshold
-    for (uint i = min_iterations; i < end; i++) {
+    for (int i = min_iterations; i < end; i++) {
         divisions = pow(2.0, float(i));
         center = (floor(st * divisions) + 0.5) / divisions;
         float side_length = 1 / divisions;
