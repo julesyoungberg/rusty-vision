@@ -205,9 +205,9 @@ void main() {
     // calculate noise effect
     float offset = noise21(vec2(0, st.y + TIME * 155.0));
     float distortion =
-        mix(0.002, 0.008, get_spectrum(0.7) * distortion_sensitivity);
+        mix(0.0, 0.01, get_spectrum(0.7) * distortion_sensitivity);
     float noisestrength =
-        mix(0.002, 0.008, get_spectrum(0.5) * noise_sensitivity);
+        mix(0.0, 0.01, get_spectrum(0.5) * noise_sensitivity);
 
     // get colors for each channel with noise
     float r =
@@ -219,7 +219,7 @@ void main() {
     vec3 color = vec3(r, g, b);
 
     // TV noise
-    color += rand21(st) * get_spectrum(0.8);
+    // color += rand21(st) * get_spectrum(0.8);
 
     // add small TV noise stripes
     float stripes = sin(st.y * 300.0 + TIME * 20.0 * small_strips_speed +

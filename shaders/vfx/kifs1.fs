@@ -44,7 +44,8 @@
 vec2 N(float angle) { return vec2(sin(angle), cos(angle)); }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
+    vec2 c = fract(coord);
+    return IMG_NORM_PIXEL(inputImage, vec2(c.x, 1.0 - c.y)).rgb;
 }
 
 void main() {

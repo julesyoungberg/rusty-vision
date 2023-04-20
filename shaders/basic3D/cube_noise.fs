@@ -75,13 +75,6 @@
             "DEFAULT": 0.1
         },
         {
-            "NAME": "n_layers",
-            "TYPE": "float",
-            "MIN": 4.0,
-            "MAX": 100.0,
-            "DEFAULT": 32.0
-        },
-        {
             "NAME": "color_amount",
             "TYPE": "float",
             "MIN": 0.0,

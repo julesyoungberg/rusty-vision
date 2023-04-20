@@ -11,7 +11,7 @@
         {
             "NAME": "speed",
             "TYPE": "float",
-            "MIN": 0.0,
+            "MIN": -0.2,
             "MAX": 0.2,
             "DEFAULT": 0.05
         },

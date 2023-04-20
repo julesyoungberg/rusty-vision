@@ -40,6 +40,13 @@
             "MIN": 0.0,
             "MAX": 2.0,
             "DEFAULT": 1.0
+        },
+        {
+            "NAME": "speed",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 50.0,
+            "DEFAULT": 30.0
         }
     ]
 }*/
@@ -50,7 +57,8 @@
 #define SPECTRUM_SIZE 32
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
+    vec2 c = fract(coord);
+    return IMG_NORM_PIXEL(inputImage, vec2(c.x, 1.0 - c.y)).rgb;
 }
 
 float rand21(vec2 p) {
@@ -75,7 +83,7 @@ void main() {
 
     vec3 color = image_color(st);
 
-    float t = floor(TIME * 0.5 * 60.0);
+    float t = floor(TIME * speed);
 
     // offset slices horizontally according to treble
     float max_offset = slice_amount + spectrum_strength(SPECTRUM_SIZE * 0.5, SPECTRUM_SIZE) *

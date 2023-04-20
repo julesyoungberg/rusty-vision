@@ -46,7 +46,8 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 vec3 image_color(in vec2 coord) {
-    return IMG_NORM_PIXEL(inputImage, fract(coord)).rgb;
+    vec2 c = fract(coord);
+    return IMG_NORM_PIXEL(inputImage, vec2(c.x, 1.0 - c.y)).rgb;
 }
 
 vec3 get_point(vec3 coord) {
