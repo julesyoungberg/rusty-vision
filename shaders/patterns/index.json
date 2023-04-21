@@ -94,6 +94,12 @@
       },
       "isf": true
     },
+    "Rain": {
+      "pipeline": {
+        "frag": "rain.fs"
+      },
+      "isf": true
+    },
     "RainbowCircle": {
       "pipeline": {
         "frag": "rainbow_circle.fs"
