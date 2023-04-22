@@ -59,20 +59,12 @@
         {
             "NAME": "sway_speed",
             "TYPE": "float",
-            "MIN": 0.1,
-            "MAX": 0.5,
-            "DEFAULT": 0.2
+            "MIN": 0.01,
+            "MAX": 0.2,
+            "DEFAULT": 0.1
         }
     ]
 }*/
-
-float rand21(vec2 p) {
-    return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-float rand31(vec3 p) {
-    return fract(sin(dot(p, vec3(27.17, 112.61, 57.53))) * 43758.5453);
-}
 
 float noise_hash2(vec2 p) {
     p = 50.0 * fract(p * 0.3183099 + vec2(0.71, 0.113));
@@ -144,7 +136,7 @@ void main() {
             );
 
             float y_pos = mod(
-                TIME * -speed + noise_hash2(vec2(j, c) * 0.5) * grid_scale.y,
+                TIME * -speed + noise_hash2(vec2(j, c)) * grid_scale.y,
                 grid_scale.y
             );
 
