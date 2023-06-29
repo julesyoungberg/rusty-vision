@@ -107,6 +107,21 @@ float noise31(in vec3 x) {
                f.z);
 }
 
+float fbm(in vec2 p) {
+    const mat2 m = mat2(0.8, 0.6, -0.6, 0.8);
+    float f = 0.0;
+    f += 0.500 * noise21(p);
+    p *= m * 2.02;
+    f += 0.250 * noise21(p);
+    p *= m * 2.03;
+    f += 0.125 * noise21(p);
+    p *= m * 2.01;
+    f += 0.0625 * noise21(p);
+    p *= m * 2.04;
+    f /= 0.9375;
+    return f * 0.5 + 0.5;
+}
+
 void main() {
     vec2 st = isf_FragNormCoord;
     vec2 grid_scale = scale * vec2(4.0, 1.0);
@@ -142,7 +157,7 @@ void main() {
 
             float x_pos = noise31(
                 vec3(c, j, TIME * sway_speed + noise_hash2(vec2(j, c) * 0.1))
-            ) * 3.0 + column - 1.0;
+            ) * 2.0 + column - 1.0;
 
             color += (
                 (step(y_pos - height * 0.5, st.y) - step(y_pos + height * 0.5, st.y))

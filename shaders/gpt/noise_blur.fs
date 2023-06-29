@@ -34,7 +34,7 @@
         {
             "NAME": "direction_y",
             "TYPE": "float",
-            "DEFAULT": 0.5],
+            "DEFAULT": 0.5,
             "DESCRIPTION": "Y Direction of the blur"
         }
     ],
@@ -57,7 +57,7 @@ void main() {
     vec2 direction = vec2(direction_x, direction_y);
     for(float i = 0.0; i < 10.0; i += 1.0) {
         vec2 sampleUV = uv + offset + i * blurAmount * direction;
-        vec4 blurColor = texture2D(inputImage, sampleUV);
+        vec4 blurColor = texture2D(inputImage, fract(sampleUV));
         color += blurColor;
         blurRadius += length(blurColor.rgb);
     }

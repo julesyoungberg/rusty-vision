@@ -50,9 +50,9 @@ void main() {
     vec2 q = p + vec2(0.0, 0.1 * amount);
     vec2 r = p + vec2(0.1 * amount, 0.0);
     float sineWave = sin(p.x * frequency + TIME * speed) * amount;
-    vec4 color = texture2D(inputImage, uv + vec2(sineWave, 0.0));
-    vec4 qColor = texture2D(inputImage, q + vec2(sineWave, 0.0));
-    vec4 rColor = texture2D(inputImage, r + vec2(sineWave, 0.0));
+    vec4 color = texture2D(inputImage, fract(uv + vec2(sineWave, 0.0)));
+    vec4 qColor = texture2D(inputImage, fract(q + vec2(sineWave, 0.0)));
+    vec4 rColor = texture2D(inputImage, fract(r + vec2(sineWave, 0.0)));
     float average = (color.r + qColor.g + rColor.b) / 3.0;
     vec4 outputColor = vec4(average, average, average, 1.0);
     gl_FragColor = outputColor;

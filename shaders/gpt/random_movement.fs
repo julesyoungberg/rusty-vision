@@ -47,7 +47,7 @@ void main()
     for (float i = 0.0; i < numCopies; i += 1.0) {
         vec2 offset = vec2(random(vec2(i, 0.0)) - 0.5, random(vec2(0.0, i)) - 0.5) * maxMovement;
         vec2 sampleUV = uv + offset;
-        vec4 blurColor = texture2D(inputImage, sampleUV);
+        vec4 blurColor = texture2D(inputImage, fract(sampleUV));
         color += blurColor;
     }
     color /= numCopies;

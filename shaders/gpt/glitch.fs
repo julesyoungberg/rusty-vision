@@ -72,7 +72,7 @@ void main() {
   vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
   vec2 distortedUv = distort(uv, distortion * amplitude);
   
-  vec4 color = texture2D(inputImage, distortedUv);
+  vec4 color = texture2D(inputImage, fract(distortedUv));
   vec4 scanlineColor = vec4(0.0, 0.0, 0.0, 1.0);
   if (mod(gl_FragCoord.y, 2.0) < scanlines) {
     color = mix(color, scanlineColor, colorOffset);

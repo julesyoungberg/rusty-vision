@@ -68,6 +68,6 @@ void main()
     float cosAngle = cos(angle + angle * intensity);
     float newRadius = dist * radius;
     vec2 newPos = vec2(newRadius * cosAngle, newRadius * sinAngle) + center;
-    vec4 color = texture2D(inputImage, newPos);
+    vec4 color = texture2D(inputImage, vec2(newPos));
     gl_FragColor = color;
 }

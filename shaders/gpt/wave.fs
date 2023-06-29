@@ -52,7 +52,7 @@ void main() {
     float offset = amplitude * sin((uv.y + t) / wavelength);
     vec2 offsetUV = vec2(uv.x + offset, uv.y);
     
-    vec4 waveColor = texture2D(inputImage, offsetUV);
+    vec4 waveColor = texture2D(inputImage, fract(offsetUV));
     
     gl_FragColor = mix(color, waveColor, amplitude * 0.5);
 }

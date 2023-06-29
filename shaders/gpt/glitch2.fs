@@ -44,7 +44,7 @@ void main() {
     float offset = amount * (sin(t) + sin(t * 3.0) + sin(t * 7.0));
     vec2 offsetUV = vec2(uv.x + offset, uv.y);
     
-    vec4 glitchColor = texture2D(inputImage, offsetUV);
+    vec4 glitchColor = texture2D(inputImage, fract(offsetUV));
     
     gl_FragColor = mix(color, glitchColor, amount);
 }
