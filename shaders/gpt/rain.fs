@@ -51,5 +51,6 @@ void main() {
     float noiseVal = noise(vec2(pos.x * rain_width, pos.y));
     float rainDrop = smoothstep(0.0, rain_density, noiseVal);
     vec4 rain = vec4(rain_color.rgb, rainDrop * rain_color.a);
-    gl_FragColor = mix(vec4(0.0, 0.0, 0.0, 1.0), rain, rain.a);
+    // gl_FragColor = mix(vec4(0.0, 0.0, 0.0, 1.0), rain, rain.a);
+    gl_FragColor = rain;
 }

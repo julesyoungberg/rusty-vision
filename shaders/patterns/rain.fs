@@ -138,6 +138,7 @@ void main() {
         float c = column / grid_scale.x;
 
         for (float j = 0.0; j < 1.0; j += 1.0 / density) {
+            float id = fbm(vec2(j, c));
             float height = mix(
                 0.1 / grid_scale.y,
                 (0.1 + drop_height) / grid_scale.y,
@@ -147,16 +148,16 @@ void main() {
             float width = mix(
                 0.02,
                 0.02 + drop_width,
-                noise21(vec2(j, c))
+                noise21(vec2(j, c) * id)
             );
 
             float y_pos = mod(
-                TIME * -speed + noise_hash2(vec2(j, c)) * grid_scale.y,
+                TIME * -speed + noise_hash2(vec2(j, c) * id * 0.5) * grid_scale.y,
                 grid_scale.y
             );
 
             float x_pos = noise31(
-                vec3(c, j, TIME * sway_speed + noise_hash2(vec2(j, c) * 0.1))
+                vec3(c, j, TIME * sway_speed + noise_hash2(vec2(c, j) * id * 0.1))
             ) * 2.0 + column - 1.0;
 
             color += (
@@ -166,5 +167,5 @@ void main() {
         }
     }
 
-    gl_FragColor = vec4(color, 1);
+    gl_FragColor = vec4(color * drop_color.rgb, 1);
 }
