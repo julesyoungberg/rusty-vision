@@ -85,12 +85,14 @@ void main()	{
 	// inputPixelColor = IMG_THIS_NORM_PIXEL(inputImage);
 	
 	vec2 uv = isf_FragNormCoord.xy;
+
+    uv.y = 1.0 - uv.y;
 	
 	float freq = 15.0;
 	float amount = 0.05;
 	float speed = 1.0;
 	
-	vec2 center = vec2(0.5, 0.8);
+	vec2 center = vec2(0.5, 0.2);
 	float radius = 0.3; 
 	
 	float dist = length(center - uv);
