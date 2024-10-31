@@ -62,6 +62,13 @@
             "DEFAULT": 1.0
         },
         {
+            "NAME": "jiggle_sensitivity",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
             "NAME": "small_strips_speed",
             "TYPE": "float",
             "MIN": 0.0,
@@ -74,6 +81,20 @@
             "MIN": 0.0,
             "MAX": 2.0,
             "DEFAULT": 1.0
+        },
+        {
+            "NAME": "fish_eye_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.5
+        },
+        {
+            "NAME": "edge_amount",
+            "TYPE": "float",
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.3
         }
     ]
 }*/
@@ -159,7 +180,7 @@ void main() {
     // bend the space
     vec2 disp = st - 0.5;
     disp *= sqrt(length(disp));
-    st += disp * 1.5;
+    st += disp * (1.0 + fish_eye_amount);
     st += 0.5;
     st *= 0.5;
 
@@ -188,11 +209,12 @@ void main() {
     x_shift *= window; // concentrate the wave
     x_shift *= step(0.3, get_spectrum(0.3) * x_flicker_sensitivity); // flicker
     st.x += x_shift; // apply shift
+
     // start with jiggle compound wave
     float y_shift =
         0.4 * sin(TIME * y_shift_speed) * sin(TIME * 20.0 * y_shift_speed);
     y_shift += 0.1 * sin(TIME * 200.0 * cos(TIME)); // add fast flickerywave
-    y_shift *= step(0.1, get_spectrum(0.6));        // flicker
+    y_shift *= step(0.1, get_spectrum(0.6) * jiggle_sensitivity);        // flicker
     st.y += y_shift;
 
     // calculate each channel coord to get chromatic shift effect
@@ -231,13 +253,14 @@ void main() {
     float t = st.y + TIME * big_strip_speed * 0.5 +
               sin(TIME * big_strip_speed +
                   sin(TIME * 0.63 * big_strip_speed) * get_spectrum(0.4));
-    color = mix(color, vec3(n), pulse(0.5, 0.05, fract(t)) * 0.4);
+    color = mix(color, vec3(n), pulse(0.5, 0.05, fract(t)) * 0.2);
 
     // edge fade
+    st = tv;
     tv *= 2.0;
     tv -= 1.0;
-    float v = (1.0 - exp((abs(tv.x) - 1.0) * 3.0)) *
-              (1.0 - exp((abs(tv.y) - 1.0) * 3.0));
+    float v = (1.0 - exp((abs(tv.x) - 1.0) * 1.0 / edge_amount)) *
+              (1.0 - exp((abs(tv.y) - 1.0) * 1.0 / edge_amount));
     color *= mix(0.0, 1.0, v);
 
     gl_FragColor = vec4(color, 1.0);
